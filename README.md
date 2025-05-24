@@ -1,2 +1,7 @@
-# scirag
-Boiler plate codes for RAG on scientific papers
+# massai
+
+A short description of what massai does.
+
+```bash
+pip install scirag
+```
