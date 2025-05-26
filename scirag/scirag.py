@@ -23,76 +23,54 @@ from google.genai.types import (
 from vertexai import rag
 
 
-from .config import (REPO_DIR, client,
+from .config import (vertex_client,
                      credentials, 
                      EMBEDDING_MODEL, CHUNK_SIZE, CHUNK_OVERLAP,
                      TOP_K, DISTANCE_THRESHOLD,
-                     GEN_MODEL)
+                     GEN_MODEL,
+                     markdown_files_path,
+                     SCOPES,
+                     display_name,
+                     folder_id)
 
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
-class Scirag:
+
+class SciRag:
     def __init__(self, 
+                 client = vertex_client,
                  credentials = credentials,
-                 markdown_files_path = REPO_DIR / "markdowns",
+                 markdown_files_path = markdown_files_path,
+                 corpus_name = display_name,
+                 gen_model = GEN_MODEL,
                  ):
         self.credentials = credentials
         self.markdown_files_path = markdown_files_path
         self.drive_service = None
-        self.rag_retrieval_tool = None
         self.client = client
+        self.corpus_name = corpus_name
+        self.gen_model = gen_model
+        self.rag_prompt = rf"""
+You are a retrieval agent. 
+You must add precise source from where you got the answer.
+Your answer should be in markdown format with the following structure: 
 
+**Answer**:
 
-        print("Listing RAG Corpora:")
+{{answer}}
 
-        corpora_found = False
-        for corpus in rag.list_corpora():
-            corpora_found = True
-            print(f"--- Corpus: {corpus.display_name} ---")
-            print(f"  Name (Resource Path): {corpus.name}")
-            print(f"  Display Name: {corpus.display_name}")
+**Sources**:
 
-            # Access other common attributes:
-            # Use hasattr() to safely check if an attribute exists before trying to access it,
-            # as some fields might not be present for all corpora or in all states.
+{{sources}}
 
+You must search your knowledge base calling your tool. The sources must be from the retrieval only.
+You must report the source names in the sources field, if possible, the page number, equation number, table number, section number, etc.
 
-            if hasattr(corpus, 'create_time') and corpus.create_time:
-                # Directly use corpus.create_time (which is a DatetimeWithNanoseconds object
-                # or similar datetime-compatible object) with strftime
-                print(f"  Create Time: {corpus.create_time.strftime('%Y-%m-%d %H:%M:%S')}")
-
-            if hasattr(corpus, 'update_time') and corpus.update_time:
-                # Directly use corpus.update_time with strftime
-                print(f"  Update Time: {corpus.update_time.strftime('%Y-%m-%d %H:%M:%S')}")
-
-            if hasattr(corpus, 'state') and corpus.state:
-                print(f"  State: {corpus.state}") # e.g., Corpus.State.ACTIVE, Corpus.State.CREATING
-
-
-            # You can inspect the object's attributes further if needed
-            # print(f"  Full object representation: {corpus}") # This can be very verbose
-
-            self.rag_corpus = corpus
-
-            self.rag_retrieval_tool = Tool(
-                retrieval=Retrieval(
-                    vertex_rag_store=VertexRagStore(
-                        rag_resources=[
-                            VertexRagStoreRagResource(
-                                rag_corpus=self.rag_corpus.name  # Currently only 1 corpus is allowed.
-                            )
-                        ],
-                        similarity_top_k=TOP_K,
-                        vector_distance_threshold=DISTANCE_THRESHOLD,
-                    )
-                )
-            )
-
-            print("-" * 30)
-
-        if not corpora_found:
-            print("No RAG corpora found in your project/region.")
+"""
+        self.enhanced_query = lambda query: (
+rf"""
+Question: {query}
+"""
+        )
 
     def load_markdown_files(self):
         markdown_files = list(self.markdown_files_path.glob("*.md"))
@@ -159,82 +137,19 @@ class Scirag:
     
 
 
-    def create_vector_db(self, display_name: str, folder_id: str):
-
-        rag_corpus = rag.create_corpus(
-            display_name=display_name,
-            backend_config=rag.RagVectorDbConfig(
-                rag_embedding_model_config=rag.RagEmbeddingModelConfig(
-                    vertex_prediction_endpoint=rag.VertexPredictionEndpoint(
-                        publisher_model=EMBEDDING_MODEL
-                    )
-                )
-            ),
-        )
-
-        rag.import_files(
-            # corpus_name=rag_corpus.name,
-            corpus_name=rag_corpus.name,
-            # https://drive.google.com/drive/u/0/folders/
-            paths=[f"https://drive.google.com/drive/folders/{folder_id}"],
-            # Optional
-            transformation_config=rag.TransformationConfig(
-                chunking_config=rag.ChunkingConfig(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
-            ),
-        )
-
-        self.rag_corpus = rag_corpus
+    def create_vector_db(self, folder_id = folder_id):
+        pass
 
 
     def get_chunks(self, query: str):
-        response = rag.retrieval_query(
-            rag_resources=[
-                rag.RagResource(
-                    rag_corpus=self.rag_corpus.name,
-                    # Optional: supply IDs from `rag.list_files()`.
-                    # rag_file_ids=["rag-file-1", "rag-file-2", ...],
-                )
-            ],
-            rag_retrieval_config=rag.RagRetrievalConfig(
-                top_k=TOP_K,  # Optional
-                filter=rag.Filter(
-                    vector_distance_threshold=DISTANCE_THRESHOLD,  # Optional
-                ),
-            ),
-                    text=query,
-                )
-        return response
+        pass
     
     def delete_vector_db(self):
-        rag.delete_corpus(name=self.rag_corpus.name)
+        pass
 
 
     def get_response(self, query: str):
-        enhanced_query = (
-rf"""Answer the following question concisely, at most two sentences long. 
-If the answer is a number, just provide the number. 
-Question: {query}
-You must add precise source from where you got the answer.
-Your answer should be in markdown format with the following format: 
-
-**Answer**:
-
-{{answer}}
-
-**Sources**:
-
-{{sources}}
-
-You must search your knowledge base calling your tool. The sources must be from the retrieval only.
-You must report the source names in the sources field, if possible, the page number, equation number, table number, section number, etc.
-            """
-        )
-        response = self.client.models.generate_content(
-            model=GEN_MODEL,
-            contents=enhanced_query,
-            config=GenerateContentConfig(tools=[self.rag_retrieval_tool],temperature=0.0,),
-        )
-        return response
+        pass
 
 
         
