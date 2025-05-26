@@ -1,6 +1,5 @@
-# massai
+# RAG for scientific documents
 
-A short description of what massai does.
 
 ```bash
 pip install scirag
