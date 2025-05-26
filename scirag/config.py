@@ -138,6 +138,11 @@ OAI_PRICE1K = {
 
 from pydantic import BaseModel, Field
 from typing import List
+from paperqa.settings import Settings, AnswerSettings, AgentSettings
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, '..'))
+OCR_OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'txt_files')
 
 class AnswerFormat(BaseModel):
     answer: str = Field(
@@ -149,3 +154,46 @@ class AnswerFormat(BaseModel):
             "If possible, include page number, equation number, table number, section number, etc."
         )
     )
+
+
+paperqa2_settings = Settings(
+        llm="gpt-4o-mini",
+        llm_config={
+            "model_list": [
+                {
+                    "model_name": "gpt-4o-mini",
+                    "litellm_params": {
+                        "model": "gpt-4o-mini",
+                        "temperature": 0.5,
+                        "max_tokens": 4096,
+                    },
+                }
+            ]
+        },
+        summary_llm="gpt-4o-mini",
+        summary_llm_config={
+            "rate_limit": {"gpt-4o-mini": "30000 per 1 minute"},
+        },
+        answer=AnswerSettings(
+            evidence_k=30,
+            answer_max_sources=15,
+            evidence_skip_summary=False
+        ),
+        agent=AgentSettings(
+            agent_llm="gpt-4o-mini",
+            agent_llm_config={
+                "rate_limit": {"gpt-4o-mini": "30000 per 1 minute"},
+            }
+        ),
+        embedding="text-embedding-3-small",
+        temperature=0.5,
+        paper_directory=OCR_OUTPUT_DIR
+    )
+
+index_settings = Settings(
+                paper_directory=OCR_OUTPUT_DIR,
+                agent={"index": {
+                    "sync_with_paper_directory": True,
+                    "recurse_subdirectories": True
+                }}
+            )
