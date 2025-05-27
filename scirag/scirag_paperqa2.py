@@ -1,93 +1,90 @@
-import csv
 import re
-import os
-from typing import Any, Dict, List, Optional
-import logging
-import nest_asyncio
+from .scirag import SciRag
+from .config import paperqa2_settings, AnswerFormat, index_settings
 from paperqa import ask
-from .config import paperqa2_settings, AnswerFormat,index_settings
-
-logging.basicConfig(level=logging.INFO, 
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("PaperQAOCR")
-
-from paperqa import Docs
 from paperqa.agents.search import get_directory_index
-from paperqa.settings import Settings, AgentSettings
+import json
 
-import threading
+import nest_asyncio
+nest_asyncio.apply()
+import asyncio
+import os
 
 
-
-class PaperQAClient:
-    """A singleton client for PaperQA2 that builds the index once and reuses it."""
-    _instance = None
-    _lock = threading.Lock()  # For thread safety
-
-    #accept both pdf files and txt files
-    def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            with cls._lock:
-                if not cls._instance:
-                    cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def __init__(self, settings: Optional[Settings] = paperqa2_settings, PAPERS_DIR=None,index_settings=index_settings):
-        if hasattr(self, '_initialized') and self._initialized:
-            return  # Prevent re-initialization
-        self._initialized = True
-        self._index_built = False
-        self.paper_directory = PAPERS_DIR
+class SciRagPaperQA2(SciRag):
+    def __init__(self, 
+                 settings=paperqa2_settings, 
+                 paper_directory=None, 
+                 index_settings=index_settings,
+                 index_built=False):
+        super().__init__(
+            client=None,  # paperqa2 doesn't use a client in the same way
+            credentials=None,
+            markdown_files_path=None, #paperqa2 cannot handle markdown files for now
+            corpus_name=None,
+            gen_model=None
+        )
         if settings is None:
-            self.settings = Settings(
-                temperature=0.1,
-                llm='gpt-4o-mini',
-                paper_directory=self.paper_directory,
-                summary_llm='gpt-4o-mini',
-
-            )
+            self.settings = paperqa2_settings
         else:
             self.settings = settings
-            self.paper_directory = settings.paper_directory
-        if index_settings is None:
-            self.index_settings = Settings(
-                paper_directory=self.paper_directory,
-                agent={"index": {
-                    "sync_with_paper_directory": True,
-                    "recurse_subdirectories": True
-                }}
-            )
-        else:
-            self.index_settings = index_settings
+        self.paper_directory = paper_directory or settings.paper_directory
+        self.index_settings = index_settings
+        self._index_built = index_built
+        print("[SciRagPaperQA2] Building index on initialization...")
+        self.build_index()
 
     def build_index(self):
-        """wrapper for the async build_index_if_needed"""
-        loop = nest_asyncio.get_event_loop()
+        loop = asyncio.get_event_loop()
         return loop.run_until_complete(self.build_index_if_needed())
 
-    
     async def build_index_if_needed(self):
-        """Build the document index if not already built ."""
         if not self._index_built:
-            print("Building PaperQA2 document index (only happens once)...")
-            #check if the files are in the right place
+            print(f"[SciRagPaperQA2] Checking for paper directory: {self.paper_directory}")
             if not os.path.exists(self.paper_directory):
                 raise FileNotFoundError(f"Paper directory not found: {self.paper_directory}")
-            
-            built_index=await get_directory_index(settings=self.index_settings)
+            print(f"[SciRagPaperQA2] Building PaperQA2 document index (only happens once)...")
+            built_index = await get_directory_index(settings=self.index_settings)
+            print(f"Using index: {index_settings.get_index_name()}")
             index_files = await built_index.index_files
+            print(f"Index files: {index_files}")
             self._index_built = True
-        return built_index
-    
+            print(f"[SciRagPaperQA2] Index built successfully.")
+            return built_index
+
+    def get_response(self, query: str) -> AnswerFormat:
+        loop = asyncio.get_event_loop()
+        answer_text = loop.run_until_complete(self.query_paperqa(query))
+        # Extract sources from the answer text
+        answer, sources = self.extract_answer_and_sources(answer_text)
+        formatted = self.format_agent_output(answer, sources)
+        return AnswerFormat(answer=formatted, sources=sources)
+
+    def extract_answer_and_sources(self, answer_text: str):
+        # Find all (filename chunk N) patterns in the answer text
+        sources = re.findall(r'\(([^)]+? chunk \d+)\)', answer_text)
+        # Remove all (filename chunk N) patterns from the answer text
+        answer_cleaned = re.sub(r'\(([^)]+? chunk \d+)\)', '', answer_text)
+        answer_cleaned = re.sub(r'\s+', ' ', answer_cleaned).strip()
+        return answer_cleaned, sources
+
+    def format_agent_output(self, answer: str, sources: list) -> str:
+        sources_str = ", ".join(sources) if sources else "N/A"
+        return f"""**Answer**:\n\n{answer}\n\n**Sources**:\n\n{sources_str}\n"""
+
     async def query_paperqa(self,query: str) -> str:
-            """Query PaperQA2 for scientific evidence using OCR-processed documents"""
-            nest_asyncio.apply()
-            response = ask(query, settings=self.settings)
-            answer_text=response.dict()['session']['answer']
-            return AnswerFormat(answer=answer_text, sources=[])
+        """Query PaperQA2 for scientific evidence using OCR-processed documents"""
+        response = ask(query, settings=self.settings)
+        return response.dict()['session']['answer']
+    
+    def create_vector_db(self, *args, **kwargs):
+        pass
 
+    def delete_vector_db(self, *args, **kwargs):
+        pass
 
-    def ask(self, question: str) -> AnswerFormat:
-        """Synchronous method to query PaperQA2, returns AnswerFormat."""
-        loop = nest_asyncio.get_event_loop()
-        return loop.run_until_complete(self.query_paperqa(question))
+    def get_chunks(self, query: str):
+        pass
+
+    def cost_dict(self, *args, **kwargs):
+        pass

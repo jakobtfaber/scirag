@@ -166,11 +166,11 @@ class AnswerFormat(BaseModel):
 
 
 paperqa2_settings = Settings(
-        llm="gpt-4o-mini",
+        llm="gpt-4o",
         llm_config={
             "model_list": [
                 {
-                    "model_name": "gpt-4o-mini",
+                    "model_name": "gpt-4o",
                     "litellm_params": {
                         "model": "gpt-4o-mini",
                         "temperature": 0.5,
@@ -179,9 +179,9 @@ paperqa2_settings = Settings(
                 }
             ]
         },
-        summary_llm="gpt-4o-mini",
+        summary_llm="gpt-4o",
         summary_llm_config={
-            "rate_limit": {"gpt-4o-mini": "30000 per 1 minute"},
+            "rate_limit": {"gpt-4o": "30000 per 1 minute"},
         },
         answer=AnswerSettings(
             evidence_k=30,
@@ -189,9 +189,9 @@ paperqa2_settings = Settings(
             evidence_skip_summary=False
         ),
         agent=AgentSettings(
-            agent_llm="gpt-4o-mini",
+            agent_llm="gpt-4o",
             agent_llm_config={
-                "rate_limit": {"gpt-4o-mini": "30000 per 1 minute"},
+                "rate_limit": {"gpt-4o": "30000 per 1 minute"},
             }
         ),
         embedding="text-embedding-3-small",
