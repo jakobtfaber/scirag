@@ -15,7 +15,8 @@ class SciRagPaperQA2(SciRag):
     def __init__(self, 
                  settings=paperqa2_settings, 
                  paper_directory=None, 
-                 index_settings=index_settings):
+                 index_settings=index_settings,
+                 index_built=False):
         super().__init__(
             client=None,  # paperqa2 doesn't use a client in the same way
             credentials=None,
@@ -23,10 +24,13 @@ class SciRagPaperQA2(SciRag):
             corpus_name=None,
             gen_model=None
         )
-        self.settings = settings
+        if settings is None:
+            self.settings = paperqa2_settings
+        else:
+            self.settings = settings
         self.paper_directory = paper_directory or settings.paper_directory
         self.index_settings = index_settings
-        self._index_built = False
+        self._index_built = index_built
         print("[SciRagPaperQA2] Building index on initialization...")
         self.build_index()
 
@@ -41,6 +45,9 @@ class SciRagPaperQA2(SciRag):
                 raise FileNotFoundError(f"Paper directory not found: {self.paper_directory}")
             print(f"[SciRagPaperQA2] Building PaperQA2 document index (only happens once)...")
             built_index = await get_directory_index(settings=self.index_settings)
+            print(f"Using index: {index_settings.get_index_name()}")
+            index_files = await built_index.index_files
+            print(f"Index files: {index_files}")
             self._index_built = True
             print(f"[SciRagPaperQA2] Index built successfully.")
             return built_index
