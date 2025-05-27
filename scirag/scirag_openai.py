@@ -30,13 +30,13 @@ from vertexai import rag
 
 from .config import (openai_client,
                      credentials, 
-                     EMBEDDING_MODEL, CHUNK_SIZE, CHUNK_OVERLAP,
+                     CHUNK_SIZE, CHUNK_OVERLAP,
                      TOP_K, DISTANCE_THRESHOLD,
-                     GEN_MODEL,
+                     OPENAI_GEN_MODEL,
+                     TEMPERATURE,
                      display_name,
                      folder_id,
                      markdown_files_path,
-                     OPENAI_GEN_MODEL,
                      OAI_PRICE1K,
                      AnswerFormat,
                      assistant_name)
@@ -54,12 +54,7 @@ class SciRagOpenAI(SciRag):
         super().__init__(client, credentials, markdown_files_path, corpus_name, gen_model)
 
 
-        cost_dict = {}
-        cost_dict['Cost'] = []
-        cost_dict['Prompt Tokens'] = []
-        cost_dict['Completion Tokens'] = []
-        cost_dict['Total Tokens'] = []
-        self.cost_dict = cost_dict
+
 
 
         print("Listing RAG Corpora:")
@@ -87,7 +82,7 @@ class SciRagOpenAI(SciRag):
                                     ],
                                     tool_resources={"file_search": {"vector_store_ids":[self.rag_corpus.id]}},
                                     model=self.gen_model, 
-                                    temperature = 0.01,
+                                    temperature = TEMPERATURE,
                                     top_p = 0.2,
                                     response_format= {
                                         "type": "json_schema",

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Any
 # from IPython.display import display, Markdown
 import asyncio
 import time
@@ -10,7 +10,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-
+from dataclasses import dataclass
+import numpy as np
 
 from google.genai.types import (
     GenerateContentConfig,
@@ -20,20 +21,39 @@ from google.genai.types import (
     VertexRagStoreRagResource,
 )
 
+# LangChain imports for document processing and utilities
+from langchain.document_loaders import (
+    PyPDFLoader, 
+    TextLoader, 
+    CSVLoader,
+    JSONLoader,
+    UnstructuredWordDocumentLoader
+)
+from langchain.schema import Document
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
 from vertexai import rag
 
 
 from .config import (vertex_client,
                      credentials, 
-                     EMBEDDING_MODEL, CHUNK_SIZE, CHUNK_OVERLAP,
-                     TOP_K, DISTANCE_THRESHOLD,
-                     GEN_MODEL,
+                     GEMINI_GEN_MODEL,
+                     CHUNK_SIZE,
+                     CHUNK_OVERLAP,
                      markdown_files_path,
                      SCOPES,
                      display_name,
                      folder_id)
 
-
+@dataclass
+class DocumentChunk:
+    """Represents a document chunk with context and metadata"""
+    original_text: str
+    contextualized_text: str
+    embedding: np.ndarray
+    tfidf_vector: Any
+    metadata: Dict[str, Any]
+    chunk_id: str
 
 class SciRag:
     def __init__(self, 
@@ -41,7 +61,7 @@ class SciRag:
                  credentials = credentials,
                  markdown_files_path = markdown_files_path,
                  corpus_name = display_name,
-                 gen_model = GEN_MODEL,
+                 gen_model = GEMINI_GEN_MODEL,
                  ):
         self.credentials = credentials
         self.markdown_files_path = markdown_files_path
@@ -72,9 +92,75 @@ Question: {query}
 """
         )
 
-    def load_markdown_files(self):
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=CHUNK_SIZE,
+            chunk_overlap=CHUNK_OVERLAP,
+            length_function=len,
+            separators=["\n\n", "\n", ". ", " ", ""]
+        )
+
+        cost_dict = {}
+        cost_dict['Cost'] = []
+        cost_dict['Prompt Tokens'] = []
+        cost_dict['Completion Tokens'] = []
+        cost_dict['Total Tokens'] = []
+        self.cost_dict = cost_dict
+
+    def _load_markdown_files(self):
         markdown_files = list(self.markdown_files_path.glob("*.md"))
         return markdown_files
+    
+    def load_markdown_files(self) -> List[Document]:
+        """
+        Load markdown files using LangChain's TextLoader.
+        """
+        documents = []
+        file_paths = self._load_markdown_files()
+        for file_path in file_paths:
+            path = Path(file_path)
+            if not path.exists() or not path.is_file() or path.suffix.lower() != '.md':
+                print(f"Skipping non-existent or non-markdown file: {file_path}")
+                continue
+            try:
+                loader = TextLoader(str(file_path), encoding='utf-8')
+                file_docs = loader.load()
+                for doc in file_docs:
+                    doc.metadata.update({
+                        'source_file': str(file_path),
+                        'file_type': path.suffix.lower(),
+                        'file_name': path.name
+                    })
+                documents.extend(file_docs)
+                print(f"  Loaded {path.name}")
+            except Exception as e:
+                print(f"  Error loading {file_path}: {e}")
+        print(f"Total markdown documents loaded: {len(documents)}")
+        return documents
+    
+
+
+
+
+    def split_documents(self) -> List[Document]:
+        """Split documents into chunks using LangChain text splitter."""
+        print("Splitting documents into chunks...")
+        
+        all_chunks = []
+        for doc in self.docs:
+            chunks = self.text_splitter.split_documents([doc])
+            
+            # Add chunk metadata
+            for i, chunk in enumerate(chunks):
+                chunk.metadata.update({
+                    'chunk_index': i,
+                    'total_chunks': len(chunks),
+                    'chunk_id': f"{doc.metadata.get('file_name', 'unknown')}_{i}"
+                })
+            
+            all_chunks.extend(chunks)
+        
+        print(f"Created {len(all_chunks)} chunks from {len(self.docs)} documents")
+        self.all_chunks = all_chunks
     
     def _get_drive_service(self):
         """Initialize and return Google Drive service."""
@@ -108,7 +194,7 @@ Question: {query}
             List[str]: List of file IDs of uploaded files
         """
         service = self._get_drive_service()
-        markdown_files = self.load_markdown_files()
+        markdown_files = self._load_markdown_files()
         uploaded_file_ids = []
 
         for file_path in markdown_files:
