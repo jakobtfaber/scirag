@@ -10,6 +10,7 @@ REPO_DIR = BASE_DIR.parent
 
 markdown_files_path = REPO_DIR / "markdowns"
 datasets_path = REPO_DIR / "datasets"
+embeddings_path = REPO_DIR / "embeddings"
 
 DATASET = "CosmoPaperQA.parquet"
 
@@ -18,7 +19,10 @@ import google.auth
 credentials, project = google.auth.default()
 
 
-EMBEDDING_MODEL = "publishers/google/models/text-embedding-005"  # @param {type:"string", isTemplate: true}
+VERTEX_EMBEDDING_MODEL = "publishers/google/models/text-embedding-005"  # @param {type:"string", isTemplate: true}
+GEMINI_EMBEDDING_MODEL = "gemini-embedding-001"
+
+
 CHUNK_SIZE = 1024
 CHUNK_OVERLAP = 100
 
@@ -28,9 +32,14 @@ assistant_name = "rag_agent"
 
 TOP_K = 20
 DISTANCE_THRESHOLD = 0.5
+semantic_weight = 0.7
 
-GEN_MODEL = "gemini-2.5-flash-preview-05-20"
+GEMINI_GEN_MODEL = "gemini-2.5-flash-preview-05-20"
 OPENAI_GEN_MODEL = "gpt-4.1"
+
+TEMPERATURE = 0.01
+
+
 
 
 LOCATION="us-central1"
