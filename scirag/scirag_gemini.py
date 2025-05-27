@@ -79,10 +79,17 @@ class SciRagGeminiAI(SciRag):
                  markdown_files_path = markdown_files_path,
                  corpus_name = display_name,
                  gen_model = GEMINI_GEN_MODEL,
+                 vector_db_backend="chromadb",#"faiss",   # <--- add this line
+                 chroma_collection_name="sci_rag_chunks",
+                 chroma_db_path=str(embeddings_path / "chromadb"),
                  n_chunks = None,
                  ):
         super().__init__(client, credentials, markdown_files_path, corpus_name, gen_model)
 
+        self.vector_db_backend = vector_db_backend
+        self.chroma_collection_name = chroma_collection_name
+        self.chroma_db_path = chroma_db_path
+        self.chromadb_built = False
         self.embedding_model = TextEmbeddingModel.from_pretrained(GEMINI_EMBEDDING_MODEL)
 
 
@@ -145,6 +152,48 @@ rf"""
 
 
 
+    def store_to_chromadb(self):
+        import chromadb
+        from chromadb.config import Settings
+        client = chromadb.PersistentClient(path=self.chroma_db_path, settings=Settings(allow_reset=True))
+        collection = client.get_or_create_collection(
+            name=self.chroma_collection_name,
+            metadata={"hnsw:space": "cosine"}
+        )
+        ids = [m.get('chunk_id', f'chunk_{i}') for i, m in enumerate(self.all_metadata)]
+        embeddings = self.embeddings.tolist() if isinstance(self.embeddings, np.ndarray) else self.embeddings
+        documents = self.all_texts
+        metadatas = self.all_metadata
+        batch_size = 1000
+        for start in range(0, len(ids), batch_size):
+            collection.add(
+                ids=ids[start:start+batch_size],
+                embeddings=embeddings[start:start+batch_size],
+                documents=documents[start:start+batch_size],
+                metadatas=metadatas[start:start+batch_size],
+            )
+        print(f"Stored {len(ids)} chunks in ChromaDB collection '{self.chroma_collection_name}' at {self.chroma_db_path}")
+
+    def load_chromadb_collection(self):
+        import chromadb
+        client = chromadb.PersistentClient(path=self.chroma_db_path)
+        self.chroma_collection = client.get_collection(name=self.chroma_collection_name)
+
+    def query_chromadb(self, query, n_results=5):
+            
+        self._embed_query(query)
+        query_embedding = self.query_embedding[0]
+        results = self.chroma_collection.query(
+            query_embeddings=[query_embedding.tolist()],
+            n_results=n_results,
+            include=["documents", "metadatas", "distances"]
+        )
+        # Flatten results to match your semantic_search interface
+        return {
+            "chunks": results["documents"][0],
+            "metadata": results["metadatas"][0],
+            "similarities": [1 - d for d in results["distances"][0]]  # Chroma returns L2, invert if using cosine
+        }
 
 
     def _count_tokens(self, text: str) -> int:
@@ -349,30 +398,36 @@ rf"""
         return index
 
 
-
     def create_vector_db(self):
         self.load_embeddings()
-        self.faiss_index = self._create_faiss_index()
-        self.index_built = True
+        if self.vector_db_backend == "faiss":
+            self.faiss_index = self._create_faiss_index()
+            self.index_built = True
+            self._build_tf_idf_index()
+            self.chunks_store = []
+            for i in range(len(self.all_texts)):
+                chunk_obj = DocumentChunk(
+                    original_text=self.all_texts[i],
+                    contextualized_text=None,
+                    embedding=self.embeddings[i],
+                    tfidf_vector=self.tfidf_matrix[i],
+                    metadata=self.all_metadata[i],
+                    chunk_id=self.all_metadata[i]['chunk_id']
+                )
+                self.chunks_store.append(chunk_obj)
+                self.chunk_id_to_index[chunk_obj.chunk_id] = i
+            print(f"FAISS index built successfully with {len(self.chunks_store)} chunks")
+            self._save_index()
+        elif self.vector_db_backend == "chromadb":
+            try:
+                self.load_chromadb_collection()
+            except FileNotFoundError:
+                self.store_to_chromadb()
+                print(f"ChromaDB vector DB built successfully with {len(self.all_texts)} chunks")
+                self.chromadb_built = True
+        else:
+            raise ValueError(f"Unknown vector_db_backend: {self.vector_db_backend}")
 
-        self._build_tf_idf_index()
-
-        # Store all chunks
-        self.chunks_store = []
-        for i in range(len(self.all_texts)):
-            chunk_obj = DocumentChunk(
-                original_text=self.all_texts[i],
-                contextualized_text=None,
-                embedding=self.embeddings[i],
-                tfidf_vector=self.tfidf_matrix[i],
-                metadata=self.all_metadata[i],
-                chunk_id=self.all_metadata[i]['chunk_id']
-            )
-            self.chunks_store.append(chunk_obj)
-            self.chunk_id_to_index[chunk_obj.chunk_id] = i
-        
-        print(f"Index built successfully with {len(self.chunks_store)} chunks")
-        self._save_index()
 
 
 
@@ -408,28 +463,28 @@ rf"""
         with open(embeddings_path/f'{GEMINI_EMBEDDING_MODEL}_chunks_metadata.json', 'w') as f:
             json.dump(chunks_metadata, f, indent=2)
 
-
-
     def semantic_search(self, query: str, n_results: int = 20) -> Dict[str, Any]:
-        """Perform semantic search using FAISS."""
-        if not self.index_built:
-            raise ValueError("Index not built. Call build_index_* method first.")
-        
-        self._embed_query(query)
-        query_embedding = self.query_embedding
-        faiss.normalize_L2(query_embedding)
-        
-        similarities, indices = self.faiss_index.search(query_embedding, n_results)
-        
-        results = {'chunks': [], 'metadata': [], 'similarities': similarities[0].tolist()}
-        
-        for idx in indices[0]:
-            if idx != -1:
-                chunk = self.chunks_store[idx]
-                results['chunks'].append(chunk.original_text)
-                results['metadata'].append(chunk.metadata)
-        
-        return results
+        if self.vector_db_backend == "faiss":
+            if not self.index_built:
+                raise ValueError("Index not built. Call build_index_* method first.")
+            self._embed_query(query)
+            query_embedding = self.query_embedding
+            faiss.normalize_L2(query_embedding)
+            similarities, indices = self.faiss_index.search(query_embedding, n_results)
+            results = {'chunks': [], 'metadata': [], 'similarities': similarities[0].tolist()}
+            for idx in indices[0]:
+                if idx != -1:
+                    chunk = self.chunks_store[idx]
+                    results['chunks'].append(chunk.original_text)
+                    results['metadata'].append(chunk.metadata)
+            return results
+        elif self.vector_db_backend == "chromadb":
+            return self.query_chromadb(query, n_results)
+        else:
+            raise ValueError(f"Unknown vector_db_backend: {self.vector_db_backend}")
+
+
+
 
     def lexical_search(self, query: str, n_results: int = 20) -> List[Dict]:
         """Perform lexical search using TF-IDF."""
@@ -459,8 +514,8 @@ rf"""
     def hybrid_search(self, query: str, n_results: int = TOP_K, 
                      semantic_weight: float = semantic_weight) -> List[Dict]:
         """Combine semantic and lexical search."""
-        semantic_results = self.semantic_search(query, n_results * 2)
-        lexical_results = self.lexical_search(query, n_results * 2)
+        semantic_results = self.semantic_search(query, n_results)
+        # lexical_results = self.lexical_search(query, n_results * 2)
         
         combined_scores = {}
         
@@ -478,21 +533,7 @@ rf"""
                 'metadata': metadata
             }
         
-        # Add lexical scores
-        for result in lexical_results:
-            chunk_id = result['metadata']['chunk_id']
-            lexical_score = result['similarity'] * (1 - semantic_weight)
-            
-            if chunk_id in combined_scores:
-                combined_scores[chunk_id]['lexical_score'] = lexical_score
-            else:
-                combined_scores[chunk_id] = {
-                    'semantic_score': 0,
-                    'lexical_score': lexical_score,
-                    'text': result['text'],
-                    'metadata': result['metadata']
-                }
-        
+
         # Calculate final scores
         final_results = []
         for chunk_id, scores in combined_scores.items():
@@ -502,7 +543,7 @@ rf"""
                 'metadata': scores['metadata'],
                 'final_score': final_score,
                 'semantic_score': scores['semantic_score'],
-                'lexical_score': scores['lexical_score']
+                'lexical_score': 0.,
             })
         
         final_results.sort(key=lambda x: x['final_score'], reverse=True)
