@@ -27,9 +27,10 @@ from vertexai import rag
 
 from .config import (vertex_client,
                      credentials, 
-                     EMBEDDING_MODEL, CHUNK_SIZE, CHUNK_OVERLAP,
+                     VERTEX_EMBEDDING_MODEL, CHUNK_SIZE, CHUNK_OVERLAP,
                      TOP_K, DISTANCE_THRESHOLD,
-                     GEN_MODEL,
+                     GEMINI_GEN_MODEL,
+                     TEMPERATURE,
                      display_name,
                      folder_id,
                      markdown_files_path)
@@ -42,8 +43,9 @@ class SciRagVertexAI(SciRag):
                  credentials = credentials,
                  markdown_files_path = markdown_files_path,
                  corpus_name = display_name,
+                 gen_model = GEMINI_GEN_MODEL,
                  ):
-        super().__init__(client, credentials, markdown_files_path, corpus_name)
+        super().__init__(client, credentials, markdown_files_path, corpus_name, gen_model)
 
 
         print("Listing RAG Corpora:")
@@ -107,7 +109,7 @@ class SciRagVertexAI(SciRag):
             backend_config=rag.RagVectorDbConfig(
                 rag_embedding_model_config=rag.RagEmbeddingModelConfig(
                     vertex_prediction_endpoint=rag.VertexPredictionEndpoint(
-                        publisher_model=EMBEDDING_MODEL
+                        publisher_model=VERTEX_EMBEDDING_MODEL
                     )
                 )
             ),
@@ -157,10 +159,10 @@ class SciRagVertexAI(SciRag):
 
     def get_response(self, query: str):
         response = self.client.models.generate_content(
-            model=GEN_MODEL,
+            model=self.gen_model,
             contents=self.enhanced_query(query),
             config=GenerateContentConfig(tools=[self.rag_retrieval_tool],
-                                         temperature=0.0,
+                                         temperature=TEMPERATURE,
                                          system_instruction=self.rag_prompt,
                                          tool_config=tool_config,
                                          response_mime_type='application/json',
