@@ -43,7 +43,12 @@ SCOPES = ['https://www.googleapis.com/auth/drive.file']
 folder_id="1uoXS3wmCIU5v4iURI1Y9EgUxhGPaF4y7"
 
 
-
+# PaperQA2 configuration variables
+PAPERQA2_EMBEDDING = "text-embedding-3-small"
+PAPERQA2_LLM = "gpt-4o-mini"
+PAPERQA2_TEMPERATURE = 0.5
+PAPERQA2_EVIDENCE_K = 30
+PAPERQA2_ANSWER_MAX_SOURCES = 15
 
 from openai import OpenAI
 import os
@@ -155,39 +160,78 @@ class AnswerFormat(BaseModel):
         )
     )
 
+CANNOT_ANSWER_PHRASE = "I cannot answer"
+CITATION_KEY_CONSTRAINTS = (
+    "## Valid citation examples: \n"
+    "- Example2024Example pages 3-4 \n"
+    "- Example2024 pages 3-4 \n"
+    "- Example2024 pages 3-4, Example2024 pages 5-6 \n"
+    "## Invalid citation examples: \n"
+    "- Example2024Example pages 3-4 and pages 4-5 \n"
+    "- Example2024Example (pages 3-4) \n"
+    "- Example2024Example pages 3-4, pages 5-6 \n"
+    "- Example2024Example et al. (2024) \n"
+    "- Example's work (pages 17–19) \n"  # noqa: RUF001
+    "- (pages 17–19) \n"  # noqa: RUF001
+)
+qa_prompt = (
+    "Answer the astronomy question below with the context.\n\n"
+    "Context (with relevance scores):\n\n{context}\n\n----\n\n"
+    "Question: {question}\n\n"
+    "Write a concise answer based on the context, focusing on astronomical facts and concepts. "
+    "Limit your response to exactly two sentences maximum!!!! No more than two sentences!!!! "
+    "If the context provides insufficient information reply "
+    f'"{CANNOT_ANSWER_PHRASE}." '
+    "For each part of your answer, indicate which sources most support "
+    "it via citation keys at the end of sentences, like {example_citation}. "
+    "Only cite from the context above and only use the citation keys from the context. "
+    f"{CITATION_KEY_CONSTRAINTS}"
+    "Do not concatenate citation keys, just use them as is. "
+    "Write in the style of a scientific astronomy reference, with precise and "
+    "factual statements. The context comes from a variety of sources and is "
+    "only a summary, so there may be inaccuracies or ambiguities. If quotes are "
+    "present and relevant, use them in the answer. Focus on delivering key "
+    "astronomical information concisely without extraneous details.\n\n"
+    "{prior_answer_prompt}"
+    "Answer (maximum two sentences):"
+)
+
 
 paperqa2_settings = Settings(
-        llm="gpt-4o-mini",
+        llm=PAPERQA2_LLM,
         llm_config={
             "model_list": [
                 {
-                    "model_name": "gpt-4o-mini",
+                    "model_name": PAPERQA2_LLM,
                     "litellm_params": {
-                        "model": "gpt-4o-mini",
-                        "temperature": 0.5,
+                        "model": PAPERQA2_LLM,
+                        "temperature": PAPERQA2_TEMPERATURE,
                         "max_tokens": 4096,
                     },
                 }
             ]
         },
-        summary_llm="gpt-4o-mini",
+        summary_llm=PAPERQA2_LLM,
         summary_llm_config={
-            "rate_limit": {"gpt-4o-mini": "30000 per 1 minute"},
+            "rate_limit": {PAPERQA2_LLM: "30000 per 1 minute"},
         },
         answer=AnswerSettings(
-            evidence_k=30,
-            answer_max_sources=15,
+            evidence_k=PAPERQA2_EVIDENCE_K,
+            answer_max_sources=PAPERQA2_ANSWER_MAX_SOURCES,
             evidence_skip_summary=False
         ),
         agent=AgentSettings(
-            agent_llm="gpt-4o-mini",
+            agent_llm=PAPERQA2_LLM,
             agent_llm_config={
-                "rate_limit": {"gpt-4o-mini": "30000 per 1 minute"},
+                "rate_limit": {PAPERQA2_LLM: "30000 per 1 minute"},
             }
         ),
-        embedding="text-embedding-3-small",
-        temperature=0.5,
-        paper_directory=OCR_OUTPUT_DIR
+        embedding=PAPERQA2_EMBEDDING,
+        temperature=PAPERQA2_TEMPERATURE,
+        paper_directory=OCR_OUTPUT_DIR,
+        prompt={
+            "qa": qa_prompt
+        }
     )
 
 index_settings = Settings(
