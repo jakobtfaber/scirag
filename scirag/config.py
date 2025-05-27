@@ -55,9 +55,9 @@ folder_id="1uoXS3wmCIU5v4iURI1Y9EgUxhGPaF4y7"
 # PaperQA2 configuration variables
 PAPERQA2_EMBEDDING = "text-embedding-3-small"
 PAPERQA2_LLM = "gpt-4o-mini"
-PAPERQA2_TEMPERATURE = 0.5
-PAPERQA2_EVIDENCE_K = 30
-PAPERQA2_ANSWER_MAX_SOURCES = 15
+PAPERQA2_TEMPERATURE = 0.01
+PAPERQA2_EVIDENCE_K = 3
+PAPERQA2_ANSWER_MAX_SOURCES = 3
 
 from openai import OpenAI
 import os
@@ -184,25 +184,17 @@ CITATION_KEY_CONSTRAINTS = (
     "- (pages 17–19) \n"  # noqa: RUF001
 )
 qa_prompt = (
-    "Answer the astronomy question below with the context.\n\n"
+    "Provide a concise answer in 1-2 sentences maximum. "
     "Context (with relevance scores):\n\n{context}\n\n----\n\n"
     "Question: {question}\n\n"
     "Write a concise answer based on the context, focusing on astronomical facts and concepts. "
-    "Limit your response to exactly two sentences maximum!!!! No more than two sentences!!!! "
     "If the context provides insufficient information reply "
     f'"{CANNOT_ANSWER_PHRASE}." '
-    "For each part of your answer, indicate which sources most support "
-    "it via citation keys at the end of sentences, like {example_citation}. "
-    "Only cite from the context above and only use the citation keys from the context. "
-    f"{CITATION_KEY_CONSTRAINTS}"
-    "Do not concatenate citation keys, just use them as is. "
     "Write in the style of a scientific astronomy reference, with precise and "
     "factual statements. The context comes from a variety of sources and is "
-    "only a summary, so there may be inaccuracies or ambiguities. If quotes are "
-    "present and relevant, use them in the answer. Focus on delivering key "
-    "astronomical information concisely without extraneous details.\n\n"
+    "only a summary, so there may be inaccuracies or ambiguities. \n\n"
     "{prior_answer_prompt}"
-    "Answer (maximum two sentences):"
+    "Answer (maximum one sentence):"
 )
 
 
@@ -227,7 +219,8 @@ paperqa2_settings = Settings(
         answer=AnswerSettings(
             evidence_k=PAPERQA2_EVIDENCE_K,
             answer_max_sources=PAPERQA2_ANSWER_MAX_SOURCES,
-            evidence_skip_summary=False
+            evidence_skip_summary=False,
+            answer_length = "1-2 sentences maximum"
         ),
         agent=AgentSettings(
             agent_llm=PAPERQA2_LLM,
