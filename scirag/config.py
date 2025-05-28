@@ -23,8 +23,8 @@ VERTEX_EMBEDDING_MODEL = "publishers/google/models/text-embedding-005"  # @param
 GEMINI_EMBEDDING_MODEL = "gemini-embedding-001"
 
 
-CHUNK_SIZE = 1024
-CHUNK_OVERLAP = 100
+CHUNK_SIZE = 5000
+CHUNK_OVERLAP = 250
 
 display_name = "corpus"
 assistant_name = "rag_agent"
