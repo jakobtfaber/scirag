@@ -1,12 +1,12 @@
-from typing import List
+from typing import List, Dict, Any
 from typing import Any, Optional, Union
-# from IPython.display import display, Markdown
 import asyncio
 import time
 import os
 import re
 import json
 import pandas as pd
+import numpy as np
 
 import shutil
 from pathlib import Path
@@ -15,18 +15,6 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-
-
-from google.genai.types import (
-    GenerateContentConfig,
-    Retrieval,
-    Tool,
-    VertexRagStore,
-    VertexRagStoreRagResource,
-)
-
-from vertexai import rag
-
 
 from .config import (openai_client,
                      credentials, 
@@ -37,26 +25,44 @@ from .config import (openai_client,
                      display_name,
                      folder_id,
                      markdown_files_path,
+                     embeddings_path,
                      OAI_PRICE1K,
                      AnswerFormat,
                      assistant_name)
 
 from .scirag import SciRag
+import chromadb
+from chromadb.config import Settings
 
 class SciRagOpenAI(SciRag):
     def __init__(self, 
-                 client = openai_client,
-                 credentials = credentials,
-                 markdown_files_path = markdown_files_path,
-                 corpus_name = display_name,
-                 gen_model = OPENAI_GEN_MODEL,
+                 client=openai_client,
+                 credentials=credentials,
+                 markdown_files_path=markdown_files_path,
+                 corpus_name=display_name,
+                 gen_model=OPENAI_GEN_MODEL,
+                 vector_db_backend="chromadb",  # "openai" or "chromadb"
+                 chroma_collection_name="sci_rag_openai_chunks",
+                 chroma_db_path=str(embeddings_path / "chromadb_openai"),
                  ):
         super().__init__(client, credentials, markdown_files_path, corpus_name, gen_model)
+        
+        self.vector_db_backend = vector_db_backend
+        self.chroma_collection_name = chroma_collection_name
+        self.chroma_db_path = chroma_db_path
+        self.chromadb_built = False
+        
+        if vector_db_backend == "openai":
+            # Original OpenAI vector store implementation
+            self._setup_openai_vector_store()
+        elif vector_db_backend == "chromadb":
+            # New ChromaDB implementation
+            self._setup_chromadb()
+        else:
+            raise ValueError(f"Unknown vector_db_backend: {vector_db_backend}")
 
-
-
-
-
+    def _setup_openai_vector_store(self):
+        """Original OpenAI vector store setup"""
         print("Listing RAG Corpora:")
         vector_stores = self.client.vector_stores.list()
 
@@ -65,102 +71,417 @@ class SciRagOpenAI(SciRag):
                 print(f"--- Corpus: {vs.name} ---")
                 self.rag_corpus = vs
 
-
                 self.rag_assistant = self.client.beta.assistants.create(
                     name=assistant_name,
                     instructions=self.rag_prompt,
                     tools=[
-                                        {"type": "file_search",
-                                            "file_search":{
-                                                'max_num_results': TOP_K,
-                                                "ranking_options": {
-                                                    "ranker": "auto",
-                                                    "score_threshold": DISTANCE_THRESHOLD
-                                                }
-                                            }
-                                        }
-                                    ],
-                                    tool_resources={"file_search": {"vector_store_ids":[self.rag_corpus.id]}},
-                                    model=self.gen_model, 
-                                    temperature = TEMPERATURE,
-                                    top_p = 0.2,
-                                    response_format= {
-                                        "type": "json_schema",
-                                        "json_schema": {
-                                            "name": "answer",
-                                            "schema": AnswerFormat.model_json_schema()
-                                        },
-                                    }
-                                )
+                        {"type": "file_search",
+                            "file_search":{
+                                'max_num_results': TOP_K,
+                                "ranking_options": {
+                                    "ranker": "auto",
+                                    "score_threshold": DISTANCE_THRESHOLD
+                                }
+                            }
+                        }
+                    ],
+                    tool_resources={"file_search": {"vector_store_ids":[self.rag_corpus.id]}},
+                    model=self.gen_model, 
+                    temperature=TEMPERATURE,
+                    top_p=0.2,
+                    response_format={
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": "answer",
+                            "schema": AnswerFormat.model_json_schema()
+                        },
+                    }
+                )
 
-
-
-
+    def _setup_chromadb(self):
+        """Setup ChromaDB implementation"""
+        # Load and process documents
+        self.docs = self.load_markdown_files()
+        self.split_documents()  # create self.all_chunks
         
-
+        # Prepare texts and metadata
+        self._get_texts()
         
-    def create_vector_db(self, folder_id = folder_id):
+        # Create or load ChromaDB collection
+        try:
+            self.load_chromadb_collection()
+            print(f"Loaded existing ChromaDB collection '{self.chroma_collection_name}'")
+        except Exception as e:
+            print(f"Could not load existing collection: {e}")
+            print("Creating new ChromaDB collection...")
+            self._create_chromadb_embeddings()
+            self._store_to_chromadb_safe()
 
-        chunking_strategy =  {
+    def load_embeddings(self):
+        try:
+            self.embeddings = np.load(embeddings_path/'chroma.sqlite3')
+        except FileNotFoundError:
+            # print(f"Embeddings file not found. You must call get_embeddings() first...")
+            raise FileNotFoundError(f"Embeddings file not found. You must call get_embeddings() first...")
+
+
+    def _get_texts(self):
+        """Prepare texts and metadata from chunks"""
+        print("Preparing texts for ChromaDB...")
+        
+        all_original_texts = []
+        all_metadata = []
+        
+        chunk_counter = 0
+        for chunk in self.all_chunks:
+            all_original_texts.append(chunk.page_content)
+            all_metadata.append({
+                **chunk.metadata,
+                'chunk_id': f"chunk_{chunk_counter}",
+            })
+            chunk_counter += 1
+            
+        print(f"Processed {chunk_counter} chunks")
+        self.all_metadata = all_metadata
+        self.all_texts = all_original_texts
+
+    def _create_chromadb_embeddings(self):
+        """Create embeddings using OpenAI's embedding model"""
+        print("Creating embeddings using OpenAI...")
+        embeddings = []
+        
+        # Use OpenAI's text-embedding-3-small or text-embedding-ada-002
+        embedding_model = "text-embedding-3-small"
+        
+        batch_size = 100  # Process in batches to avoid rate limits
+        
+        for i in range(0, len(self.all_texts), batch_size):
+            batch_texts = self.all_texts[i:i+batch_size]
+            print(f"Processing batch {i//batch_size + 1}/{(len(self.all_texts) + batch_size - 1)//batch_size}")
+            
+            try:
+                response = self.client.embeddings.create(
+                    input=batch_texts,
+                    model=embedding_model
+                )
+                
+                batch_embeddings = [item.embedding for item in response.data]
+                embeddings.extend(batch_embeddings)
+                
+                # Rate limiting
+                time.sleep(0.1)
+                
+            except Exception as e:
+                print(f"Error creating embeddings for batch {i//batch_size + 1}: {e}")
+                # Add zero embeddings as fallback
+                embeddings.extend([[0.0] * 1536] * len(batch_texts))  # 1536 is dimension for text-embedding-3-small
+        
+        self.embeddings = embeddings
+        print(f"Created {len(embeddings)} embeddings")
+
+    def _store_to_chromadb_safe(self):
+        """Store embeddings and texts in ChromaDB with proper error handling"""
+        import chromadb
+        from chromadb.config import Settings
+        import time
+        
+        # Try to clean up any existing ChromaDB instances
+        try:
+            # Force reset any existing instances
+            if hasattr(chromadb, '_client_cache'):
+                chromadb._client_cache.clear()
+        except:
+            pass
+            
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # Create unique path for this attempt if needed
+                db_path = self.chroma_db_path
+                collection_name = self.chroma_collection_name
+                
+                if attempt > 0:
+                    db_path = f"{self.chroma_db_path}_attempt_{attempt}"
+                    collection_name = f"{self.chroma_collection_name}_attempt_{attempt}"
+                    print(f"Retry {attempt}: Using path {db_path} and collection {collection_name}")
+                
+                # Create client with unique settings
+                client = chromadb.PersistentClient(
+                    path=db_path,
+                    settings=Settings(
+                        allow_reset=True,
+                        anonymized_telemetry=False,
+                        is_persistent=True
+                    )
+                )
+                
+                # Delete existing collection if it exists
+                try:
+                    existing_collection = client.get_collection(name=collection_name)
+                    client.delete_collection(name=collection_name)
+                    print(f"Deleted existing collection '{collection_name}'")
+                except:
+                    pass  # Collection doesn't exist, which is fine
+                
+                # Create new collection
+                collection = client.create_collection(
+                    name=collection_name,
+                    metadata={"hnsw:space": "cosine"}
+                )
+                
+                # Store the successful paths
+                self.chroma_db_path = db_path
+                self.chroma_collection_name = collection_name
+                break
+                
+            except Exception as e:
+                print(f"Attempt {attempt + 1} failed: {e}")
+                if attempt == max_retries - 1:
+                    raise Exception(f"Failed to create ChromaDB client after {max_retries} attempts: {e}")
+                time.sleep(1)  # Wait before retry
+        
+        # Prepare data for storage
+        ids = [m.get('chunk_id', f'chunk_{i}') for i, m in enumerate(self.all_metadata)]
+        embeddings = self.embeddings
+        documents = self.all_texts
+        metadatas = self.all_metadata
+        
+        # Add in batches to avoid memory issues
+        batch_size = 1000
+        total_batches = (len(ids) + batch_size - 1) // batch_size
+        
+        for start in range(0, len(ids), batch_size):
+            end = min(start + batch_size, len(ids))
+            batch_num = start // batch_size + 1
+            print(f"Storing batch {batch_num}/{total_batches}")
+            
+            try:
+                collection.add(
+                    ids=ids[start:end],
+                    embeddings=embeddings[start:end],
+                    documents=documents[start:end],
+                    metadatas=metadatas[start:end],
+                )
+            except Exception as batch_error:
+                print(f"Error storing batch {batch_num}: {batch_error}")
+                # Continue with next batch instead of failing completely
+                continue
+        
+        self.chroma_collection = collection
+        print(f"Successfully stored {len(ids)} chunks in ChromaDB collection '{self.chroma_collection_name}'")
+        print(f"Collection stored at: {self.chroma_db_path}")
+        self.chromadb_built = True
+
+    def load_chromadb_collection(self):
+        """Load existing ChromaDB collection with better error handling"""
+        import chromadb
+        from chromadb.config import Settings
+        
+        try:
+            client = chromadb.PersistentClient(
+                path=self.chroma_db_path,
+                settings=Settings(
+                    allow_reset=True,
+                    anonymized_telemetry=False,
+                    is_persistent=True
+                )
+            )
+            self.chroma_collection = client.get_collection(name=self.chroma_collection_name)
+            print(f"Successfully loaded ChromaDB collection '{self.chroma_collection_name}'")
+        except Exception as e:
+            # If we can't load, we'll need to create a new one
+            raise Exception(f"Could not load collection: {e}")
+
+    def query_chromadb(self, query: str, n_results: int = TOP_K) -> Dict[str, Any]:
+        """Query ChromaDB collection"""
+        # Create query embedding using OpenAI
+        response = self.client.embeddings.create(
+            input=[query],
+            model="text-embedding-3-small"
+        )
+        query_embedding = response.data[0].embedding
+        
+        results = self.chroma_collection.query(
+            query_embeddings=[query_embedding],
+            n_results=n_results,
+            include=["documents", "metadatas", "distances"]
+        )
+        
+        return {
+            "chunks": results["documents"][0],
+            "metadata": results["metadatas"][0],
+            "similarities": [1 - d for d in results["distances"][0]]  # Convert distance to similarity
+        }
+        
+    def create_vector_db(self, folder_id=folder_id):
+        """Create vector database - supports both OpenAI and ChromaDB backends"""
+        if self.vector_db_backend == "openai":
+            # Original OpenAI implementation
+            chunking_strategy = {
                 "type": "static",
                 "static": {
-                    "max_chunk_size_tokens": CHUNK_SIZE, # reduce size to ensure better context integrity
-                    "chunk_overlap_tokens": CHUNK_OVERLAP # increase overlap to maintain context across chunks
-                }}
+                    "max_chunk_size_tokens": CHUNK_SIZE,
+                    "chunk_overlap_tokens": CHUNK_OVERLAP
+                }
+            }
 
-        vector_store = self.client.vector_stores.create(name=self.corpus_name, chunking_strategy=chunking_strategy)
-        self.rag_corpus = vector_store
-
-        # Get all local .md files
-        file_paths = [
-            os.path.join(markdown_files_path, f)
-            for f in os.listdir(markdown_files_path)
-            if f.endswith('.md')
-        ]
-        if not file_paths:
-            print("No markdown files found.")
-            return
-
-        print(f"Uploading {len(file_paths)} markdown files to OpenAI vector store...")
-
-        # Open files in binary mode
-        files = [open(path, "rb") for path in file_paths]
-        try:
-            # Upload and poll the file batch
-            response = self.client.vector_stores.file_batches.upload_and_poll(
-                vector_store_id=self.rag_corpus.id,
-                files=files,
+            vector_store = self.client.vector_stores.create(
+                name=self.corpus_name, 
+                chunking_strategy=chunking_strategy
             )
-            print("Upload complete. Status:", response.status)
-        finally:
-            for f in files:
-                f.close()
+            self.rag_corpus = vector_store
 
+            # Get all local .md files
+            file_paths = [
+                os.path.join(markdown_files_path, f)
+                for f in os.listdir(markdown_files_path)
+                if f.endswith('.md')
+            ]
+            if not file_paths:
+                print("No markdown files found.")
+                return
 
+            print(f"Uploading {len(file_paths)} markdown files to OpenAI vector store...")
+
+            # Open files in binary mode
+            files = [open(path, "rb") for path in file_paths]
+            try:
+                # Upload and poll the file batch
+                response = self.client.vector_stores.file_batches.upload_and_poll(
+                    vector_store_id=self.rag_corpus.id,
+                    files=files,
+                )
+                print("Upload complete. Status:", response.status)
+            finally:
+                for f in files:
+                    f.close()
+                    
+        elif self.vector_db_backend == "chromadb":
+            # ChromaDB implementation already handled in __init__
+            print("ChromaDB vector database ready")
 
     def delete_vector_db(self):
-        # List all vector stores
-        vector_stores = self.client.vector_stores.list()
-        deleted_ids = []
-        for vs in vector_stores:
-            # Depending on the API, it might be vs["name"] or vs.name
+        """Delete vector database"""
+        if self.vector_db_backend == "openai":
+            # Original OpenAI implementation
+            vector_stores = self.client.vector_stores.list()
+            deleted_ids = []
+            for vs in vector_stores:
+                try:
+                    if (getattr(vs, "name", None) or vs.get("name")) == self.corpus_name:
+                        vs_id = getattr(vs, "id", None) or vs.get("id")
+                        if vs_id:
+                            self.client.vector_stores.delete(vs_id)
+                            deleted_ids.append(vs_id)
+                except Exception as e:
+                    continue
+            return deleted_ids
+            
+        elif self.vector_db_backend == "chromadb":
+            # Delete ChromaDB collection
             try:
-                if (getattr(vs, "name", None) or vs.get("name")) == self.corpus_name:
-                    vs_id = getattr(vs, "id", None) or vs.get("id")
-                    if vs_id:
-                        self.client.vector_stores.delete(vs_id)
-                        deleted_ids.append(vs_id)
+                client = chromadb.PersistentClient(path=self.chroma_db_path)
+                client.delete_collection(name=self.chroma_collection_name)
+                print(f"Deleted ChromaDB collection '{self.chroma_collection_name}'")
+                return [self.chroma_collection_name]
             except Exception as e:
-                continue
-        return deleted_ids
+                print(f"Error deleting ChromaDB collection: {e}")
+                return []
 
+    def get_response(self, query: str):
+        """Get response - supports both OpenAI and ChromaDB backends"""
+        if self.vector_db_backend == "openai":
+            # Original OpenAI implementation
+            thread = self.client.beta.threads.create(messages=[])
 
+            parsed = self.client.beta.threads.messages.create(
+                thread_id=thread.id,
+                content=self.enhanced_query(query),
+                role='user',
+            )
+
+            run = self.client.beta.threads.runs.create(
+                thread_id=thread.id,
+                assistant_id=self.rag_assistant.id,
+                instructions=self.rag_prompt,
+                tool_choice={"type": "file_search", "function": {"name": "file_search"}}
+            )
+
+            return self._get_run_response(thread, run)
+            
+        elif self.vector_db_backend == "chromadb":
+            # ChromaDB implementation
+            search_results = self.query_chromadb(query)
+            
+            # Prepare context
+            context_pieces = []
+            for i, (chunk, metadata) in enumerate(zip(search_results['chunks'], search_results['metadata']), 1):
+                source = metadata.get('source_file', metadata.get('source', 'Unknown'))
+                context_pieces.append(f"[Context {i} - Source: {source}]\n{chunk}\n")
+            
+            context_text = "\n".join(context_pieces)
+            
+            # Create enhanced prompt
+            enhanced_prompt = f"""
+*Question*: 
+{query}
+
+*Context*:
+{context_text}
+"""
+
+            # Get response from OpenAI
+            response = self.client.chat.completions.create(
+                model=self.gen_model,
+                messages=[
+                    {"role": "system", "content": self.rag_prompt},
+                    {"role": "user", "content": enhanced_prompt}
+                ],
+                temperature=TEMPERATURE,
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "answer",
+                        "schema": AnswerFormat.model_json_schema()
+                    }
+                }
+            )
+            
+            return self.format_chromadb_response(response.choices[0].message.content)
+
+    def format_chromadb_response(self, response_content):
+        """Format ChromaDB response similar to OpenAI assistant format"""
+        try:
+            parsed = json.loads(response_content)
+            answer = parsed.get("answer") or parsed.get("Answer") or ""
+            sources = parsed.get("sources") or parsed.get("Sources") or []
+            
+            if isinstance(sources, list):
+                sources_str = ", ".join(sources)
+            else:
+                sources_str = str(sources)
+                
+            return f"""**Answer**:
+
+{answer}
+
+**Sources**:
+
+{sources_str}
+"""
+        except Exception as e:
+            return f"Could not parse response: {response_content}\nError: {e}"
+
+    # Keep all the original methods for OpenAI compatibility
     def delete_assistant_by_name(self, assistant_name=assistant_name):
-        # List all assistants
+        """Delete assistant by name (OpenAI only)"""
+        if self.vector_db_backend != "openai":
+            print("Assistant deletion only supported for OpenAI backend")
+            return []
+            
         assistants = self.client.beta.assistants.list()
         deleted_ids = []
         for a in assistants:
-            # Some clients use attribute access, some use dict-style
             try:
                 name = getattr(a, "name", None) or a.get("name")
                 if name == assistant_name:
@@ -171,12 +492,9 @@ class SciRagOpenAI(SciRag):
             except Exception as e:
                 continue
         return deleted_ids
-    
 
-
-
-
-    def _wait_for_run(self,run_id: str, thread_id: str) -> Any:
+    def _wait_for_run(self, run_id: str, thread_id: str) -> Any:
+        """Wait for OpenAI assistant run to complete"""
         in_progress = True
         while in_progress:
             run = self.client.beta.threads.runs.retrieve(run_id, thread_id=thread_id)
@@ -185,23 +503,17 @@ class SciRagOpenAI(SciRag):
                 time.sleep(0.1)
         return run
 
-
     def _format_assistant_message(self, message_content):
-        """Formats the assistant's message to include annotations and citations."""
+        """Format OpenAI assistant message with citations"""
         annotations = message_content.annotations
         citations = []
 
-        # Iterate over the annotations and add footnotes
         for index, annotation in enumerate(annotations):
-            # Replace the text with a footnote
             message_content.value = message_content.value.replace(annotation.text, f" [{index}]")
 
-            # Gather citations based on annotation attributes
             if file_citation := getattr(annotation, "file_citation", None):
                 try:
                     cited_file = self.client.files.retrieve(file_citation.file_id)
-                    # print(cited_file)
-                    # citations.append(f"[{index}] {cited_file.filename}: {file_citation.quote}")
                     citations.append(f"[{index}] {cited_file.filename}")
                 except Exception as e:
                     print(f"Error retrieving file citation: {e}")
@@ -211,58 +523,45 @@ class SciRagOpenAI(SciRag):
                     citations.append(f"[{index}] Click <here> to download {cited_file.filename}")
                 except Exception as e:
                     print(f"Error retrieving file citation: {e}")
-                # Note: File download functionality not implemented above for brevity
 
-        # Add footnotes to the end of the message before displaying to user
-        # message_content.value += "\n" + "\n".join(citations)
         return message_content.value
 
-
-
     def format_assistant_json_response(self, messages):
-        """
-        Accepts a list of message dicts (as you have).
-        Formats the assistant's answer and sources nicely.
-        """
+        """Format OpenAI assistant JSON response"""
         outputs = []
         for msg in messages:
             if msg.get("role") == "assistant":
                 raw_content = msg.get("content", "").strip()
-                # Sometimes there is a trailing newline, remove it.
                 try:
                     parsed = json.loads(raw_content)
                     answer = parsed.get("answer") or parsed.get("Answer") or ""
                     sources = parsed.get("sources") or parsed.get("Sources") or []
-                    # If sources is a single string in a list, flatten
                     if isinstance(sources, list) and len(sources) == 1 and isinstance(sources[0], str):
                         sources_str = sources[0]
                     elif isinstance(sources, list):
                         sources_str = ", ".join(sources)
                     else:
                         sources_str = str(sources)
-                    # Format as markdown
                     outputs.append(f"""**Answer**:
 
-{answer}
+                        {answer}
 
-**Sources**:
+                        **Sources**:
 
-{sources_str}
-""")
+                        {sources_str}
+                        """)
                 except Exception as e:
                     outputs.append(f"Could not parse content for message: {raw_content}...\nError: {e}")
         return "\n---\n".join(outputs)
 
-
-
-        
     def _get_run_response(self, thread, run):
+        """Get OpenAI assistant run response"""
         while True:
             run = self._wait_for_run(run.id, thread.id)
             if run.status == "completed":
                 response_messages = self.client.beta.threads.messages.list(thread.id, order="asc")
 
-                # register cost 
+                # Register cost 
                 prompt_tokens = run.usage.prompt_tokens
                 completion_tokens = run.usage.completion_tokens
                 total_tokens = run.usage.total_tokens
@@ -277,48 +576,23 @@ class SciRagOpenAI(SciRag):
                 }
                 print_usage_summary(tokens_dict, self.cost_dict)
 
-
-
-
                 new_messages = []
                 for msg in response_messages:
                     if msg.run_id == run.id:
                         for content in msg.content:
                             if content.type == "text":
-                                # Remove numerical references from the content
-                                cleaned_content = remove_numerical_references(self._format_assistant_message(content.text))
-                                new_messages.append(
-                                    {"role": msg.role, 
-                                    "content": cleaned_content}
+                                cleaned_content = remove_numerical_references(
+                                    self._format_assistant_message(content.text)
                                 )
+                                new_messages.append({
+                                    "role": msg.role, 
+                                    "content": cleaned_content
+                                })
                 return self.format_assistant_json_response(new_messages)
 
 
-
-    def get_response(self, query: str):
-        thread = self.client.beta.threads.create(
-                messages=[],
-            )
-
-        parsed = self.client.beta.threads.messages.create(
-                        thread_id=thread.id,
-                        content=self.enhanced_query(query),
-                        role='user',
-                    )
-
-
-        run = self.client.beta.threads.runs.create(
-            thread_id=thread.id,
-            assistant_id=self.rag_assistant.id,
-            # pass the latest system message as instructions
-            instructions=self.rag_prompt,
-            tool_choice={"type": "file_search", "function": {"name": "file_search"}}
-        )
-
-        return self._get_run_response(thread, run)
-
+# Keep the utility functions
 def remove_numerical_references(text):
-    # Remove numerical references of format [0], [1], etc.
     cleaned_text = re.sub(r'\[\d+\]', '', text)
     return cleaned_text
 
@@ -326,34 +600,27 @@ def get_cost(run):
     """Calculate the cost of the run."""
     model = run.model
     if model not in OAI_PRICE1K:
-        # log warning that the model is not found
         print(
             f'Model {model} is not found. The cost will be 0. In your config_list, add field {{"price" : [prompt_price_per_1k, completion_token_price_per_1k]}} for customized pricing.'
         )
         return 0
 
-    n_input_tokens = run.usage.prompt_tokens if run.usage is not None else 0  # type: ignore [union-attr]
-    n_output_tokens = run.usage.completion_tokens if run.usage is not None else 0  # type: ignore [union-attr]
+    n_input_tokens = run.usage.prompt_tokens if run.usage is not None else 0
+    n_output_tokens = run.usage.completion_tokens if run.usage is not None else 0
     if n_output_tokens is None:
         n_output_tokens = 0
     tmp_price1K = OAI_PRICE1K[model]
-    # First value is input token rate, second value is output token rate
     if isinstance(tmp_price1K, tuple):
-        return (tmp_price1K[0] * n_input_tokens + tmp_price1K[1] * n_output_tokens) / 1000  # type: ignore [no-any-return]
-    return tmp_price1K * (n_input_tokens + n_output_tokens) / 1000  # type: ignore [operator]
-
-
+        return (tmp_price1K[0] * n_input_tokens + tmp_price1K[1] * n_output_tokens) / 1000
+    return tmp_price1K * (n_input_tokens + n_output_tokens) / 1000
 
 def print_usage_summary(tokens_dict, cost_dict):
-    # Extracting values from the dictionary
     model = tokens_dict["model"]
     prompt_tokens = tokens_dict["prompt_tokens"]
     completion_tokens = tokens_dict["completion_tokens"]
     total_tokens = tokens_dict["total_tokens"]
     cost = tokens_dict["cost"]
-    
 
-    # Restructure tokens_dict to create a DataFrame
     df = pd.DataFrame([{
         "Model": model,
         "Cost": f"{cost:.5f}",
@@ -362,7 +629,6 @@ def print_usage_summary(tokens_dict, cost_dict):
         "Total Tokens": total_tokens,
     }])
 
-    # Update dictionary containing all costs
     cost_dict['Cost'].append(cost) 
     cost_dict['Prompt Tokens'].append(prompt_tokens)
     cost_dict['Completion Tokens'].append(completion_tokens)
