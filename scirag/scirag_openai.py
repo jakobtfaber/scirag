@@ -28,7 +28,8 @@ from .config import (openai_client,
                      embeddings_path,
                      OAI_PRICE1K,
                      AnswerFormat,
-                     assistant_name)
+                     assistant_name,
+                     OpenAI_Embedding_Model)
 
 from .scirag import SciRag
 import chromadb
@@ -135,9 +136,15 @@ class SciRagOpenAI(SciRag):
         chunk_counter = 0
         for chunk in self.all_chunks:
             all_original_texts.append(chunk.page_content)
+            
+            # Extract just filename from source path
+            source_path = chunk.metadata.get('source', '')
+            filename = os.path.basename(source_path) if source_path else 'Unknown'
+            
             all_metadata.append({
                 **chunk.metadata,
                 'chunk_id': f"chunk_{chunk_counter}",
+                'filename': filename,  # Store clean filename separately
             })
             chunk_counter += 1
             
@@ -151,7 +158,7 @@ class SciRagOpenAI(SciRag):
         embeddings = []
         
         # Use OpenAI's text-embedding-3-small or text-embedding-ada-002
-        embedding_model = "text-embedding-3-small"
+        embedding_model = OpenAI_Embedding_Model
         
         batch_size = 100  # Process in batches to avoid rate limits
         
@@ -297,7 +304,7 @@ class SciRagOpenAI(SciRag):
         # Create query embedding using OpenAI
         response = self.client.embeddings.create(
             input=[query],
-            model="text-embedding-3-small"
+            model=OpenAI_Embedding_Model
         )
         query_embedding = response.data[0].embedding
         
@@ -413,29 +420,37 @@ class SciRagOpenAI(SciRag):
             # ChromaDB implementation
             search_results = self.query_chromadb(query)
             
-            # Prepare context
+            # Prepare context with clean filenames
             context_pieces = []
             for i, (chunk, metadata) in enumerate(zip(search_results['chunks'], search_results['metadata']), 1):
-                source = metadata.get('source_file', metadata.get('source', 'Unknown'))
-                context_pieces.append(f"[Context {i} - Source: {source}]\n{chunk}\n")
+                # Use the clean filename we stored
+                filename = metadata.get('filename', metadata.get('source_file', 'Unknown'))
+                context_pieces.append(f"[Context {i} - Source: {filename}]\n{chunk}\n")
             
             context_text = "\n".join(context_pieces)
             
-            # Create enhanced prompt
-            enhanced_prompt = f"""
-*Question*: 
-{query}
+            # Create ChromaDB-specific prompt
+            chromadb_prompt = f"""You are a helpful research assistant. Based on the provided context, answer the user's question accurately and cite your sources.
 
-*Context*:
+Context:
 {context_text}
-"""
+
+Question: {query}
+
+Instructions:
+- Provide a comprehensive answer based on the context provided
+- Cite specific sources by filename when referencing information
+- If information is not available in the context, state that clearly
+- Format your response as JSON with "answer" and "sources" fields
+- Sources should be a list of filenames (not full paths)
+
+Respond in JSON format only."""
 
             # Get response from OpenAI
             response = self.client.chat.completions.create(
                 model=self.gen_model,
                 messages=[
-                    {"role": "system", "content": self.rag_prompt},
-                    {"role": "user", "content": enhanced_prompt}
+                    {"role": "user", "content": chromadb_prompt}
                 ],
                 temperature=TEMPERATURE,
                 response_format={

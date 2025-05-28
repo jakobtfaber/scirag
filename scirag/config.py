@@ -63,6 +63,7 @@ from openai import OpenAI
 import os
 openai_client = OpenAI(api_key = os.environ["OPENAI_API_KEY"])
 
+OpenAI_Embedding_Model = "text-embedding-3-small"
 
 
 
