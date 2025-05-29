@@ -174,57 +174,12 @@ rf"""
 """
         )
         self._initialize_embeddings_and_vector_db()
-    def _initialize_embeddings_and_vector_db(self):
-        """Initialize embeddings and vector database in the correct order."""
-        print("Initializing embeddings and vector database...")
-        
-        # Check if embeddings already exist
-        embedding_filename = f'{self.embedding_provider}_{self.embedding_model_name.replace("/", "_")}_embeddings.npy'
-        embedding_path = embeddings_path / embedding_filename
-        
-        if embedding_path.exists():
-            print(f"Loading existing embeddings from: {embedding_path}")
-            self.load_embeddings()
-        else:
-            print("Embeddings not found. Generating embeddings...")
-            self.get_embeddings()
-        
-        # Now create the vector database
-        print("Creating vector database...")
-        self._create_vector_db_after_embeddings()
-    def _create_vector_db_after_embeddings(self):
-        """Create vector database after embeddings are ready."""
-        if self.vector_db_backend == "faiss":
-            self.faiss_index = self._create_faiss_index()
-            self.index_built = True
-            self._build_tf_idf_index()
-            self.chunks_store = []
-            for i in range(len(self.all_texts)):
-                chunk_obj = DocumentChunk(
-                    original_text=self.all_texts[i],
-                    contextualized_text=None,
-                    embedding=self.embeddings[i],
-                    tfidf_vector=self.tfidf_matrix[i],
-                    metadata=self.all_metadata[i],
-                    chunk_id=self.all_metadata[i]['chunk_id']
-                )
-                self.chunks_store.append(chunk_obj)
-                self.chunk_id_to_index[chunk_obj.chunk_id] = i
-            print(f"FAISS index built successfully with {len(self.chunks_store)} chunks")
-            self._save_index()
-        elif self.vector_db_backend == "chromadb":
-            try:
-                self.load_chromadb_collection()
-                print(f"Loaded existing ChromaDB collection")
-            except:
-                print("Creating new ChromaDB collection...")
-                self.store_to_chromadb()
-                self.load_chromadb_collection()
-                print(f"ChromaDB vector DB built successfully with {len(self.all_texts)} chunks")
-                self.chromadb_built = True
-        else:
-            raise ValueError(f"Unknown vector_db_backend: {self.vector_db_backend}")
+    
 
+    def _get_collection_name(self):
+        """Generate consistent collection name based on embedding provider and model."""
+        model_name_clean = self.embedding_model_name.replace('/', '_').replace('-', '_').replace(':', '_')
+        return f"{self.chroma_collection_name}_{self.embedding_provider}_{model_name_clean}"
 
     def store_to_chromadb(self):
         import chromadb
@@ -245,24 +200,28 @@ rf"""
             settings=Settings(allow_reset=True, anonymized_telemetry=False)
         )
         
-        # Create collection name that includes embedding provider info
-        collection_name = f"{self.chroma_collection_name}_{self.embedding_provider}_{self.embedding_model_name.replace('/', '_').replace('-', '_')}"
+        # Create collection name using consistent method
+        collection_name = self._get_collection_name()
         
-        # Delete existing collection if it exists (for fresh start)
+        # Check if collection already exists
         try:
-            client.delete_collection(name=collection_name)
-            print(f"Deleted existing collection: {collection_name}")
+            existing_collection = client.get_collection(name=collection_name)
+            print(f"Collection '{collection_name}' already exists with {existing_collection.count()} items")
+            self.chroma_collection_name = collection_name
+            return
         except:
-            pass
+            print(f"Creating new collection: {collection_name}")
         
         collection = client.get_or_create_collection(
             name=collection_name,
             metadata={"hnsw:space": "cosine", "embedding_provider": self.embedding_provider}
         )
+        
         ids = [m.get('chunk_id', f'chunk_{i}') for i, m in enumerate(self.all_metadata)]
         embeddings = self.embeddings.tolist() if isinstance(self.embeddings, np.ndarray) else self.embeddings
         documents = self.all_texts
         metadatas = self.all_metadata
+        
         batch_size = 1000
         for start in range(0, len(ids), batch_size):
             collection.add(
@@ -271,6 +230,7 @@ rf"""
                 documents=documents[start:start+batch_size],
                 metadatas=metadatas[start:start+batch_size],
             )
+        
         print(f"Stored {len(ids)} chunks in ChromaDB collection '{collection_name}' at {self.chroma_db_path}")
         self.chroma_collection_name = collection_name
 
@@ -293,22 +253,81 @@ rf"""
             settings=Settings(allow_reset=True, anonymized_telemetry=False)
         )
         
-        # Try to load collection with embedding provider info
-        collection_name = f"{self.chroma_collection_name.split('_')[0]}_{self.embedding_provider}_{self.embedding_model_name.replace('/', '_').replace('-', '_')}"
+        # Use consistent collection name generation
+        collection_name = self._get_collection_name()
         
         try:
             self.chroma_collection = client.get_collection(name=collection_name)
             self.chroma_collection_name = collection_name
             print(f"Loaded existing ChromaDB collection: {collection_name}")
+            return
         except Exception as e:
             print(f"Collection {collection_name} not found: {e}")
-            # Try fallback to original collection name
+            
+            # Try fallback to original collection name (for backward compatibility)
             try:
-                self.chroma_collection = client.get_collection(name=self.chroma_collection_name)
-                print(f"Loaded fallback ChromaDB collection: {self.chroma_collection_name}")
+                original_name = self.chroma_collection_name
+                self.chroma_collection = client.get_collection(name=original_name)
+                print(f"Loaded fallback ChromaDB collection: {original_name}")
+                return
             except Exception as e2:
                 print(f"No existing collection found: {e2}")
                 raise FileNotFoundError(f"No ChromaDB collection found. Will create new one.")
+
+    def _initialize_embeddings_and_vector_db(self):
+        """Initialize embeddings and vector database in the correct order."""
+        print("Initializing embeddings and vector database...")
+
+        embeddings_path.mkdir(parents=True, exist_ok=True)
+        
+        # Check if embeddings already exist
+        embedding_filename = f'{self.embedding_provider}_{self.embedding_model_name.replace("/", "_").replace("-", "_").replace(":", "_")}_embeddings.npy'
+        embedding_path = embeddings_path / embedding_filename
+        
+        if embedding_path.exists():
+            print(f"Loading existing embeddings from: {embedding_path}")
+            self.load_embeddings()
+        else:
+            print("Embeddings not found. Generating embeddings...")
+            self.get_embeddings()
+        
+        # Now create the vector database
+        print("Creating vector database...")
+        self._create_vector_db_after_embeddings()
+
+    def _create_vector_db_after_embeddings(self):
+        """Create vector database after embeddings are ready."""
+        if self.vector_db_backend == "faiss":
+            self.faiss_index = self._create_faiss_index()
+            self.index_built = True
+            self._build_tf_idf_index()
+            self.chunks_store = []
+            for i in range(len(self.all_texts)):
+                chunk_obj = DocumentChunk(
+                    original_text=self.all_texts[i],
+                    contextualized_text=None,
+                    embedding=self.embeddings[i],
+                    tfidf_vector=self.tfidf_matrix[i],
+                    metadata=self.all_metadata[i],
+                    chunk_id=self.all_metadata[i]['chunk_id']
+                )
+                self.chunks_store.append(chunk_obj)
+                self.chunk_id_to_index[chunk_obj.chunk_id] = i
+            print(f"FAISS index built successfully with {len(self.chunks_store)} chunks")
+            self._save_index()
+        elif self.vector_db_backend == "chromadb":
+            try:
+                # First try to load existing collection
+                self.load_chromadb_collection()
+                print(f"Loaded existing ChromaDB collection")
+            except FileNotFoundError:
+                print("Creating new ChromaDB collection...")
+                self.store_to_chromadb()
+                self.load_chromadb_collection()
+                print(f"ChromaDB vector DB built successfully")
+            self.chromadb_built = True
+        else:
+            raise ValueError(f"Unknown vector_db_backend: {self.vector_db_backend}")
 
     def query_chromadb(self, query, n_results=5):
         self._embed_query(query)
