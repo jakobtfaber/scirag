@@ -175,3 +175,8 @@ cython_debug/
 .DS_Store
 gemini.json
 pdfs/*
+
+papers/*
+Notebooks/*
+embeddings/*
+credentials.json
