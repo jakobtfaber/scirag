@@ -148,29 +148,31 @@ class SciRagHybrid(SciRag):
         self._get_texts()
 
         self.rag_prompt = rf"""
-You are a helpful assistant. 
-Your answer should be in markdown format with the following structure: 
+You are a helpful assistant. Answer based on the provided context.
+You must respond in valid JSON format with the following structure:
 
-**Answer**:
+{{
+  "answer": "your detailed answer here",
+  "sources": ["source1", "source2", "source3"]
+}}
 
-{{answer}}
-
-**Sources**:
-
-{{sources}}
-
-The sources must be from the **Context** material provided in the *Context* section.
-You must report the source names in the sources field, if possible, the page number, equation number, table number, section number, etc.
-
+The sources must be from the **Context** material provided.
+Include source names, page numbers, equation numbers, table numbers, section numbers when available.
+Ensure your response is valid JSON only.
 """
 
         self.enhanced_query = lambda context, query: (
 rf"""
-*Question*: 
-{query}
+Question: {query}
 
-*Context*:
+Context:
 {context}
+
+Instructions: Based on the context provided above, answer the question in valid JSON format:
+{{
+  "answer": "your detailed answer here",
+  "sources": ["source1", "source2"]
+}}
 """
         )
         self._initialize_embeddings_and_vector_db()
@@ -281,8 +283,9 @@ rf"""
         embeddings_path.mkdir(parents=True, exist_ok=True)
         
         # Check if embeddings already exist
-        embedding_filename = f'{self.embedding_provider}_{self.embedding_model_name.replace("/", "_").replace("-", "_").replace(":", "_")}_embeddings.npy'
+        embedding_filename = f'{self.embedding_provider}_{self.embedding_model_name.replace("/", "-").replace("-", "-").replace(":", "-")}_embeddings.npy'
         embedding_path = embeddings_path / embedding_filename
+        print(f"Checking for existing embeddings at: {embedding_path}")
         
         if embedding_path.exists():
             print(f"Loading existing embeddings from: {embedding_path}")
@@ -740,18 +743,48 @@ rf"""
         return self.format_agent_output(response.text)
     
     def format_agent_output(self, response):
-        parsed = json.loads(response)
-        answer = parsed.get("answer") or parsed.get("Answer") or ""
-        sources = parsed.get("sources") or parsed.get("Sources") or []
-        if isinstance(sources, list):
-            sources_str = ", ".join(sources)
-        else:
-            sources_str = str(sources)
-        return f"""**Answer**:
+        """Format agent output with robust JSON parsing and fallback handling."""
+        try:
+            # Try to parse as JSON first
+            parsed = json.loads(response)
+            answer = parsed.get("answer") or parsed.get("Answer") or ""
+            sources = parsed.get("sources") or parsed.get("Sources") or []
+            if isinstance(sources, list):
+                sources_str = ", ".join(sources)
+            else:
+                sources_str = str(sources)
+            return f"""**Answer**:
 
 {answer}
 
 **Sources**:
 
 {sources_str}
+"""
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing failed: {e}")
+            print(f"Raw response: {response[:200]}...")
+            
+            # Fallback: try to extract answer and sources from markdown-like format
+            if "**Answer**:" in response and "**Sources**:" in response:
+                parts = response.split("**Sources**:")
+                answer = parts[0].replace("**Answer**:", "").strip()
+                sources = parts[1].strip() if len(parts) > 1 else ""
+                return f"""**Answer**:
+
+{answer}
+
+**Sources**:
+
+{sources}
+"""
+            else:
+                # Last resort: return the raw response
+                return f"""**Answer**:
+
+{response}
+
+**Sources**:
+
+Unable to parse sources from response
 """

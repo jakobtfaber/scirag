@@ -54,7 +54,7 @@ folder_id="1uoXS3wmCIU5v4iURI1Y9EgUxhGPaF4y7"
 
 # PaperQA2 configuration variables
 PAPERQA2_EMBEDDING = "text-embedding-3-large"
-PAPERQA2_LLM = "gpt-4o-mini"
+PAPERQA2_LLM = "gpt-4.1"
 PAPERQA2_TEMPERATURE = 0.01
 PAPERQA2_EVIDENCE_K = 10
 PAPERQA2_ANSWER_MAX_SOURCES = 5
