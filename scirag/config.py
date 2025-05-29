@@ -23,8 +23,8 @@ VERTEX_EMBEDDING_MODEL = "publishers/google/models/text-embedding-005"  # @param
 GEMINI_EMBEDDING_MODEL = "gemini-embedding-001"
 
 
-CHUNK_SIZE = 1024
-CHUNK_OVERLAP = 100
+CHUNK_SIZE = 5000
+CHUNK_OVERLAP = 250
 
 display_name = "corpus"
 assistant_name = "rag_agent"
@@ -53,17 +53,17 @@ folder_id="1uoXS3wmCIU5v4iURI1Y9EgUxhGPaF4y7"
 
 
 # PaperQA2 configuration variables
-PAPERQA2_EMBEDDING = "text-embedding-3-small"
+PAPERQA2_EMBEDDING = "text-embedding-3-large"
 PAPERQA2_LLM = "gpt-4o-mini"
 PAPERQA2_TEMPERATURE = 0.01
-PAPERQA2_EVIDENCE_K = 3
-PAPERQA2_ANSWER_MAX_SOURCES = 3
+PAPERQA2_EVIDENCE_K = 10
+PAPERQA2_ANSWER_MAX_SOURCES = 5
 
 from openai import OpenAI
 import os
 openai_client = OpenAI(api_key = os.environ["OPENAI_API_KEY"])
 
-OpenAI_Embedding_Model = "text-embedding-3-small"
+OpenAI_Embedding_Model = "text-embedding-3-large"
 
 
 

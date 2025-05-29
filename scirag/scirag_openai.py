@@ -52,6 +52,7 @@ class SciRagOpenAI(SciRag):
         self.chroma_collection_name = chroma_collection_name
         self.chroma_db_path = chroma_db_path
         self.chromadb_built = False
+
         
         if vector_db_backend == "openai":
             # Original OpenAI vector store implementation
@@ -63,42 +64,53 @@ class SciRagOpenAI(SciRag):
             raise ValueError(f"Unknown vector_db_backend: {vector_db_backend}")
 
     def _setup_openai_vector_store(self):
-        """Original OpenAI vector store setup"""
-        print("Listing RAG Corpora:")
+        """Original OpenAI vector store setup - only for existing vector stores"""
+        print("Listing existing RAG Corpora:")
         vector_stores = self.client.vector_stores.list()
 
+        rag_corpus_found = False
         for vs in vector_stores:
             if vs.name == self.corpus_name:
-                print(f"--- Corpus: {vs.name} ---")
+                print(f"--- Found existing corpus: {vs.name} ---")
                 self.rag_corpus = vs
-
-                self.rag_assistant = self.client.beta.assistants.create(
-                    name=assistant_name,
-                    instructions=self.rag_prompt,
-                    tools=[
-                        {"type": "file_search",
-                            "file_search":{
-                                'max_num_results': TOP_K,
-                                "ranking_options": {
-                                    "ranker": "auto",
-                                    "score_threshold": DISTANCE_THRESHOLD
-                                }
+                rag_corpus_found = True
+                break
+        
+        # Only create assistant if we found an existing corpus
+        if rag_corpus_found:
+            print("Creating assistant for existing vector store...")
+            self.rag_assistant = self.client.beta.assistants.create(
+                name=assistant_name,
+                instructions=self.rag_prompt,
+                tools=[
+                    {"type": "file_search",
+                        "file_search":{
+                            'max_num_results': TOP_K,
+                            "ranking_options": {
+                                "ranker": "auto",
+                                "score_threshold": DISTANCE_THRESHOLD
                             }
                         }
-                    ],
-                    tool_resources={"file_search": {"vector_store_ids":[self.rag_corpus.id]}},
-                    model=self.gen_model, 
-                    temperature=TEMPERATURE,
-                    top_p=0.2,
-                    response_format={
-                        "type": "json_schema",
-                        "json_schema": {
-                            "name": "answer",
-                            "schema": AnswerFormat.model_json_schema()
-                        },
                     }
-                )
-
+                ],
+                tool_resources={"file_search": {"vector_store_ids":[self.rag_corpus.id]}},
+                model=self.gen_model, 
+                temperature=TEMPERATURE,
+                top_p=0.2,
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "answer",
+                        "schema": AnswerFormat.model_json_schema()
+                    },
+                }
+            )
+            print(f"Assistant created for existing corpus with ID: {self.rag_assistant.id}")
+        else:
+            print(f"No existing vector store found with name '{self.corpus_name}'.")
+            print("Use create_vector_db() to create a new one.")
+            self.rag_corpus = None
+            self.rag_assistant = None
     def _setup_chromadb(self):
         """Setup ChromaDB implementation"""
         # Load and process documents
@@ -359,6 +371,37 @@ class SciRagOpenAI(SciRag):
                     files=files,
                 )
                 print("Upload complete. Status:", response.status)
+                
+                # NOW CREATE THE ASSISTANT after successful upload
+                print("Creating OpenAI assistant...")
+                self.rag_assistant = self.client.beta.assistants.create(
+                    name=assistant_name,
+                    instructions=self.rag_prompt,
+                    tools=[
+                        {"type": "file_search",
+                            "file_search":{
+                                'max_num_results': TOP_K,
+                                "ranking_options": {
+                                    "ranker": "auto",
+                                    "score_threshold": DISTANCE_THRESHOLD
+                                }
+                            }
+                        }
+                    ],
+                    tool_resources={"file_search": {"vector_store_ids":[self.rag_corpus.id]}},
+                    model=self.gen_model, 
+                    temperature=TEMPERATURE,
+                    top_p=0.2,
+                    response_format={
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": "answer",
+                            "schema": AnswerFormat.model_json_schema()
+                        },
+                    }
+                )
+                print(f"Assistant created successfully with ID: {self.rag_assistant.id}")
+                
             finally:
                 for f in files:
                     f.close()
@@ -367,49 +410,27 @@ class SciRagOpenAI(SciRag):
             # ChromaDB implementation already handled in __init__
             print("ChromaDB vector database ready")
 
-    def delete_vector_db(self):
-        """Delete vector database"""
-        if self.vector_db_backend == "openai":
-            # Original OpenAI implementation
-            vector_stores = self.client.vector_stores.list()
-            deleted_ids = []
-            for vs in vector_stores:
-                try:
-                    if (getattr(vs, "name", None) or vs.get("name")) == self.corpus_name:
-                        vs_id = getattr(vs, "id", None) or vs.get("id")
-                        if vs_id:
-                            self.client.vector_stores.delete(vs_id)
-                            deleted_ids.append(vs_id)
-                except Exception as e:
-                    continue
-            return deleted_ids
-            
-        elif self.vector_db_backend == "chromadb":
-            # Delete ChromaDB collection
-            try:
-                client = chromadb.PersistentClient(path=self.chroma_db_path)
-                client.delete_collection(name=self.chroma_collection_name)
-                print(f"Deleted ChromaDB collection '{self.chroma_collection_name}'")
-                return [self.chroma_collection_name]
-            except Exception as e:
-                print(f"Error deleting ChromaDB collection: {e}")
-                return []
-
     def get_response(self, query: str):
         """Get response - supports both OpenAI and ChromaDB backends"""
         if self.vector_db_backend == "openai":
-            # Original OpenAI implementation
-            thread = self.client.beta.threads.create(messages=[])
+            # Check if assistant exists
+            if not hasattr(self, 'rag_assistant') or self.rag_assistant is None:
+                raise AttributeError("OpenAI assistant not found. Make sure to create the vector store first or check if the corpus exists.")
+            
+            thread = self.client.beta.threads.create(
+                messages=[],
+            )
 
             parsed = self.client.beta.threads.messages.create(
-                thread_id=thread.id,
-                content=self.enhanced_query(query),
-                role='user',
-            )
+                            thread_id=thread.id,
+                            content=self.enhanced_query(query),
+                            role='user',
+                        )
 
             run = self.client.beta.threads.runs.create(
                 thread_id=thread.id,
                 assistant_id=self.rag_assistant.id,
+                # pass the latest system message as instructions
                 instructions=self.rag_prompt,
                 tool_choice={"type": "file_search", "function": {"name": "file_search"}}
             )
@@ -430,21 +451,22 @@ class SciRagOpenAI(SciRag):
             context_text = "\n".join(context_pieces)
             
             # Create ChromaDB-specific prompt
-            chromadb_prompt = f"""You are a helpful research assistant. Based on the provided context, answer the user's question accurately and cite your sources.
+            chromadb_prompt = rf"""
+You are a helpful assistant. 
+Your answer should be in markdown format with the following structure: 
 
-Context:
-{context_text}
+**Answer**:
 
-Question: {query}
+{{answer}}
 
-Instructions:
-- Provide a comprehensive answer based on the context provided
-- Cite specific sources by filename when referencing information
-- If information is not available in the context, state that clearly
-- Format your response as JSON with "answer" and "sources" fields
-- Sources should be a list of filenames (not full paths)
+**Sources**:
 
-Respond in JSON format only."""
+{{sources}}
+
+The sources must be from the **Context** material provided in the *Context* section.
+You must report the source names in the sources field, if possible, the page number, equation number, table number, section number, etc.
+
+"""
 
             # Get response from OpenAI
             response = self.client.chat.completions.create(
@@ -463,7 +485,7 @@ Respond in JSON format only."""
             )
             
             return self.format_chromadb_response(response.choices[0].message.content)
-
+        
     def format_chromadb_response(self, response_content):
         """Format ChromaDB response similar to OpenAI assistant format"""
         try:
@@ -557,26 +579,27 @@ Respond in JSON format only."""
                         sources_str = ", ".join(sources)
                     else:
                         sources_str = str(sources)
+                    
+                    # Fix the formatting - remove the extra indentation
                     outputs.append(f"""**Answer**:
 
-                        {answer}
+{answer}
 
-                        **Sources**:
+**Sources**:
 
-                        {sources_str}
-                        """)
+{sources_str}
+""")
                 except Exception as e:
                     outputs.append(f"Could not parse content for message: {raw_content}...\nError: {e}")
         return "\n---\n".join(outputs)
 
     def _get_run_response(self, thread, run):
-        """Get OpenAI assistant run response"""
         while True:
             run = self._wait_for_run(run.id, thread.id)
             if run.status == "completed":
                 response_messages = self.client.beta.threads.messages.list(thread.id, order="asc")
 
-                # Register cost 
+                # register cost 
                 prompt_tokens = run.usage.prompt_tokens
                 completion_tokens = run.usage.completion_tokens
                 total_tokens = run.usage.total_tokens
@@ -591,19 +614,22 @@ Respond in JSON format only."""
                 }
                 print_usage_summary(tokens_dict, self.cost_dict)
 
+
+
+
                 new_messages = []
                 for msg in response_messages:
                     if msg.run_id == run.id:
                         for content in msg.content:
                             if content.type == "text":
-                                cleaned_content = remove_numerical_references(
-                                    self._format_assistant_message(content.text)
+                                # Remove numerical references from the content
+                                cleaned_content = remove_numerical_references(self._format_assistant_message(content.text))
+                                new_messages.append(
+                                    {"role": msg.role, 
+                                    "content": cleaned_content}
                                 )
-                                new_messages.append({
-                                    "role": msg.role, 
-                                    "content": cleaned_content
-                                })
                 return self.format_assistant_json_response(new_messages)
+
 
 
 # Keep the utility functions
