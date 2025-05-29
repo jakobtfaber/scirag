@@ -177,6 +177,6 @@ gemini.json
 pdfs/*
 
 papers/*
-embeddings/*
+
 credentials.json
-embeddings/*
+
