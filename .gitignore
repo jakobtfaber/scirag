@@ -179,5 +179,5 @@ pdfs/*
 papers/*
 
 credentials.json
-notebooks/results/*
+
 embeddings/*
