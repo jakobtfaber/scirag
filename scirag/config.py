@@ -1,6 +1,14 @@
 from pathlib import Path
 import vertexai
 from google import genai
+import os
+from glob import glob
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+import pickle
+from google.oauth2 import service_account
 
 # Using pathlib (modern approach) to define the base directory as the directory that contains this file.
 BASE_DIR = Path(__file__).resolve().parent
@@ -45,12 +53,82 @@ TEMPERATURE = 0.01
 LOCATION="us-central1"
 PROJECT = "camels-453517"
 vertexai.init(project=PROJECT,location=LOCATION,credentials=credentials)
+
+# creds = service_account.IDTokenCredentials.from_service_account_file(
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"],
+# target_audience="https://generativelanguage.googleapis.com"
+# )
+# creds.refresh(Request())
+# vertexai.init(project=PROJECT, location=LOCATION, credentials=creds)
 vertex_client = genai.Client(vertexai=True,project=PROJECT,location=LOCATION)
 
 
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
-folder_id="1uoXS3wmCIU5v4iURI1Y9EgUxhGPaF4y7"
 
+
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
+folder_id="10PHjfTh-2Ur8n7pgiTDP1TsxURTaZATS" 
+
+# you must create this folder in your drive and enable the drive api in the console
+# see here https://chatgpt.com/share/6840a0ed-bf88-800c-9c71-1cc5d49960a8 to enable the drive api
+
+
+
+
+
+
+def authenticate_gdrive(scopes=SCOPES):
+    creds = None
+    # Token stores the user's access/refresh tokens
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as token:
+            creds = pickle.load(token)
+    # If no credentials or invalid, let user log in
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json', scopes)
+            creds = flow.run_local_server(port=0)
+        with open('token.pickle', 'wb') as token:
+            pickle.dump(creds, token)
+    return build('drive', 'v3', credentials=creds)
+
+def upload_markdowns_to_gdrive():
+    """Upload all .md files in output_dir to the given Google Drive folder ID."""
+    service = authenticate_gdrive()
+    md_files = glob(os.path.join(markdown_files_path, '*.md'))
+    for md_file in md_files:
+        file_metadata = {
+            'name': os.path.basename(md_file),
+            'parents': [folder_id]
+        }
+        media = MediaFileUpload(md_file, mimetype='text/markdown')
+        uploaded = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id'
+        ).execute()
+        print(f"Uploaded {md_file} to Google Drive with ID: {uploaded.get('id')}")
+
+
+from google.cloud import storage
+from pathlib import Path
+
+
+bucket_name = "cmbagent"
+
+def upload_markdown_files_to_gcs():
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    local_dir = Path(markdown_files_path)
+    gs_paths = []
+    for file_path in local_dir.glob("*.md"):
+        blob = bucket.blob(file_path.name)
+        blob.upload_from_filename(str(file_path))
+        print(f"Uploaded {file_path.name} to gs://{bucket_name}/{file_path.name}")
+        gs_paths.append(f"gs://{bucket_name}/{file_path.name}")
+    return gs_paths
 
 # PaperQA2 configuration variables
 PAPERQA2_EMBEDDING = "text-embedding-3-large"

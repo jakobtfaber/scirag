@@ -10,6 +10,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+from google.oauth2 import service_account
+
 
 from .config import AnswerFormat
 import json
@@ -32,7 +34,8 @@ from .config import (vertex_client,
                      GEMINI_GEN_MODEL,
                      TEMPERATURE,
                      display_name,
-                     folder_id,
+                     authenticate_gdrive,
+                     folder_id,SCOPES,
                      markdown_files_path)
 
 from .scirag import SciRag
@@ -115,16 +118,62 @@ class SciRagVertexAI(SciRag):
             ),
         )
 
+        print(f"Created corpus: {rag_corpus.name}")
+
+
+
+        # service = authenticate_gdrive()
+
+        # results = service.files().list(
+        #     q=f"'{folder_id}' in parents and trashed = false",
+        #     fields="files(id, name, mimeType)").execute()
+        # files = results.get('files', [])
+
+        # # Download files or get their links
+        # file_paths = []
+        # for file in files:
+        #     file_id = file['id']
+        #     # For a download link:
+        #     file_paths.append(f"https://drive.google.com/uc?id={file_id}")
+
+        # print(f"Importing files to corpus: {rag_corpus.name}")
+        # print(file_paths)
+        # import sys
+        # sys.exit()
+
         rag.import_files(
-            # corpus_name=rag_corpus.name,
             corpus_name=rag_corpus.name,
-            # https://drive.google.com/drive/u/0/folders/
-            paths=[f"https://drive.google.com/drive/folders/{folder_id}"],
-            # Optional
+            paths=["gs://cmbagent"],
             transformation_config=rag.TransformationConfig(
                 chunking_config=rag.ChunkingConfig(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
             ),
         )
+        # rag.import_files(
+        #     corpus_name=rag_corpus.name,
+        #     paths=[str(markdown_file_path) for markdown_file_path in markdown_files_path.glob("*.md")],
+        #     transformation_config=rag.TransformationConfig(
+        #         chunking_config=rag.ChunkingConfig(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
+        #     ),
+        # )
+        # paths=[markdown_file_path for markdown_file_path in markdown_files_path.glob("*.md")],
+        # for file_path in paths[0]:
+        #     print(file_path)
+        #     file_display_name = file_path.stem
+        #     rag_file = rag.upload_file(
+        #         corpus_name=rag_corpus.name,
+        #         path=str(file_path),
+        #         display_name=file_display_name,
+        #         description=f"{file_display_name}",
+        #         transformation_config=rag.TransformationConfig(
+        #             chunking_config=rag.ChunkingConfig(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
+        #         )
+        #     )
+            # # uploaded_rag_files_info.append({"name": rag_file.name, "display_name": rag_file.display_name})
+            # print(f"Successfully uploaded: {rag_file.name}")
+
+
+
+        print(f"Imported files to corpus: {rag_corpus.name}")
 
         self.rag_corpus = rag_corpus
 
