@@ -38,7 +38,7 @@ GEMINI_GEN_MODEL = "gemini-2.5-flash-preview-05-20"
 OPENAI_GEN_MODEL = "gpt-4.1"
 
 TEMPERATURE = 0.01
-
+PERPLEXITY_MODEL="sonar-reasoning-pro"
 
 
 
