@@ -128,8 +128,8 @@ Your response must be in JSON format with exactly these fields:
 
 Example format:
 {{
-  "answer": "The Hubble constant from Planck is 67.4 ± 0.5 km/s/Mpc [1]. Local measurements give 73.04 ± 1.04 km/s/Mpc [4]. This represents a ~5σ tension in cosmology.",
-  "sources": ["1", "4"]
+  "answer": "The CAMELS project uses machine learning simulations to study cosmology and astrophysics [2]. It provides a comprehensive suite of hydrodynamic and N-body simulations for parameter inference[3].",
+  "sources": [2, 3]
 }}
 """
     
@@ -232,20 +232,34 @@ Search for information relevant to this question within the specified papers and
         """Extract citation numbers from text like [1], [2], etc."""
         citations = re.findall(r'\[(\d+)\]', text)
         return list(set(citations))  # Remove duplicates
-    def _format_sources_with_papers(self, response: str) -> str:
-        """Format sources section with paper names and citations"""
-        citation_numbers = self._extract_citation_numbers(response)
+    def _format_sources_from_numbers(self, source_numbers: List) -> str:
+        """Format sources from citation numbers to full paper info - handles various formats"""
+        if not source_numbers:
+            return "(No sources provided)"
         
-        if not citation_numbers:
-            return "(Sources not found in standard format)"
         
+        # Extract all unique numbers from all source items
+        all_numbers = set()
+        for source_item in source_numbers:
+            # Convert to string and strip brackets: "[1]" -> "1", 1 -> "1", etc.
+            num_str = str(source_item).strip('[]')
+            if num_str.isdigit():  # Make sure it's a valid number
+                all_numbers.add(num_str)
+        
+        
+        # Format each unique number
         formatted_sources = []
-        for num in sorted(citation_numbers, key=int):
-            if num in self.citation_to_paper:
-                paper = self.citation_to_paper[num]
-                formatted_sources.append(f"[{num}] {paper.title} - {paper.citation}")
+        for num_str in sorted(all_numbers, key=int):  # Sort numerically
+            if num_str in self.citation_to_paper:
+                paper = self.citation_to_paper[num_str]
+                formatted_sources.append(f"[{num_str}] {paper.title} - {paper.citation}")
+            else:
+                formatted_sources.append(f"[{num_str}] Unknown source")
         
-        return "\n".join(formatted_sources) if formatted_sources else "(Sources not found in standard format)"
+        result = "\n".join(formatted_sources) if formatted_sources else "(No valid sources found)"
+        return result
+        
+       
     def _clean_response_for_reasoning_models(self, content: str) -> str:
         """Clean thinking tags from reasoning model responses"""
         if not content:
@@ -263,20 +277,7 @@ Search for information relevant to this question within the specified papers and
         return content.strip()
     
 
-    def _format_sources_from_numbers(self, source_numbers: List[str]) -> str:
-        """Format sources from citation numbers to full paper info"""
-        if not source_numbers:
-            return "(No sources provided)"
-        
-        formatted_sources = []
-        for num_str in source_numbers:
-            if num_str in self.citation_to_paper:
-                paper = self.citation_to_paper[num_str]
-                formatted_sources.append(f"[{num_str}] {paper.title} - {paper.citation}")
-            else:
-                formatted_sources.append(f"[{num_str}] Unknown source")
-        
-        return "\n".join(formatted_sources) if formatted_sources else "(No valid sources found)"
+
 
     def get_response(self, query: str) -> str:
         """
@@ -333,11 +334,27 @@ Search for information relevant to this question within the specified papers and
             # Parse the JSON response
             parsed = json.loads(json_response)
             answer = parsed.get("answer", "")
-            source_info = parsed.get("sources", [])
+            source_info = parsed.get("sources", [])  # Default to empty list
             
             # Debug: Print what we received
             print(f"Parsed answer: {answer[:100]}...")
             print(f"Parsed sources: {source_info}")
+            print(f"Source info type: {type(source_info)}")
+            
+            # Ensure source_info is a list
+            if isinstance(source_info, str):
+                # If it's a string like "[1], [2]" or "1,2", try to parse it
+                if source_info.strip():
+                    # Extract numbers from string format
+                    numbers = re.findall(r'\d+', source_info)
+                    source_info = numbers  # Keep as plain numbers, not "[1]" format
+                else:
+                    source_info = []
+            elif not isinstance(source_info, list):
+                # Convert other types to list
+                source_info = [source_info] if source_info else []
+            
+            print(f"Processed sources: {source_info}")
             
             # Format sources with full paper information
             formatted_sources = self._format_sources_from_numbers(source_info)
@@ -380,6 +397,22 @@ Search for information relevant to this question within the specified papers and
                 return match.group(0)
         
         return re.sub(r'\[(\d+)\]', citation_repl, response)
+    
+    def _format_sources_with_papers(self, response: str) -> str:
+        """Format sources section with paper names and citations"""
+        citation_numbers = self._extract_citation_numbers(response)
+        
+        if not citation_numbers:
+            return "(Sources not found in standard format)"
+        
+        formatted_sources = []
+        for num in sorted(citation_numbers, key=int):
+            if num in self.citation_to_paper:
+                paper = self.citation_to_paper[num]
+                formatted_sources.append(f"[{num}] {paper.title} - {paper.citation}")
+        
+        return "\n".join(formatted_sources) if formatted_sources else "(Sources not found in standard format)"
+
     
     
 

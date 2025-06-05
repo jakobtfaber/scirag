@@ -1,5 +1,7 @@
 import os
 import json
+import time
+import tiktoken
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 import google.generativeai as genai
@@ -29,6 +31,9 @@ class GeminiGroundedAgent(SciRag):
                  markdown_files_path=None,
                  corpus_name=None,
                  gen_model=GEMINI_GEN_MODEL,
+                 max_retries=3,
+                 base_sleep_time=60,
+                 max_tokens_per_minute=200000,
                  **kwargs):
         # Initialize parent SciRag class
         super().__init__(
@@ -88,6 +93,12 @@ class GeminiGroundedAgent(SciRag):
                 arxiv_id="2503.14454"
             )
         ]
+        #rate limiting factor
+        self.max_retries = max_retries
+        self.base_sleep_time = base_sleep_time
+        self.max_tokens_per_minute = max_tokens_per_minute
+        self._token_bucket = 0
+        self._bucket_start_time = 0
         
         # Create a mapping of citation numbers to paper info for sources
         self.citation_to_paper = {
@@ -99,6 +110,35 @@ class GeminiGroundedAgent(SciRag):
         
         # Override the rag_prompt with Gemini-specific prompt
         self.rag_prompt = self._create_gemini_prompt()
+    def _count_tokens(self, text: str) -> int:
+        """Count tokens in text using tiktoken encoding."""
+        try:
+            encoding = tiktoken.get_encoding("cl100k_base")
+            return len(encoding.encode(text))
+        except Exception as e:
+            print(f"Warning: Could not count tokens: {e}")
+            # Fallback: rough estimate of 1 token per 4 characters
+            return len(text) // 4
+    def _check_rate_limit(self, text: str):
+        """Check and enforce rate limiting based on token usage."""
+        tokens = self._count_tokens(text)
+        now = time.time()
+        
+        # Reset token bucket every minute
+        if now - self._bucket_start_time > 60 or self._bucket_start_time == 0:
+            self._token_bucket = 0
+            self._bucket_start_time = now
+        
+        # If adding this text would exceed the quota, wait for the next minute
+        if self._token_bucket + tokens > self.max_tokens_per_minute:
+            sleep_time = 60 - (now - self._bucket_start_time)
+            if sleep_time > 0:
+                print(f"[TokenTracker] Token quota reached ({self._token_bucket} tokens). Sleeping for {sleep_time:.1f} seconds...")
+                time.sleep(sleep_time)
+            self._token_bucket = 0
+            self._bucket_start_time = time.time()
+        
+        self._token_bucket += tokens
     
     def _initialize_gemini(self):
         """Initialize Gemini client with credentials (no Google Search)"""
@@ -143,7 +183,7 @@ class GeminiGroundedAgent(SciRag):
                 generation_config=generation_config
             )
             
-            ß
+    
             
         except Exception as e:
             print(f"Failed to initialize Gemini client: {e}")
@@ -182,8 +222,8 @@ Your response must be in JSON format with exactly these fields:
 
 Example format:
 {{
-  "answer": "The Hubble constant from Planck is 67.4 ± 0.5 km/s/Mpc [1]. Local measurements give 73.04 ± 1.04 km/s/Mpc [4].",
-  "sources": ["[1] Planck 2018 results", "[4] Riess et al. 2016 paper"]
+  "answer": "The CAMELS project uses machine learning simulations to study cosmology and astrophysics [2]. It provides a comprehensive suite of hydrodynamic and N-body simulations for parameter inference.",
+  "sources": [2]
 }}
 """
     
@@ -203,21 +243,48 @@ Example format:
         
         # Create the full prompt with the question
         full_prompt = f"{self.rag_prompt}\n\nQuestion: {query}"
+        self._check_rate_limit(full_prompt)
         
-        try:
-            # Generate response using Gemini's knowledge only
-            response = self.model.generate_content(full_prompt)
-            
-            # Extract the JSON response
-            response_text = response.text
-            
-            # Parse and format the structured response
-            final_response = self.parse_structured_response(response_text)
-            
-            return final_response
-            
-        except Exception as e:
-            raise RuntimeError(f"Error generating Gemini response: {e}")
+        while True:
+            try:
+                print("[Request] Generating response...")
+                
+                # Generate response using Gemini's knowledge only
+                response = self.model.generate_content(full_prompt)
+                
+                # Check if response was blocked
+                if not response.text:
+                    if response.candidates and response.candidates[0].finish_reason:
+                        reason = response.candidates[0].finish_reason
+                        raise RuntimeError(f"Response was blocked. Finish reason: {reason}")
+                    else:
+                        raise RuntimeError("Empty response received from Gemini")
+                
+                # Extract the JSON response
+                response_text = response.text
+                
+                # Parse and format the structured response
+                final_response = self.parse_structured_response(response_text)
+                
+                print("[Success] Response generated successfully")
+                return final_response
+                
+            except Exception as e:
+                error_str = str(e).lower()
+                if "429" in error_str or "quota" in error_str or "rate limit" in error_str:
+                    print("[TokenTracker] 429 error: Quota exceeded. Sleeping for 60 seconds before retrying...")
+                    time.sleep(60)
+                    self._token_bucket = 0
+                    self._bucket_start_time = time.time()
+                elif "500" in error_str or "502" in error_str or "503" in error_str:
+                    print(f"[Server Error] {e}. Sleeping for 30 seconds before retrying...")
+                    time.sleep(30)
+                elif "400" in error_str or "401" in error_str or "403" in error_str:
+                    print(f"[Client Error] Non-retryable error: {e}")
+                    raise RuntimeError(f"Error generating Gemini response: {e}")
+                else:
+                    print(f"[Unknown Error] {e}. Sleeping for 10 seconds before retrying...")
+                    time.sleep(10)
     
     def parse_structured_response(self, json_response: str) -> str:
         """Parse the structured JSON response and format it properly"""

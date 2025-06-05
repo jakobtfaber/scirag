@@ -1,6 +1,14 @@
 from pathlib import Path
 import vertexai
 from google import genai
+from glob import glob
+import os
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+import pickle
+from google.oauth2 import service_account
 
 # Using pathlib (modern approach) to define the base directory as the directory that contains this file.
 BASE_DIR = Path(__file__).resolve().parent
@@ -48,15 +56,59 @@ vertexai.init(project=PROJECT,location=LOCATION,credentials=credentials)
 vertex_client = genai.Client(vertexai=True,project=PROJECT,location=LOCATION)
 
 
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
-folder_id="1uoXS3wmCIU5v4iURI1Y9EgUxhGPaF4y7"
 
+
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
+folder_id="10PHjfTh-2Ur8n7pgiTDP1TsxURTaZATS" 
+
+
+def authenticate_gdrive(scopes=SCOPES):
+    creds = None
+    # Token stores the user's access/refresh tokens
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as token:
+            creds = pickle.load(token)
+    # If no credentials or invalid, let user log in
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json', scopes)
+            creds = flow.run_local_server(port=0)
+        with open('token.pickle', 'wb') as token:
+            pickle.dump(creds, token)
+    return build('drive', 'v3', credentials=creds)
+
+def upload_markdowns_to_gdrive():
+    """Upload all .md files in output_dir to the given Google Drive folder ID."""
+    service = authenticate_gdrive()
+    md_files = glob(os.path.join(markdown_files_path, '*.md'))
+    for md_file in md_files:
+        file_metadata = {
+            'name': os.path.basename(md_file),
+            'parents': [folder_id]
+        }
+        media = MediaFileUpload(md_file, mimetype='text/markdown')
+        uploaded = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id'
+        ).execute()
+        print(f"Uploaded {md_file} to Google Drive with ID: {uploaded.get('id')}")
+
+
+from google.cloud import storage
+from pathlib import Path
+
+
+bucket_name = "cmbagent"
 
 # PaperQA2 configuration variables
 PAPERQA2_EMBEDDING = "text-embedding-3-large"
 PAPERQA2_LLM = "gpt-4.1"
 PAPERQA2_TEMPERATURE = 0.01
-PAPERQA2_EVIDENCE_K = 10
+PAPERQA2_EVIDENCE_K = 30
 PAPERQA2_ANSWER_MAX_SOURCES = 5
 
 from openai import OpenAI
@@ -184,19 +236,19 @@ CITATION_KEY_CONSTRAINTS = (
     "- Example's work (pages 17–19) \n"  # noqa: RUF001
     "- (pages 17–19) \n"  # noqa: RUF001
 )
-qa_prompt = (
-    "Provide a concise answer in 1-2 sentences maximum. "
-    "Context (with relevance scores):\n\n{context}\n\n----\n\n"
-    "Question: {question}\n\n"
-    "Write a concise answer based on the context, focusing on astronomical facts and concepts. "
-    "If the context provides insufficient information reply "
-    f'"{CANNOT_ANSWER_PHRASE}." '
-    "Write in the style of a scientific astronomy reference, with precise and "
-    "factual statements. The context comes from a variety of sources and is "
-    "only a summary, so there may be inaccuracies or ambiguities. \n\n"
-    "{prior_answer_prompt}"
-    "Answer (maximum one sentence):"
-)
+# qa_prompt = (
+#     "Provide a concise answer in 1-2 sentences maximum. "
+#     "Context (with relevance scores):\n\n{context}\n\n----\n\n"
+#     "Question: {question}\n\n"
+#     "Write a concise answer based on the context, focusing on astronomical facts and concepts. "
+#     "If the context provides insufficient information reply "
+#     f'"{CANNOT_ANSWER_PHRASE}." '
+#     "Write in the style of a scientific astronomy reference, with precise and "
+#     "factual statements. The context comes from a variety of sources and is "
+#     "only a summary, so there may be inaccuracies or ambiguities. \n\n"
+#     "{prior_answer_prompt}"
+#     "Answer (maximum one sentence):"
+# )
 
 
 paperqa2_settings = Settings(
@@ -232,9 +284,9 @@ paperqa2_settings = Settings(
         embedding=PAPERQA2_EMBEDDING,
         temperature=PAPERQA2_TEMPERATURE,
         paper_directory=OCR_OUTPUT_DIR,
-        prompt={
-            "qa": qa_prompt
-        }
+        # prompt={
+        #     "qa": qa_prompt
+        # }
     )
 
 index_settings = Settings(

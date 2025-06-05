@@ -8,5 +8,6 @@ from .scirag_hybrid import SciRagHybrid
 from .ocr import MistralOCRProcessor
 from .scirag_perplexity import PerplexityAgent
 from .scirag_gemini import GeminiGroundedAgent
-__all__ = ['SciRagVertexAI', 'SciRagOpenAI', 'SciRagPaperQA2', 'REPO_DIR', 'SciRagDataSet', 'SciRag', 'TOP_K', 'DISTANCE_THRESHOLD', 'OAI_PRICE1K','SciRagHybrid','MistralOCRProcessor','PerplexityAgent','GeminiGroundedAgent']
+from .scirag_qwends import QwenDeepSeekRag
+__all__ = ['SciRagVertexAI', 'SciRagOpenAI', 'SciRagPaperQA2', 'REPO_DIR', 'SciRagDataSet', 'SciRag', 'TOP_K', 'DISTANCE_THRESHOLD', 'OAI_PRICE1K','SciRagHybrid','MistralOCRProcessor','PerplexityAgent','GeminiGroundedAgent','QwenDeepSeekRag']
 
