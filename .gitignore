@@ -181,3 +181,4 @@ papers/*
 credentials.json
 notebooks/results/*
 embeddings/*
+notebooks/rag_evaluation_results/*

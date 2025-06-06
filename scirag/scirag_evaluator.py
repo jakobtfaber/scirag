@@ -8,8 +8,8 @@ from pydantic import BaseModel, Field
 import autogen
 from autogen import UserProxyAgent, AssistantAgent
 
-class SummaryEvaluation(BaseModel):
-    """Structured evaluation of a scientific summary"""
+class ResponseEvaluation(BaseModel):
+    """Structured evaluation of a scientific response"""
     accuracy_score: int = Field(
         description="Factual accuracy score (0-100), where 100 means perfectly matching the ideal answer", 
         ge=0, le=100
@@ -34,7 +34,7 @@ class AIEvaluator:
     
     def _create_ai_judge_agent(self) -> AssistantAgent:
         """Create and configure the AI judge agent"""
-        system_message = """You are an expert scientific evaluator assessing the quality of scientific summaries against reference answers.
+        system_message = """You are an expert scientific evaluator assessing the quality of scientific response against reference answers.
 
 Your task is to evaluate responses using one critical criterion:
 
@@ -43,7 +43,7 @@ CRITICAL: Use ONLY these two scores for accuracy:
 - 100: The answer contains the core correct factual content, concepts, and conclusions from the ideal answer
 - 0: The answer is fundamentally wrong or contradicts the ideal answer
 
-This is a BINARY evaluation - either the answer is essentially correct (100) or fundamentally incorrect (0).
+This is a BINARY evaluation - either the answer is essentially correct (100) or incorrect (0).
 No partial credit or intermediate scores allowed.
 
 EVALUATION GUIDELINES:
@@ -51,9 +51,10 @@ EVALUATION GUIDELINES:
 - Check that the core factual claims from the ideal answer are present in the generated answer
 - Verify the overall conceptual direction and main conclusions align
 - Additional correct information beyond the ideal answer is acceptable
+- Only award 0 if the answer contradicts the ideal answer or gets the main concepts completely wrong
 - Award 100 if the answer captures the essential correct scientific understanding
 
-Provide your evaluation using the evaluate_summary function with the numerical score and detailed rationale explaining why you chose 100 or 0."""
+Provide your evaluation using the evaluate_response function with the numerical score and detailed rationale explaining why you chose 100 or 0."""
         
         return AssistantAgent(
             name="ai_judge",
@@ -64,9 +65,9 @@ Provide your evaluation using the evaluate_summary function with the numerical s
                     {
                         "type": "function",
                         "function": {
-                            "name": "evaluate_summary",
-                            "description": "Evaluate a scientific summary",
-                            "parameters": SummaryEvaluation.model_json_schema()
+                            "name": "evaluate_response",
+                            "description": "Evaluate a scientific response",
+                            "parameters": ResponseEvaluation.model_json_schema()
                         }
                     }
                 ]
@@ -111,7 +112,7 @@ IDEAL ANSWER:
 Evaluate based on:
 Accuracy (0-100): How factually correct is the answer compared to the ideal?
 
-Use the evaluate_summary function to provide your structured evaluation with detailed rationale.
+Use the evaluate_response function to provide your structured evaluation with detailed rationale.
 """
         
         try:
@@ -134,7 +135,7 @@ Use the evaluate_summary function to provide your structured evaluation with det
                 tool_calls = last_message["tool_calls"]
                 if tool_calls and len(tool_calls) > 0:
                     tool_call = tool_calls[0]
-                    if tool_call.get("function", {}).get("name") == "evaluate_summary":
+                    if tool_call.get("function", {}).get("name") == "evaluate_response":
                         try:
                             evaluation_result = json.loads(tool_call["function"].get("arguments", "{}"))
                         except json.JSONDecodeError as e:
@@ -144,7 +145,7 @@ Use the evaluate_summary function to provide your structured evaluation with det
             # Fallback to old function_call format for compatibility
             elif last_message and "function_call" in last_message:
                 function_call = last_message["function_call"]
-                if function_call.get("name") == "evaluate_summary":
+                if function_call.get("name") == "evaluate_response":
                     try:
                         evaluation_result = json.loads(function_call.get("arguments", "{}"))
                     except json.JSONDecodeError as e:
