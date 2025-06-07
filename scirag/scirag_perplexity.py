@@ -307,7 +307,7 @@ Search for information relevant to this question within the specified papers and
             ],
             "search_domain_filter": ["arxiv.org", "adsabs.harvard.edu"],
             "search_recency_filter": "month",
-            "temperature": 0.1,
+            "temperature": 0.01,
             "max_tokens": 2000,
             # Add structured output formatting
             "response_format": {

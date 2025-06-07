@@ -172,7 +172,7 @@ class GeminiGroundedAgent(SciRag):
             }
             
             generation_config = {
-                "temperature": 0.0,  # For consistent results
+                "temperature": 0.01,  # For consistent results
                 "response_mime_type": "application/json",
                 "response_schema": response_schema
             }
