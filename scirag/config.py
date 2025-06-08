@@ -283,7 +283,7 @@ paperqa2_settings = Settings(
         ),
         embedding=PAPERQA2_EMBEDDING,
         temperature=PAPERQA2_TEMPERATURE,
-        paper_directory=OCR_OUTPUT_DIR,
+        paper_directory=OCR_OUTPUT_DIR
         # prompt={
         #     "qa": qa_prompt
         # }
