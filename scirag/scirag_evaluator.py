@@ -189,7 +189,7 @@ class GeminiEvaluator:
                  model: str = "gemini-2.5-pro-preview-06-05", 
                  temperature: float = 0.01,
                  max_retries: int = 3,
-                 base_sleep_time: int = 30,
+                 base_sleep_time: int = 60,
                  max_sleep_time: int = 300,
                  credentials_path: str = "gemini.json",
                  backoff_multiplier: float = 2.0,
@@ -423,7 +423,9 @@ Provide your structured evaluation with detailed rationale as JSON with fields:
                          "response_mime_type": "application/json"
                         
                     })
-                
+            except Exception as e:
+                print(f"Error generating evaluation: {e}")
+                raise
                 # Check if response was generated
                 if not response.text:
                     raise RuntimeError("Empty response received from Gemini")

@@ -21,9 +21,29 @@ class Paper:
     arxiv_id: Optional[str] = None
     doi: Optional[str] = None
 
+@dataclass
+class CostInfo:
+    """Tracks cost information for API calls"""
+    input_tokens: int = 0
+    output_tokens: int = 0
+    search_queries: int = 0
+    total_cost: float = 0.0
+
 class PerplexityAgent(SciRag):
     """A Perplexity-style agent for cosmology questions, inheriting from SciRag"""
-    
+    # Perplexity API pricing (as of 2024 - update as needed)
+    PRICING = {
+        "sonar-pro": {
+            "input": 0.001,    # $0.001 per 1K input tokens
+            "output": 0.001,   # $0.001 per 1K output tokens
+            "search": 0.005    # $0.005 per search query
+        },
+        "sonar": {
+            "input": 0.0002,   # $0.0002 per 1K input tokens  
+            "output": 0.0002,  # $0.0002 per 1K output tokens
+            "search": 0.005    # $0.005 per search query
+        }
+    }
     def __init__(self, 
                  client=None,
                  credentials=None, 
@@ -40,6 +60,9 @@ class PerplexityAgent(SciRag):
             gen_model=gen_model,
             **kwargs
         )
+        # Initialize cost tracking
+        self.session_cost = CostInfo()
+        self.total_cost = CostInfo()
         
         # Core paper database - exactly as specified
         self.papers = [
@@ -97,7 +120,52 @@ class PerplexityAgent(SciRag):
             str(i): paper for i, paper in enumerate(self.papers, 1)
         }
     
-    
+    def _calculate_cost(self, model: str, usage: Dict) -> float:
+        """Calculate cost based on token usage and model pricing"""
+        if model not in self.PRICING:
+            # Default to sonar pricing if model not found
+            model = "sonar"
+        
+        pricing = self.PRICING[model]
+        
+        input_tokens = usage.get("prompt_tokens", 0)
+        output_tokens = usage.get("completion_tokens", 0)
+        
+        input_cost = (input_tokens / 1000) * pricing["input"]
+        output_cost = (output_tokens / 1000) * pricing["output"]
+        search_cost = pricing["search"]  # One search query per API call
+        
+        total_cost = input_cost + output_cost + search_cost
+        
+        return total_cost, input_tokens, output_tokens
+    def _update_cost_tracking(self, cost: float, input_tokens: int, output_tokens: int):
+        """Update both session and total cost tracking"""
+        # Update session costs
+        self.session_cost.input_tokens += input_tokens
+        self.session_cost.output_tokens += output_tokens
+        self.session_cost.search_queries += 1
+        self.session_cost.total_cost += cost
+        
+        # Update total costs
+        self.total_cost.input_tokens += input_tokens
+        self.total_cost.output_tokens += output_tokens
+        self.total_cost.search_queries += 1
+        self.total_cost.total_cost += cost
+    def get_cost_summary(self, session_only: bool = False) -> str:
+        """Get a formatted cost summary"""
+        cost_info = self.session_cost if session_only else self.total_cost
+        period = "Session" if session_only else "Total"
+        
+        return f"""
+{period} Cost Summary:
+- Input tokens: {cost_info.input_tokens:,}
+- Output tokens: {cost_info.output_tokens:,}
+- Search queries: {cost_info.search_queries}
+- Total cost: ${cost_info.total_cost:.4f}
+"""
+    def reset_session_costs(self):
+        """Reset session cost tracking"""
+        self.session_cost = CostInfo()
     def _create_perplexity_prompt(self) -> str:
         """Create the specialized prompt for Perplexity-style responses"""
         paper_list = "\n".join([f"{i}. {paper.citation}" for i, paper in enumerate(self.papers, 1)])
@@ -151,6 +219,17 @@ Example format:
                 json=payload
             )
             response.raise_for_status()
+            response_data = response.json()
+            # Extract usage information and calculate cost
+            usage = response_data.get("usage", {})
+            model = payload.get("model", "sonar")
+            
+            cost, input_tokens, output_tokens = self._calculate_cost(model, usage)
+            self._update_cost_tracking(cost, input_tokens, output_tokens)
+            
+            # Log cost information (optional)
+            print(f"Query cost: ${cost:.4f} | Input: {input_tokens} tokens | Output: {output_tokens} tokens")
+            
             return response.json()
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Error calling Perplexity API: {e}")

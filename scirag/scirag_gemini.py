@@ -99,6 +99,20 @@ class GeminiGroundedAgent(SciRag):
         self.max_tokens_per_minute = max_tokens_per_minute
         self._token_bucket = 0
         self._bucket_start_time = 0
+        # Gemini 2.5 Flash pricing (per 1M tokens)
+        self.pricing = {
+            "input_price_per_1k": 0.00015,    # $0.15 per 1M tokens = $0.00015 per 1K tokens   # $0.60 per 1M tokens = $0.0006 per 1K tokens  
+            "output_price_per_1k": 0.0035,        # $3.50 per 1M tokens = $0.0035 per 1K tokens
+        }
+        
+        # Initialize cost tracking (similar to the existing cost_dict structure)
+        self.cost_dict = {
+            'Cost': [],
+            'Prompt Tokens': [],
+            'Completion Tokens': [],
+            'Total Tokens': [],
+            'Model': []
+        }
         
         # Create a mapping of citation numbers to paper info for sources
         self.citation_to_paper = {
@@ -119,6 +133,40 @@ class GeminiGroundedAgent(SciRag):
             print(f"Warning: Could not count tokens: {e}")
             # Fallback: rough estimate of 1 token per 4 characters
             return len(text) // 4
+    def _calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
+        """Calculate the cost of the API call based on token usage."""
+        input_cost = (input_tokens / 1000) * self.pricing["input_price_per_1k"]
+        
+       
+        output_cost = (output_tokens / 1000) * self.pricing["output_price_per_1k"]
+        
+        total_cost = input_cost + output_cost
+        return total_cost
+    def _log_usage_and_cost(self, input_tokens: int, output_tokens: int, total_cost: float):
+        """Log usage and cost information."""
+        total_tokens = input_tokens + output_tokens
+        
+        # Add to cost tracking
+        self.cost_dict['Cost'].append(total_cost)
+        self.cost_dict['Prompt Tokens'].append(input_tokens)
+        self.cost_dict['Completion Tokens'].append(output_tokens)
+        self.cost_dict['Total Tokens'].append(total_tokens)
+        self.cost_dict['Model'].append(self.gen_model)
+        
+        # Print usage summary
+        print(f"\n--- Usage Summary ---")
+        print(f"Model: {self.gen_model}")
+        print(f"Input tokens: {input_tokens:,}")
+        print(f"Output tokens: {output_tokens:,}")
+        print(f"Total tokens: {total_tokens:,}")
+        print(f"Cost: ${total_cost:.6f}")
+        print(f"Input cost: ${(input_tokens / 1000) * self.pricing['input_price_per_1k']:.6f}")
+        print(f"Output cost: ${(output_tokens / 1000) * self.pricing['output_price_per_1k']:.6f} (thinking)")
+
+        print(f"--- End Summary ---\n")
+    def get_total_cost(self) -> float:
+        """Get the total cost of all API calls made so far."""
+        return sum(self.cost_dict['Cost'])
     def _check_rate_limit(self, text: str):
         """Check and enforce rate limiting based on token usage."""
         tokens = self._count_tokens(text)
@@ -243,6 +291,7 @@ Example format:
         
         # Create the full prompt with the question
         full_prompt = f"{self.rag_prompt}\n\nQuestion: {query}"
+        input_tokens = self._count_tokens(full_prompt)
         self._check_rate_limit(full_prompt)
         
         while True:
@@ -262,9 +311,15 @@ Example format:
                 
                 # Extract the JSON response
                 response_text = response.text
+                output_tokens = self._count_tokens(response_text)
                 
                 # Parse and format the structured response
                 final_response = self.parse_structured_response(response_text)
+
+                 # Calculate and log cost
+                total_cost = self._calculate_cost(input_tokens, output_tokens)
+                self._log_usage_and_cost(input_tokens, output_tokens, total_cost)
+                
                 
                 print("[Success] Response generated successfully")
                 return final_response

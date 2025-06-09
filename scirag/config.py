@@ -201,7 +201,22 @@ OAI_PRICE1K = {
     "deepseek-chat": (0.00027, 0.0011),
 }
 
+# Gemini 2.5 Flash pricing (per 1K tokens) - Add this to the existing OAI_PRICE1K dictionary
+GEMINI_PRICE1K = {
+    # Gemini 2.5 Flash pricing based on search results
+    "gemini-2.5-flash": (0.00015, 0.0006),  # (input, output) without thinking
+    "gemini-2.5-flash-thinking": (0.00015, 0.0035),  # (input, output) with thinking
+    "gemini-2.5-flash-preview-05-20": (0.00015, 0.0006),  # specific version without thinking
+    "gemini-2.5-flash-preview-05-20-thinking": (0.00015, 0.0035),  # specific version with thinking
+    
+    # Additional Gemini models for reference
+    "gemini-2.0-flash": (0.0001, 0.0004),  # Based on search results mentioning $0.10/$0.40 per 1M
+    "gemini-1.5-pro": (0.00125, 0.005),    # Based on search results
+    "gemini-1.5-flash": (0.0, 0.0),        # Free tier mentioned in search results
+}
 
+# Add to the existing OAI_PRICE1K dictionary
+OAI_PRICE1K.update(GEMINI_PRICE1K)
 
 from pydantic import BaseModel, Field
 from typing import List
