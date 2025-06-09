@@ -423,9 +423,6 @@ Provide your structured evaluation with detailed rationale as JSON with fields:
                          "response_mime_type": "application/json"
                         
                     })
-            except Exception as e:
-                print(f"Error generating evaluation: {e}")
-                raise
                 # Check if response was generated
                 if not response.text:
                     raise RuntimeError("Empty response received from Gemini")
