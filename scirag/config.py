@@ -1,8 +1,13 @@
 from pathlib import Path
 import vertexai
 from google import genai
+<<<<<<< HEAD
 import os
 from glob import glob
+=======
+from glob import glob
+import os
+>>>>>>> April
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -47,6 +52,7 @@ OPENAI_GEN_MODEL = "gpt-4.1"
 
 TEMPERATURE = 0.01
 
+PERPLEXITY_MODEL="sonar-reasoning-pro"
 
 
 
@@ -135,6 +141,7 @@ PAPERQA2_EMBEDDING = "text-embedding-3-large"
 PAPERQA2_LLM = "gpt-4.1"
 PAPERQA2_TEMPERATURE = 0.01
 PAPERQA2_EVIDENCE_K = 10
+PAPERQA2_EVIDENCE_K = 30
 PAPERQA2_ANSWER_MAX_SOURCES = 5
 
 from openai import OpenAI
@@ -227,7 +234,22 @@ OAI_PRICE1K = {
     "deepseek-chat": (0.00027, 0.0011),
 }
 
+# Gemini 2.5 Flash pricing (per 1K tokens) - Add this to the existing OAI_PRICE1K dictionary
+GEMINI_PRICE1K = {
+    # Gemini 2.5 Flash pricing based on search results
+    "gemini-2.5-flash": (0.00015, 0.0006),  # (input, output) without thinking
+    "gemini-2.5-flash-thinking": (0.00015, 0.0035),  # (input, output) with thinking
+    "gemini-2.5-flash-preview-05-20": (0.00015, 0.0006),  # specific version without thinking
+    "gemini-2.5-flash-preview-05-20-thinking": (0.00015, 0.0035),  # specific version with thinking
+    
+    # Additional Gemini models for reference
+    "gemini-2.0-flash": (0.0001, 0.0004),  # Based on search results mentioning $0.10/$0.40 per 1M
+    "gemini-1.5-pro": (0.00125, 0.005),    # Based on search results
+    "gemini-1.5-flash": (0.0, 0.0),        # Free tier mentioned in search results
+}
 
+# Add to the existing OAI_PRICE1K dictionary
+OAI_PRICE1K.update(GEMINI_PRICE1K)
 
 from pydantic import BaseModel, Field
 from typing import List
@@ -277,6 +299,7 @@ qa_prompt = (
 )
 
 
+
 paperqa2_settings = Settings(
         llm=PAPERQA2_LLM,
         llm_config={
@@ -309,10 +332,10 @@ paperqa2_settings = Settings(
         ),
         embedding=PAPERQA2_EMBEDDING,
         temperature=PAPERQA2_TEMPERATURE,
-        paper_directory=OCR_OUTPUT_DIR,
-        prompt={
-            "qa": qa_prompt
-        }
+        paper_directory=OCR_OUTPUT_DIR
+        # prompt={
+        #     "qa": qa_prompt
+        # }
     )
 
 index_settings = Settings(

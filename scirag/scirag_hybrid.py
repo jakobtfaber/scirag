@@ -123,6 +123,8 @@ class SciRagHybrid(SciRag):
                 self.embedding_dim = 1536
             else:
                 self.embedding_dim = 1536  # Default fallback
+        # Cost tracking configuration
+        self._setup_cost_tracking()
 
         self.docs = self.load_markdown_files()
         self.split_documents() ## create self.all_chunks
@@ -177,11 +179,109 @@ Instructions: Based on the context provided above, answer the question in valid 
         )
         self._initialize_embeddings_and_vector_db()
     
+    def _setup_cost_tracking(self):
+        """Setup cost tracking for generation costs only"""
+        # Pricing configuration (per 1K tokens) - Generation costs only
+        self.pricing = {
+            "gemini-2.5-flash-preview-05-20": {
+                "input_price_per_1k": 0.00015,    # $0.15 per 1M tokens
+                "output_price_per_1k": 0.0006,    # $0.60 per 1M tokens (no thinking)
+                "output_price_per_1k_thinking": 0.0035,  # $3.50 per 1M tokens (with thinking)
+            },
+            "gemini-2.5-flash": {
+                "input_price_per_1k": 0.000075,   # $0.075 per 1M tokens
+                "output_price_per_1k": 0.0003,    # $0.30 per 1M tokens
+            },
+            "gemini-2.0-flash": {
+                "input_price_per_1k": 0.0001,     # $0.10 per 1M tokens
+                "output_price_per_1k": 0.0004,    # $0.40 per 1M tokens
+            },
+        }
+        
+        # Enhanced cost tracking
+        self.cost_dict['Generation Model'] = []
+        
+        # Track total generation cost only
+        self.total_generation_cost = 0.0
+    def _count_tokens(self, text: str) -> int:
+        """Count tokens in text using tiktoken encoding."""
+        try:
+            encoding = tiktoken.get_encoding("cl100k_base")
+            return len(encoding.encode(text))
+        except Exception as e:
+            print(f"Warning: Could not count tokens: {e}")
+            # Fallback: rough estimate of 1 token per 4 characters
+            return len(text) // 4
+    def _calculate_generation_cost(self, input_tokens: int, output_tokens: int, thinking_enabled: bool = False) -> float:
+        """Calculate generation cost for Gemini models"""
+        model_pricing = self.pricing.get(self.gen_model, {})
+        
+        if not model_pricing:
+            print(f"Warning: No pricing found for generation model {self.gen_model}")
+            return 0.0
+        
+        # Calculate input cost
+        input_cost = (input_tokens / 1000) * model_pricing.get("input_price_per_1k", 0.0)
+        
+        # Calculate output cost based on thinking mode
+        if "output_price_per_1k" in model_pricing:
+            output_cost = (output_tokens / 1000) * model_pricing["output_price_per_1k"]
+        else:
+            output_cost = (output_tokens / 1000) * model_pricing.get("output_price_per_1k", 0.0)
+        
+        return input_cost + output_cost
+    def _log_cost_summary(self, generation_cost: float, input_tokens: int, output_tokens: int, ):
+        """Log cost summary for generation only"""
+        total_tokens = input_tokens + output_tokens
+        
+        # Update tracking
+        self.cost_dict['Generation Model'].append(self.gen_model)
+        
+        # Update totals
+        self.total_generation_cost += generation_cost
+        
+        # Update parent class tracking
+        self.cost_dict['Cost'].append(generation_cost)
+        self.cost_dict['Prompt Tokens'].append(input_tokens)
+        self.cost_dict['Completion Tokens'].append(output_tokens)
+        self.cost_dict['Total Tokens'].append(total_tokens)
+        
+        # Print detailed summary
+        print(f"\n--- SciRagHybrid Cost Summary ---")
+        print(f"Generation Model: {self.gen_model}")
+        print(f"Input tokens: {input_tokens:,}")
+        print(f"Output tokens: {output_tokens:,}")
+        print(f"Total tokens: {total_tokens:,}")
+        print(f"Generation cost: ${generation_cost:.6f}")
+        print(f"Total session cost: ${self.get_total_cost():.6f}")
+        print(f"--- End Summary ---\n")
 
     def _get_collection_name(self):
         """Generate consistent collection name based on embedding provider and model."""
         model_name_clean = self.embedding_model_name.replace('/', '_').replace('-', '_').replace(':', '_')
         return f"{self.chroma_collection_name}_{self.embedding_provider}_{model_name_clean}"
+    def get_total_cost(self) -> float:
+        """Get the total cost of all generation operations"""
+        return self.total_generation_cost
+    def get_cost_breakdown(self) -> dict:
+        """Get detailed cost breakdown"""
+        if not self.cost_dict['Cost']:
+            return {
+                "total_cost": 0.0,
+                "total_calls": 0,
+                "average_cost_per_call": 0.0,
+                "generation_model": self.gen_model
+            }
+        
+        return {
+            "total_cost": self.get_total_cost(),
+            "total_calls": len(self.cost_dict['Cost']),
+            "average_cost_per_call": sum(self.cost_dict['Cost']) / len(self.cost_dict['Cost']),
+            "generation_model": self.gen_model,
+            "total_tokens": sum(self.cost_dict['Total Tokens']),
+            "total_input_tokens": sum(self.cost_dict['Prompt Tokens']),
+            "total_output_tokens": sum(self.cost_dict['Completion Tokens'])
+        }
 
     def store_to_chromadb(self):
         import chromadb
@@ -730,6 +830,8 @@ Instructions: Based on the context provided above, answer the question in valid 
         context_text = "\n".join(context_pieces)
         self.context_text = context_text
         content = self.enhanced_query(context_text, query)
+        # Count input tokens
+        input_tokens = self._count_tokens(content)
         response = self.client.models.generate_content(
             model=self.gen_model,
             contents=content,
@@ -740,6 +842,11 @@ Instructions: Based on the context provided above, answer the question in valid 
                 response_schema=AnswerFormat,
             ),
         )
+        output_tokens = self._count_tokens(response.text)
+        # Calculate and log cost
+        generation_cost = self._calculate_generation_cost(input_tokens, output_tokens)
+        self._log_cost_summary(generation_cost, input_tokens, output_tokens)
+        
         return self.format_agent_output(response.text)
     
     def format_agent_output(self, response):

@@ -74,8 +74,8 @@ class SciRagPaperQA2(SciRag):
 
     async def query_paperqa(self,query: str) -> str:
         """Query PaperQA2 for scientific evidence using OCR-processed documents"""
-        response = ask(query, settings=self.settings)
-        return response.dict()['session']['answer']
+        response = await ask(query, settings=self.settings)
+        return response.model_dump()['session']['answer']
     
     def create_vector_db(self, *args, **kwargs):
         pass

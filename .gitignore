@@ -186,3 +186,6 @@ credentials.json
 
 embeddings/*
 notebooks/credential.json
+
+embeddings/*
+

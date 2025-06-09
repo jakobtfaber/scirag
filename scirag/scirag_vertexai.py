@@ -12,6 +12,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
 
+import tiktoken
 
 from .config import AnswerFormat
 import json
@@ -39,6 +40,41 @@ from .config import (vertex_client,
                      markdown_files_path)
 
 from .scirag import SciRag
+# Enhanced cost tracking functions
+def remove_numerical_references(text):
+    """Remove numerical references from text"""
+    import re
+    cleaned_text = re.sub(r'\[\d+\]', '', text)
+    return cleaned_text
+
+def print_usage_summary(tokens_dict, cost_dict):
+    """Print usage summary and update cost tracking"""
+    import pandas as pd
+    
+    model = tokens_dict["model"]
+    prompt_tokens = tokens_dict["prompt_tokens"]
+    completion_tokens = tokens_dict["completion_tokens"]
+    total_tokens = tokens_dict["total_tokens"]
+    cost = tokens_dict["cost"]
+
+    df = pd.DataFrame([{
+        "Model": model,
+        "Cost": f"${cost:.6f}",
+        "Prompt Tokens": prompt_tokens,
+        "Completion Tokens": completion_tokens,
+        "Total Tokens": total_tokens,
+    }])
+    
+    print(f"\n--- Vertex AI Usage Summary ---")
+    print(df.to_string(index=False))
+    print(f"--- End Summary ---\n")
+
+    cost_dict['Cost'].append(cost) 
+    cost_dict['Prompt Tokens'].append(prompt_tokens)
+    cost_dict['Completion Tokens'].append(completion_tokens)
+    cost_dict['Total Tokens'].append(total_tokens)
+    cost_dict['Model'].append(model)
+
 
 class SciRagVertexAI(SciRag):
     def __init__(self, 
@@ -49,7 +85,12 @@ class SciRagVertexAI(SciRag):
                  gen_model = GEMINI_GEN_MODEL,
                  ):
         super().__init__(client, credentials, markdown_files_path, corpus_name, gen_model)
+<<<<<<< HEAD
 
+=======
+        self.pricing = self._get_vertex_ai_pricing()
+        self.cost_dict['Model'] = []
+>>>>>>> April
 
         print("Listing RAG Corpora:")
 
@@ -101,9 +142,92 @@ class SciRagVertexAI(SciRag):
 
         if not corpora_found:
             print("No RAG corpora found in your project/region.")
+    def _get_vertex_ai_pricing(self):
+        """Get Vertex AI pricing for Gemini 2.5 Flash Preview model"""
+        pricing = {
+            "gemini-2.5-flash-preview-05-20": {
+                "input_price_per_1k": 0.00015,    # $0.15 per 1M tokens (thinking version)
+                "output_price_per_1k": 0.0035 # $3.50 per 1M tokens (with thinking)
+            },
+        }
+        return pricing
+    def _calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
+        """Calculate the cost of the API call based on token usage."""
+        model_name = "gemini-2.5-flash-preview-05-20"
+        model_pricing = self.pricing.get(model_name, {})
+        
+        if not model_pricing:
+            print(f"Warning: No pricing found for model {model_name}")
+            return 0.0
+        
+        # Calculate input cost
+        input_cost = (input_tokens / 1000) * model_pricing["input_price_per_1k"]
+        
+        # Calculate output cost based on thinking mode
     
-    
+        output_cost = (output_tokens / 1000) * model_pricing["output_price_per_1k"]
 
+        
+        total_cost = input_cost + output_cost
+        return total_cost
+    
+    def _log_usage_and_cost(self, input_tokens: int, output_tokens: int, total_cost: float):
+        """Log usage and cost information."""
+        total_tokens = input_tokens + output_tokens
+        
+        tokens_dict = {
+            "model": "gemini-2.5-flash-preview-05-20",
+            "prompt_tokens": input_tokens,
+            "completion_tokens": output_tokens,
+            "total_tokens": total_tokens,
+            "cost": total_cost
+        }
+        
+        # Enhanced logging with thinking mode info
+        print(f"\n--- Vertex AI Usage Summary ---")
+        print(f"Model: gemini-2.5-flash-preview-05-20")
+        print(f"Input tokens: {input_tokens:,}")
+        print(f"Output tokens: {output_tokens:,}")
+        print(f"Total tokens: {total_tokens:,}")
+        print(f"Cost: ${total_cost:.6f}")
+        print(f"Input cost: ${(input_tokens / 1000) * 0.00015:.6f}")
+
+        print(f"Output cost: ${(output_tokens / 1000) * 0.0035:.6f} (thinking)")
+
+        print(f"--- End Summary ---\n")
+        
+        print_usage_summary(tokens_dict, self.cost_dict)
+    def get_cost_summary(self) -> dict:
+        """Get a summary of all costs and usage."""
+        if not self.cost_dict['Cost']:
+            return {
+                "total_cost": 0.0,
+                "total_calls": 0,
+                "total_input_tokens": 0,
+                "total_output_tokens": 0,
+                "total_tokens": 0,
+                "average_cost_per_call": 0.0,
+                "model": self.gen_model
+            }
+        
+        return {
+            "total_cost": sum(self.cost_dict['Cost']),
+            "total_calls": len(self.cost_dict['Cost']),
+            "total_input_tokens": sum(self.cost_dict['Prompt Tokens']),
+            "total_output_tokens": sum(self.cost_dict['Completion Tokens']),
+            "total_tokens": sum(self.cost_dict['Total Tokens']),
+            "average_cost_per_call": sum(self.cost_dict['Cost']) / len(self.cost_dict['Cost']),
+            "model": self.gen_model
+        }
+    def _count_tokens(self, text: str) -> int:
+        """Count tokens in text using tiktoken encoding."""
+        try:
+            encoding = tiktoken.get_encoding("cl100k_base")
+            return len(encoding.encode(text))
+        except Exception as e:
+            print(f"Warning: Could not count tokens: {e}")
+            # Fallback: rough estimate of 1 token per 4 characters
+            return len(text) // 4
 
     def create_vector_db(self, folder_id = folder_id):
 
@@ -207,6 +331,10 @@ class SciRagVertexAI(SciRag):
 
 
     def get_response(self, query: str):
+         # Count input tokens
+
+        input_tokens = self._count_tokens(query)
+        
         response = self.client.models.generate_content(
             model=self.gen_model,
             contents=self.enhanced_query(query),
@@ -218,6 +346,11 @@ class SciRagVertexAI(SciRag):
                                          response_schema=AnswerFormat,
                                          ),
         )
+        output_text = response.text
+        output_tokens = self._count_tokens(output_text)
+        # Calculate and log cost
+        total_cost = self._calculate_cost(input_tokens, output_tokens)
+        self._log_usage_and_cost(input_tokens, output_tokens, total_cost)
         return self.format_agent_output(response.text)
     
 
