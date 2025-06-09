@@ -268,11 +268,6 @@ Your response must be in JSON format with exactly these fields:
 - "answer": Your 1-2 sentence response with citations
 - "sources": Array of paper citations [1]-[5] that are relevant to your answer
 
-Example format:
-{{
-  "answer": "The CAMELS project uses machine learning simulations to study cosmology and astrophysics [2]. It provides a comprehensive suite of hydrodynamic and N-body simulations for parameter inference.",
-  "sources": [2]
-}}
 """
     
     def get_response(self, query: str) -> str:

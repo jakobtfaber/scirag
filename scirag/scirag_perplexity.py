@@ -193,12 +193,6 @@ You must search your knowledge base calling your tool. The sources must be from 
 Your response must be in JSON format with exactly these fields:
 - "answer": Your 1-3 sentence response with citations
 - "sources": Array of citation numbers used (e.g., ["1", "2"])
-
-Example format:
-{{
-  "answer": "The CAMELS project uses machine learning simulations to study cosmology and astrophysics [2]. It provides a comprehensive suite of hydrodynamic and N-body simulations for parameter inference[3].",
-  "sources": [2, 3]
-}}
 """
     
     def _execute_perplexity_query(self, payload: Dict) -> Dict:
