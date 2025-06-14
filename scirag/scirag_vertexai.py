@@ -85,12 +85,8 @@ class SciRagVertexAI(SciRag):
                  gen_model = GEMINI_GEN_MODEL,
                  ):
         super().__init__(client, credentials, markdown_files_path, corpus_name, gen_model)
-<<<<<<< HEAD
-
-=======
         self.pricing = self._get_vertex_ai_pricing()
         self.cost_dict['Model'] = []
->>>>>>> April
 
         print("Listing RAG Corpora:")
 

@@ -1,13 +1,8 @@
 from pathlib import Path
 import vertexai
 from google import genai
-<<<<<<< HEAD
-import os
-from glob import glob
-=======
 from glob import glob
 import os
->>>>>>> April
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google_auth_oauthlib.flow import InstalledAppFlow
