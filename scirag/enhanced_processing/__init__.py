@@ -5,7 +5,6 @@ This module integrates RAGBook's sophisticated document processing capabilities
 into SciRAG, providing advanced mathematical content processing, content type
 classification, and enhanced chunking strategies.
 """
-
 from .enhanced_chunk import (
     EnhancedChunk, ContentType, MathematicalContent, AssetContent,
     GlossaryContent
