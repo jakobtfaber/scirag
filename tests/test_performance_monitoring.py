@@ -1,0 +1,423 @@
+#!/usr/bin/env python3
+"""
+Performance and Monitoring Test Suite for Enhanced SciRAG
+
+This test suite validates:
+1. Performance benchmarks and thresholds
+2. Memory usage monitoring
+3. Error rate tracking
+4. Response time measurements
+5. System health checks
+"""
+
+import pytest
+import time
+import psutil
+import tempfile
+import os
+from pathlib import Path
+from typing import List, Dict, Any
+import statistics
+
+# Import enhanced processing components
+from scirag.enhanced_processing import (
+    EnhancedDocumentProcessor, MathematicalProcessor, ContentClassifier,
+    EnhancedChunker, AssetProcessor, GlossaryExtractor
+)
+from scirag.enhanced_processing.monitoring import EnhancedProcessingMonitor
+
+
+class TestPerformanceBenchmarks:
+    """Test performance benchmarks and thresholds."""
+    
+    def test_document_processing_performance(self):
+        """Test document processing performance benchmarks."""
+        processor = EnhancedDocumentProcessor()
+        
+        # Create test document with various content types
+        test_content = """
+        # Test Document
+        
+        This is a test paragraph with some content.
+        
+        The equation E = mc^2 is famous in physics.
+        
+        \\begin{figure}
+        \\includegraphics{test.png}
+        \\caption{Test figure}
+        \\end{figure}
+        
+        Definition: A black hole is a region of spacetime.
+        
+        Another equation: F = ma
+        """
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+            f.write(test_content)
+            f.flush()
+            
+            try:
+                # Measure processing time
+                start_time = time.time()
+                chunks = processor.process_document(Path(f.name), "test_doc")
+                processing_time = time.time() - start_time
+                
+                # Performance thresholds
+                assert processing_time < 5.0, f"Document processing took {processing_time:.2f}s (threshold: 5.0s)"
+                assert len(chunks) > 0, "Should produce at least one chunk"
+                
+                # Check processing quality
+                content_types = [chunk.content_type for chunk in chunks]
+                assert any(ct.value == "prose" for ct in content_types), "Should identify prose content"
+                
+            finally:
+                os.unlink(f.name)
+    
+    def test_mathematical_processing_performance(self):
+        """Test mathematical processing performance."""
+        processor = MathematicalProcessor()
+        
+        # Test with various equation complexities
+        equations = [
+            r"E = mc^2",
+            r"\frac{d}{dx}(x^2) = 2x",
+            r"\int_0^\infty e^{-x} dx = 1",
+            r"\sum_{i=1}^n i = \frac{n(n+1)}{2}",
+            r"\begin{pmatrix} a & b \\ c & d \end{pmatrix}"
+        ]
+        
+        processing_times = []
+        
+        for equation in equations:
+            start_time = time.time()
+            result = processor.process_equation(equation)
+            processing_time = time.time() - start_time
+            processing_times.append(processing_time)
+            
+            # Each equation should process quickly
+            assert processing_time < 1.0, f"Equation processing took {processing_time:.3f}s (threshold: 1.0s)"
+            assert 'equation_tex' in result
+            assert 'math_norm' in result
+        
+        # Average processing time should be reasonable
+        avg_time = statistics.mean(processing_times)
+        assert avg_time < 0.5, f"Average equation processing time: {avg_time:.3f}s (threshold: 0.5s)"
+    
+    def test_content_classification_performance(self):
+        """Test content classification performance."""
+        classifier = ContentClassifier()
+        
+        # Test with various content types
+        test_cases = [
+            ("This is regular prose text.", "prose"),
+            (r"\begin{equation} E = mc^2 \end{equation}", "equation"),
+            (r"\begin{figure} \includegraphics{test.png} \end{figure}", "figure"),
+            (r"\begin{table} \begin{tabular}{cc} a & b \\ c & d \end{tabular} \end{table}", "table"),
+            ("Definition: A black hole is a region of spacetime.", "definition"),
+        ]
+        
+        classification_times = []
+        
+        for content, expected_type in test_cases:
+            start_time = time.time()
+            result = classifier.classify_content(content, {})
+            classification_time = time.time() - start_time
+            classification_times.append(classification_time)
+            
+            # Classification should be fast
+            assert classification_time < 0.1, f"Classification took {classification_time:.3f}s (threshold: 0.1s)"
+            assert result.value == expected_type, f"Expected {expected_type}, got {result.value}"
+        
+        # Average classification time should be very fast
+        avg_time = statistics.mean(classification_times)
+        assert avg_time < 0.05, f"Average classification time: {avg_time:.3f}s (threshold: 0.05s)"
+
+
+class TestMemoryUsage:
+    """Test memory usage and monitoring."""
+    
+    def test_memory_usage_during_processing(self):
+        """Test memory usage during document processing."""
+        processor = EnhancedDocumentProcessor()
+        
+        # Get initial memory usage
+        initial_memory = psutil.Process().memory_info().rss / 1024 / 1024  # MB
+        
+        # Create a moderately large document
+        large_content = "Test content. " * 1000  # Large content
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+            f.write(large_content)
+            f.flush()
+            
+            try:
+                # Process document and measure memory
+                chunks = processor.process_document(Path(f.name), "large_doc")
+                
+                # Get peak memory usage
+                peak_memory = psutil.Process().memory_info().rss / 1024 / 1024  # MB
+                memory_increase = peak_memory - initial_memory
+                
+                # Memory increase should be reasonable
+                assert memory_increase < 200, f"Memory usage increased by {memory_increase:.1f}MB (threshold: 200MB)"
+                assert len(chunks) > 0, "Should produce chunks"
+                
+            finally:
+                os.unlink(f.name)
+    
+    def test_memory_cleanup_after_processing(self):
+        """Test that memory is cleaned up after processing."""
+        processor = EnhancedDocumentProcessor()
+        
+        # Process multiple documents and check memory cleanup
+        initial_memory = psutil.Process().memory_info().rss / 1024 / 1024  # MB
+        
+        for i in range(5):  # Process 5 documents
+            test_content = f"Test document {i}. " * 100
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+                f.write(test_content)
+                f.flush()
+                
+                try:
+                    chunks = processor.process_document(Path(f.name), f"doc_{i}")
+                    assert len(chunks) > 0
+                finally:
+                    os.unlink(f.name)
+        
+        # Force garbage collection
+        import gc
+        gc.collect()
+        
+        # Check final memory usage
+        final_memory = psutil.Process().memory_info().rss / 1024 / 1024  # MB
+        memory_increase = final_memory - initial_memory
+        
+        # Memory should not increase significantly after cleanup
+        assert memory_increase < 50, f"Memory increase after cleanup: {memory_increase:.1f}MB (threshold: 50MB)"
+
+
+class TestErrorRateMonitoring:
+    """Test error rate monitoring and tracking."""
+    
+    def test_error_tracking(self):
+        """Test error tracking functionality."""
+        monitor = EnhancedProcessingMonitor()
+        
+        # Simulate some processing with errors
+        for i in range(10):
+            if i % 3 == 0:  # Simulate errors every 3rd operation
+                monitor.record_error("test_error", f"Error {i}")
+            else:
+                monitor.record_success("test_operation", 0.1)
+        
+        # Check error rate
+        metrics = monitor.get_metrics()
+        assert 'error_count' in metrics
+        assert 'success_count' in metrics
+        assert 'error_rate' in metrics
+        
+        # Error rate should be approximately 33% (3 errors out of 10 operations)
+        assert 0.2 < metrics['error_rate'] < 0.4, f"Error rate: {metrics['error_rate']:.2f}"
+    
+    def test_health_check_functionality(self):
+        """Test health check functionality."""
+        monitor = EnhancedProcessingMonitor()
+        
+        # Test healthy state
+        health_status = monitor.check_health()
+        assert 'status' in health_status
+        assert 'timestamp' in health_status
+        
+        # Test with high error rate
+        for i in range(20):
+            monitor.record_error("test_error", f"Error {i}")
+        
+        health_status = monitor.check_health()
+        assert 'status' in health_status
+        # Should indicate unhealthy state due to high error rate
+
+
+class TestResponseTimeMonitoring:
+    """Test response time monitoring."""
+    
+    def test_response_time_tracking(self):
+        """Test response time tracking."""
+        monitor = EnhancedProcessingMonitor()
+        
+        # Simulate various response times
+        response_times = [0.1, 0.2, 0.15, 0.3, 0.25, 0.18, 0.22, 0.28, 0.12, 0.35]
+        
+        for i, response_time in enumerate(response_times):
+            monitor.record_success(f"operation_{i}", response_time)
+        
+        # Check response time metrics
+        metrics = monitor.get_metrics()
+        assert 'avg_response_time' in metrics
+        assert 'max_response_time' in metrics
+        assert 'min_response_time' in metrics
+        
+        # Verify calculations
+        expected_avg = statistics.mean(response_times)
+        expected_max = max(response_times)
+        expected_min = min(response_times)
+        
+        assert abs(metrics['avg_response_time'] - expected_avg) < 0.01
+        assert metrics['max_response_time'] == expected_max
+        assert metrics['min_response_time'] == expected_min
+    
+    def test_response_time_thresholds(self):
+        """Test response time threshold monitoring."""
+        monitor = EnhancedProcessingMonitor()
+        
+        # Set custom thresholds
+        monitor.thresholds['max_processing_time'] = 0.2  # 200ms
+        
+        # Test with responses within threshold
+        monitor.record_success("fast_operation", 0.1)
+        health_status = monitor.check_health()
+        assert health_status['status'] == 'healthy'
+        
+        # Test with responses exceeding threshold
+        monitor.record_success("slow_operation", 0.3)
+        health_status = monitor.check_health()
+        # Should indicate performance issues
+
+
+class TestSystemHealthChecks:
+    """Test system health check functionality."""
+    
+    def test_cpu_usage_monitoring(self):
+        """Test CPU usage monitoring."""
+        monitor = EnhancedProcessingMonitor()
+        
+        # Get current CPU usage
+        cpu_usage = monitor._get_cpu_usage()
+        assert isinstance(cpu_usage, float)
+        assert 0 <= cpu_usage <= 100, f"CPU usage: {cpu_usage}%"
+    
+    def test_memory_usage_monitoring(self):
+        """Test memory usage monitoring."""
+        monitor = EnhancedProcessingMonitor()
+        
+        # Get current memory usage
+        memory_usage = monitor._get_memory_usage()
+        assert isinstance(memory_usage, float)
+        assert memory_usage > 0, f"Memory usage: {memory_usage}MB"
+    
+    def test_health_check_comprehensive(self):
+        """Test comprehensive health check."""
+        monitor = EnhancedProcessingMonitor()
+        
+        # Run comprehensive health check
+        health_status = monitor.check_health()
+        
+        # Check required fields
+        required_fields = ['status', 'timestamp', 'cpu_usage', 'memory_usage', 'error_rate']
+        for field in required_fields:
+            assert field in health_status, f"Missing field: {field}"
+        
+        # Check data types
+        assert isinstance(health_status['status'], str)
+        assert isinstance(health_status['timestamp'], str)
+        assert isinstance(health_status['cpu_usage'], float)
+        assert isinstance(health_status['memory_usage'], float)
+        assert isinstance(health_status['error_rate'], float)
+    
+    def test_metrics_export(self):
+        """Test metrics export functionality."""
+        monitor = EnhancedProcessingMonitor()
+        
+        # Record some metrics
+        monitor.record_success("test_operation", 0.1)
+        monitor.record_error("test_error", "Test error message")
+        
+        # Test JSON export
+        json_metrics = monitor.export_metrics('json')
+        assert isinstance(json_metrics, str)
+        
+        # Test CSV export
+        csv_metrics = monitor.export_metrics('csv')
+        assert isinstance(csv_metrics, str)
+        assert 'metric,value' in csv_metrics
+        
+        # Test invalid format
+        with pytest.raises(ValueError):
+            monitor.export_metrics('invalid_format')
+
+
+class TestPerformanceRegression:
+    """Test for performance regressions."""
+    
+    def test_processing_time_regression(self):
+        """Test that processing times don't regress significantly."""
+        processor = EnhancedDocumentProcessor()
+        
+        # Test with standard document
+        test_content = """
+        # Test Document
+        
+        This is a test paragraph.
+        
+        The equation E = mc^2 is famous.
+        
+        \\begin{figure}
+        \\includegraphics{test.png}
+        \\caption{Test figure}
+        \\end{figure}
+        """
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+            f.write(test_content)
+            f.flush()
+            
+            try:
+                # Measure processing time multiple times
+                times = []
+                for _ in range(5):
+                    start_time = time.time()
+                    chunks = processor.process_document(Path(f.name), "test_doc")
+                    processing_time = time.time() - start_time
+                    times.append(processing_time)
+                
+                # Check that processing time is consistent and reasonable
+                avg_time = statistics.mean(times)
+                max_time = max(times)
+                
+                assert avg_time < 2.0, f"Average processing time: {avg_time:.2f}s (threshold: 2.0s)"
+                assert max_time < 3.0, f"Max processing time: {max_time:.2f}s (threshold: 3.0s)"
+                
+                # Check that all runs produced the same number of chunks
+                assert len(chunks) > 0, "Should produce chunks"
+                
+            finally:
+                os.unlink(f.name)
+    
+    def test_memory_usage_regression(self):
+        """Test that memory usage doesn't regress significantly."""
+        processor = EnhancedDocumentProcessor()
+        
+        # Test with multiple documents
+        initial_memory = psutil.Process().memory_info().rss / 1024 / 1024  # MB
+        
+        for i in range(3):
+            test_content = f"Test document {i}. " * 100
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+                f.write(test_content)
+                f.flush()
+                
+                try:
+                    chunks = processor.process_document(Path(f.name), f"doc_{i}")
+                    assert len(chunks) > 0
+                finally:
+                    os.unlink(f.name)
+        
+        # Check final memory usage
+        final_memory = psutil.Process().memory_info().rss / 1024 / 1024  # MB
+        memory_increase = final_memory - initial_memory
+        
+        # Memory increase should be reasonable
+        assert memory_increase < 100, f"Memory increase: {memory_increase:.1f}MB (threshold: 100MB)"
+
+
+if __name__ == "__main__":
+    # Run the tests
+    pytest.main([__file__, "-v", "--tb=short"])

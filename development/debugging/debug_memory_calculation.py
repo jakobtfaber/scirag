@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""
+Debug Memory Calculation Issue
+
+This script investigates the memory calculation discrepancy in the monitoring system.
+"""
+
+import psutil
+import sys
+from pathlib import Path
+
+def test_memory_calculations():
+    """Test different memory calculation methods"""
+    print("🔍 Testing Memory Calculation Methods")
+    print("=" * 50)
+    
+    # Method 1: System-wide memory usage (what monitoring.py uses)
+    system_memory = psutil.virtual_memory()
+    system_used_mb = system_memory.used / 1024 / 1024
+    system_total_mb = system_memory.total / 1024 / 1024
+    system_available_mb = system_memory.available / 1024 / 1024
+    
+    print(f"System-wide memory usage:")
+    print(f"  Used: {system_used_mb:.2f} MB")
+    print(f"  Total: {system_total_mb:.2f} MB")
+    print(f"  Available: {system_available_mb:.2f} MB")
+    print(f"  Usage %: {system_memory.percent:.1f}%")
+    
+    # Method 2: Process-specific memory usage
+    process = psutil.Process()
+    process_memory = process.memory_info()
+    process_rss_mb = process_memory.rss / 1024 / 1024  # Resident Set Size
+    process_vms_mb = process_memory.vms / 1024 / 1024  # Virtual Memory Size
+    
+    print(f"\nProcess-specific memory usage:")
+    print(f"  RSS (Resident Set Size): {process_rss_mb:.2f} MB")
+    print(f"  VMS (Virtual Memory Size): {process_vms_mb:.2f} MB")
+    
+    # Method 3: Memory usage by children processes
+    children = process.children(recursive=True)
+    children_memory = 0
+    for child in children:
+        try:
+            child_memory = child.memory_info()
+            children_memory += child_memory.rss / 1024 / 1024
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+    
+    print(f"\nChildren processes memory: {children_memory:.2f} MB")
+    
+    # Method 4: Memory usage including children
+    total_process_memory = process_rss_mb + children_memory
+    print(f"Total process memory (including children): {total_process_memory:.2f} MB")
+    
+    print(f"\n📊 COMPARISON:")
+    print(f"System-wide used memory: {system_used_mb:.2f} MB")
+    print(f"Process-specific memory: {process_rss_mb:.2f} MB")
+    print(f"Difference: {system_used_mb - process_rss_mb:.2f} MB")
+    
+    # Check if the monitoring system is using the wrong method
+    if system_used_mb > process_rss_mb * 10:  # System memory is much higher
+        print(f"\n⚠️ ISSUE IDENTIFIED:")
+        print(f"The monitoring system is using system-wide memory usage ({system_used_mb:.2f} MB)")
+        print(f"instead of process-specific memory usage ({process_rss_mb:.2f} MB)")
+        print(f"This explains the high memory usage reported in the health check!")
+    
+    return {
+        'system_used_mb': system_used_mb,
+        'process_rss_mb': process_rss_mb,
+        'process_vms_mb': process_vms_mb,
+        'children_memory_mb': children_memory,
+        'total_process_memory_mb': total_process_memory
+    }
+
+def test_enhanced_processing_memory_calculation():
+    """Test memory calculation during enhanced processing"""
+    print("\n🔍 Testing Enhanced Processing Memory Calculation")
+    print("=" * 50)
+    
+    # Import enhanced processing
+    sys.path.insert(0, str(Path(__file__).parent / "scirag" / "enhanced_processing"))
+    
+    try:
+        from monitoring import EnhancedProcessingMonitor
+        
+        # Create monitor
+        monitor = EnhancedProcessingMonitor()
+        
+        # Record some metrics
+        monitor.record_processing_metrics(
+            documents_processed=1,
+            chunks_created=5,
+            mathematical_content_processed=2,
+            assets_processed=1,
+            glossary_terms_extracted=1,
+            processing_time=1.5
+        )
+        
+        # Get processing stats
+        stats = monitor.get_processing_stats()
+        print(f"Processing stats memory usage: {stats['memory_usage_mb']:.2f} MB")
+        
+        # Get health status
+        health = monitor.get_health_status()
+        print(f"Health status: {health}")
+        
+        # Check what memory calculation is being used
+        print(f"\nMemory calculation method in monitoring:")
+        print(f"  System memory used: {psutil.virtual_memory().used / 1024 / 1024:.2f} MB")
+        print(f"  Process memory RSS: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB")
+        
+    except Exception as e:
+        print(f"❌ Error testing enhanced processing: {e}")
+        import traceback
+        traceback.print_exc()
+
+def main():
+    """Main debugging function"""
+    print("🚀 Starting Memory Calculation Investigation")
+    print("=" * 60)
+    
+    # Test memory calculations
+    memory_data = test_memory_calculations()
+    
+    # Test enhanced processing memory calculation
+    test_enhanced_processing_memory_calculation()
+    
+    print("\n" + "=" * 60)
+    print("📊 CONCLUSION")
+    print("=" * 60)
+    
+    if memory_data['system_used_mb'] > memory_data['process_rss_mb'] * 10:
+        print("✅ ISSUE CONFIRMED: The monitoring system is using system-wide memory usage")
+        print("   instead of process-specific memory usage.")
+        print("   This causes false high memory usage warnings.")
+        print("\n🔧 RECOMMENDED FIX:")
+        print("   Change monitoring.py line 77 from:")
+        print("   memory_usage = psutil.virtual_memory().used / 1024 / 1024")
+        print("   to:")
+        print("   memory_usage = psutil.Process().memory_info().rss / 1024 / 1024")
+    else:
+        print("✅ Memory calculation appears correct")
+
+if __name__ == "__main__":
+    main()

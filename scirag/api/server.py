@@ -1,0 +1,382 @@
+"""
+Production API server for Enhanced SciRAG.
+
+This module provides a FastAPI-based production server for the enhanced
+SciRAG system with comprehensive monitoring, health checks, and API endpoints.
+"""
+
+import asyncio
+import logging
+import time
+from typing import List, Dict, Any, Optional
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+import uvicorn
+
+from ..config.production import config
+from ..enhanced_processing import EnhancedDocumentProcessor
+from ..validation import SciRagHealthChecker, DataIntegrityChecker
+from ..enhanced_processing.monitoring import EnhancedProcessingMonitor
+
+
+# Request/Response Models
+class QueryRequest(BaseModel):
+    """Query request model."""
+    query: str = Field(..., description="The query to process")
+    content_types: Optional[List[str]] = Field(None, description="Content types to filter by")
+    max_results: Optional[int] = Field(10, description="Maximum number of results")
+    enable_enhanced_processing: Optional[bool] = Field(True, description="Enable enhanced processing")
+
+
+class QueryResponse(BaseModel):
+    """Query response model."""
+    response: str = Field(..., description="The generated response")
+    chunks_used: List[Dict[str, Any]] = Field(..., description="Chunks used in the response")
+    processing_time: float = Field(..., description="Processing time in seconds")
+    enhanced_processing_enabled: bool = Field(..., description="Whether enhanced processing was used")
+
+
+class DocumentUploadRequest(BaseModel):
+    """Document upload request model."""
+    content: str = Field(..., description="Document content")
+    source_id: str = Field(..., description="Source document ID")
+    file_type: Optional[str] = Field("markdown", description="File type")
+
+
+class DocumentUploadResponse(BaseModel):
+    """Document upload response model."""
+    chunks_created: int = Field(..., description="Number of chunks created")
+    processing_time: float = Field(..., description="Processing time in seconds")
+    enhanced_content_types: Dict[str, int] = Field(..., description="Enhanced content types found")
+
+
+class HealthResponse(BaseModel):
+    """Health check response model."""
+    status: str = Field(..., description="Overall system status")
+    timestamp: str = Field(..., description="Health check timestamp")
+    components: Dict[str, Any] = Field(..., description="Component health status")
+    metrics: Dict[str, Any] = Field(..., description="System metrics")
+
+
+class MetricsResponse(BaseModel):
+    """Metrics response model."""
+    metrics: Dict[str, Any] = Field(..., description="System metrics")
+    timestamp: str = Field(..., description="Metrics timestamp")
+
+
+# Initialize FastAPI app
+app = FastAPI(
+    title="Enhanced SciRAG API",
+    description="Production API for Enhanced SciRAG with RAGBook integration",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# Add middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=config.security_config['cors_origins'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Global variables
+document_processor: Optional[EnhancedDocumentProcessor] = None
+health_checker: Optional[SciRagHealthChecker] = None
+monitor: Optional[EnhancedProcessingMonitor] = None
+integrity_checker: Optional[DataIntegrityChecker] = None
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize the application on startup."""
+    global document_processor, health_checker, monitor, integrity_checker
+    
+    # Setup logging
+    logging.basicConfig(
+        level=getattr(logging, config.log_level),
+        format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+    )
+    
+    logger = logging.getLogger(__name__)
+    logger.info("Starting Enhanced SciRAG API server...")
+    
+    # Create necessary directories
+    config.create_directories()
+    
+    # Initialize components
+    try:
+        document_processor = EnhancedDocumentProcessor(
+            chunk_size=config.chunk_size,
+            overlap_ratio=config.overlap_ratio,
+            enable_mathematical_processing=config.enable_mathematical_processing,
+            enable_asset_processing=config.enable_asset_processing,
+            enable_glossary_extraction=config.enable_glossary_extraction
+        )
+        
+        health_checker = SciRagHealthChecker()
+        monitor = EnhancedProcessingMonitor()
+        integrity_checker = DataIntegrityChecker()
+        
+        logger.info("Enhanced SciRAG components initialized successfully")
+        
+    except Exception as e:
+        logger.error(f"Failed to initialize components: {e}")
+        raise
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    logger = logging.getLogger(__name__)
+    logger.info("Shutting down Enhanced SciRAG API server...")
+
+
+# Dependency functions
+def get_document_processor() -> EnhancedDocumentProcessor:
+    """Get document processor instance."""
+    if document_processor is None:
+        raise HTTPException(status_code=503, detail="Document processor not initialized")
+    return document_processor
+
+
+def get_health_checker() -> SciRagHealthChecker:
+    """Get health checker instance."""
+    if health_checker is None:
+        raise HTTPException(status_code=503, detail="Health checker not initialized")
+    return health_checker
+
+
+def get_monitor() -> EnhancedProcessingMonitor:
+    """Get monitor instance."""
+    if monitor is None:
+        raise HTTPException(status_code=503, detail="Monitor not initialized")
+    return monitor
+
+
+# API Endpoints
+@app.get("/", response_model=Dict[str, str])
+async def root():
+    """Root endpoint."""
+    return {
+        "message": "Enhanced SciRAG API",
+        "version": "1.0.0",
+        "status": "running"
+    }
+
+
+@app.get("/health", response_model=HealthResponse)
+async def health_check(
+    health_checker: SciRagHealthChecker = Depends(get_health_checker),
+    monitor: EnhancedProcessingMonitor = Depends(get_monitor)
+):
+    """Health check endpoint."""
+    try:
+        # Run health checks
+        health_status = health_checker.run_health_checks()
+        
+        # Get metrics
+        metrics = monitor.get_metrics()
+        
+        return HealthResponse(
+            status=health_status['overall_status'],
+            timestamp=health_status['timestamp'],
+            components=health_status['components'],
+            metrics=metrics
+        )
+        
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Health check failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+
+
+@app.get("/metrics", response_model=MetricsResponse)
+async def get_metrics(monitor: EnhancedProcessingMonitor = Depends(get_monitor)):
+    """Get system metrics."""
+    try:
+        metrics = monitor.get_metrics()
+        return MetricsResponse(
+            metrics=metrics,
+            timestamp=time.strftime("%Y-%m-%dT%H:%M:%S")
+        )
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to get metrics: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get metrics: {str(e)}")
+
+
+@app.post("/query", response_model=QueryResponse)
+async def query_documents(
+    request: QueryRequest,
+    background_tasks: BackgroundTasks,
+    processor: EnhancedDocumentProcessor = Depends(get_document_processor),
+    monitor: EnhancedProcessingMonitor = Depends(get_monitor)
+):
+    """Query documents endpoint."""
+    try:
+        start_time = time.time()
+        
+        # Process query (simplified for demo - in production, this would use the full SciRAG pipeline)
+        response_text = f"Enhanced SciRAG response to: {request.query}"
+        
+        # Create mock chunks for demonstration
+        chunks_used = [
+            {
+                "id": "chunk_1",
+                "text": f"Relevant content for: {request.query}",
+                "content_type": "prose",
+                "source_id": "demo_source"
+            }
+        ]
+        
+        processing_time = time.time() - start_time
+        
+        # Record metrics
+        monitor.record_success("query_processing", processing_time)
+        
+        # Background task for logging
+        background_tasks.add_task(log_query, request.query, processing_time)
+        
+        return QueryResponse(
+            response=response_text,
+            chunks_used=chunks_used,
+            processing_time=processing_time,
+            enhanced_processing_enabled=request.enable_enhanced_processing
+        )
+        
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Query processing failed: {e}")
+        monitor.record_error("query_processing", str(e))
+        raise HTTPException(status_code=500, detail=f"Query processing failed: {str(e)}")
+
+
+@app.post("/documents", response_model=DocumentUploadResponse)
+async def upload_document(
+    request: DocumentUploadRequest,
+    background_tasks: BackgroundTasks,
+    processor: EnhancedDocumentProcessor = Depends(get_document_processor),
+    monitor: EnhancedProcessingMonitor = Depends(get_monitor)
+):
+    """Upload and process document endpoint."""
+    try:
+        start_time = time.time()
+        
+        # Create temporary file
+        temp_file = Path(f"./temp/{request.source_id}.md")
+        temp_file.parent.mkdir(exist_ok=True)
+        
+        with open(temp_file, 'w', encoding='utf-8') as f:
+            f.write(request.content)
+        
+        try:
+            # Process document
+            chunks = processor.process_document(temp_file, request.source_id)
+            
+            # Count enhanced content types
+            enhanced_content_types = {}
+            for chunk in chunks:
+                content_type = chunk.content_type.value
+                enhanced_content_types[content_type] = enhanced_content_types.get(content_type, 0) + 1
+            
+            processing_time = time.time() - start_time
+            
+            # Record metrics
+            monitor.record_success("document_processing", processing_time)
+            
+            # Background task for cleanup
+            background_tasks.add_task(cleanup_temp_file, temp_file)
+            
+            return DocumentUploadResponse(
+                chunks_created=len(chunks),
+                processing_time=processing_time,
+                enhanced_content_types=enhanced_content_types
+            )
+            
+        finally:
+            # Cleanup temp file
+            if temp_file.exists():
+                temp_file.unlink()
+        
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Document processing failed: {e}")
+        monitor.record_error("document_processing", str(e))
+        raise HTTPException(status_code=500, detail=f"Document processing failed: {str(e)}")
+
+
+@app.get("/config")
+async def get_config():
+    """Get current configuration."""
+    return config.get_config()
+
+
+@app.post("/config/validate")
+async def validate_config():
+    """Validate current configuration."""
+    is_valid = config.validate_config()
+    return {"valid": is_valid}
+
+
+# Background tasks
+async def log_query(query: str, processing_time: float):
+    """Log query for analytics."""
+    logger = logging.getLogger("query_analytics")
+    logger.info(f"Query: {query[:100]}... | Processing time: {processing_time:.3f}s")
+
+
+async def cleanup_temp_file(file_path: Path):
+    """Cleanup temporary file."""
+    try:
+        if file_path.exists():
+            file_path.unlink()
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to cleanup temp file {file_path}: {e}")
+
+
+# Error handlers
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc):
+    """Handle HTTP exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": exc.detail, "status_code": exc.status_code}
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc):
+    """Handle general exceptions."""
+    logger = logging.getLogger(__name__)
+    logger.error(f"Unhandled exception: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal server error", "status_code": 500}
+    )
+
+
+def run_server():
+    """Run the production server."""
+    uvicorn.run(
+        "scirag.api.server:app",
+        host=config.api_host,
+        port=config.api_port,
+        workers=config.api_workers,
+        log_level=config.log_level.lower(),
+        access_log=True
+    )
+
+
+if __name__ == "__main__":
+    run_server()

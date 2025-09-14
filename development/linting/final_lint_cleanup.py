@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+"""
+Final Lint Cleanup Script
+
+This script performs the final cleanup of remaining linting issues.
+"""
+
+import os
+import re
+from pathlib import Path
+
+def final_cleanup(file_path: Path):
+    """Perform final cleanup of linting issues."""
+    print(f"Final cleanup of {file_path.name}...")
+    
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Fix 1: Remove all trailing whitespace
+    content = re.sub(r'[ \t]+$', '', content, flags=re.MULTILINE)
+    
+    # Fix 2: Remove blank lines with only whitespace
+    content = re.sub(r'^\s+$', '', content, flags=re.MULTILINE)
+    
+    # Fix 3: Fix continuation line indentation
+    lines = content.split('\n')
+    fixed_lines = []
+    
+    for i, line in enumerate(lines):
+        # Fix continuation line indentation
+        if (line.strip().startswith(('(', '[', '{')) and 
+            i > 0 and 
+            len(lines[i-1]) > 70 and
+            len(line) - len(line.lstrip()) < 8):
+            # This is a continuation line, fix indentation
+            indent = len(lines[i-1]) - len(lines[i-1].lstrip())
+            line = ' ' * (indent + 4) + line.lstrip()
+        
+        fixed_lines.append(line)
+    
+    content = '\n'.join(fixed_lines)
+    
+    # Fix 4: Remove unused imports
+    content = remove_unused_imports_final(content)
+    
+    # Fix 5: Fix line length issues
+    content = fix_line_length_final(content)
+    
+    # Fix 6: Ensure proper file ending
+    content = content.rstrip() + '\n'
+    
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+def remove_unused_imports_final(content: str) -> str:
+    """Remove unused imports more aggressively."""
+    lines = content.split('\n')
+    fixed_lines = []
+    
+    for line in lines:
+        # Remove clearly unused imports
+        if (line.strip().startswith('from pathlib import Path') and 
+            'Path(' not in content.replace(line, '') and
+            'Path.' not in content.replace(line, '')):
+            continue
+        elif (line.strip().startswith('import sympy as sp') and 
+              'sp.' not in content.replace(line, '') and
+              'sp(' not in content.replace(line, '')):
+            continue
+        elif (line.strip().startswith('import time') and 
+              'time.' not in content.replace(line, '') and
+              'time(' not in content.replace(line, '')):
+            continue
+        elif (line.strip().startswith('from typing import Optional') and 
+              'Optional[' not in content.replace(line, '')):
+            continue
+        elif (line.strip().startswith('from typing import List') and 
+              'List[' not in content.replace(line, '') and
+              'List(' not in content.replace(line, '')):
+            continue
+        else:
+            fixed_lines.append(line)
+    
+    return '\n'.join(fixed_lines)
+
+def fix_line_length_final(content: str) -> str:
+    """Fix remaining line length issues."""
+    lines = content.split('\n')
+    fixed_lines = []
+    
+    for line in lines:
+        if len(line) > 79:
+            # Try to break at logical points
+            if ' and ' in line and len(line) > 79:
+                # Break at 'and'
+                parts = line.split(' and ')
+                if len(parts) > 1:
+                    indent = len(line) - len(line.lstrip())
+                    spaces = ' ' * (indent + 4)
+                    result = [parts[0]]
+                    for part in parts[1:]:
+                        result.append(f"{spaces}and {part}")
+                    fixed_lines.append('\n'.join(result))
+                    continue
+            
+            elif ' or ' in line and len(line) > 79:
+                # Break at 'or'
+                parts = line.split(' or ')
+                if len(parts) > 1:
+                    indent = len(line) - len(line.lstrip())
+                    spaces = ' ' * (indent + 4)
+                    result = [parts[0]]
+                    for part in parts[1:]:
+                        result.append(f"{spaces}or {part}")
+                    fixed_lines.append('\n'.join(result))
+                    continue
+            
+            elif ' + ' in line and len(line) > 79:
+                # Break at '+'
+                parts = line.split(' + ')
+                if len(parts) > 1:
+                    indent = len(line) - len(line.lstrip())
+                    spaces = ' ' * (indent + 4)
+                    result = [parts[0]]
+                    for part in parts[1:]:
+                        result.append(f"{spaces}+ {part}")
+                    fixed_lines.append('\n'.join(result))
+                    continue
+            
+            elif ',' in line and len(line) > 79:
+                # Break at commas
+                parts = line.split(',')
+                if len(parts) > 1:
+                    indent = len(line) - len(line.lstrip())
+                    spaces = ' ' * (indent + 4)
+                    result = [parts[0]]
+                    for i, part in enumerate(parts[1:], 1):
+                        if i == len(parts) - 1:
+                            result.append(f"{spaces}{part}")
+                        else:
+                            result.append(f"{spaces}{part},")
+                    fixed_lines.append('\n'.join(result))
+                    continue
+        
+        fixed_lines.append(line)
+    
+    return '\n'.join(fixed_lines)
+
+def main():
+    """Perform final cleanup of all enhanced processing modules."""
+    enhanced_processing_dir = Path(__file__).parent / "scirag" / "enhanced_processing"
+    
+    if not enhanced_processing_dir.exists():
+        print(f"Directory not found: {enhanced_processing_dir}")
+        return
+    
+    # Get all Python files
+    python_files = list(enhanced_processing_dir.glob("*.py"))
+    
+    print(f"Found {len(python_files)} Python files for final cleanup")
+    
+    for file_path in python_files:
+        if file_path.name == "__init__.py":
+            continue  # Skip __init__.py for now
+        
+        try:
+            final_cleanup(file_path)
+            print(f"✅ Final cleanup completed for {file_path.name}")
+        except Exception as e:
+            print(f"❌ Error in final cleanup of {file_path.name}: {e}")
+
+if __name__ == "__main__":
+    main()

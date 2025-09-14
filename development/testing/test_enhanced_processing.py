@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""
+Simple test runner for enhanced processing functionality.
+"""
+
+import sys
+from pathlib import Path
+
+# Add the scirag module to the path
+sys.path.insert(0, str(Path(__file__).parent))
+
+def test_imports():
+    """Test that we can import our modules."""
+    try:
+        from scirag.enhanced_processing import MathematicalProcessor, ContentClassifier, ContentType, EnhancedChunk
+        print("✓ All imports successful")
+        return True
+    except ImportError as e:
+        print(f"✗ Import failed: {e}")
+        return False
+
+def test_mathematical_processor():
+    """Test MathematicalProcessor basic functionality."""
+    try:
+        from scirag.enhanced_processing import MathematicalProcessor
+        
+        processor = MathematicalProcessor(enable_sympy=False, enable_ragbook=False)
+        
+        # Test equation detection
+        text = "The equation $E = mc^2$ is famous."
+        equations = processor.detect_equations(text)
+        assert len(equations) == 1
+        assert equations[0][0] == "E = mc^2"
+        
+        # Test equation processing
+        result = processor.process_equation("x + y = z", "inline")
+        assert 'math_norm' in result
+        assert 'math_tokens' in result
+        
+        print("✓ MathematicalProcessor tests passed")
+        return True
+    except Exception as e:
+        print(f"✗ MathematicalProcessor test failed: {e}")
+        return False
+
+def test_content_classifier():
+    """Test ContentClassifier basic functionality."""
+    try:
+        from scirag.enhanced_processing import ContentClassifier, ContentType
+        
+        classifier = ContentClassifier()
+        
+        # Test equation classification
+        text = "The equation $E = mc^2$ is famous."
+        content_type, confidence = classifier.classify_content(text)
+        assert content_type == ContentType.EQUATION
+        assert confidence > 0.3
+        
+        # Test prose classification
+        text = "This is regular prose text."
+        content_type, confidence = classifier.classify_content(text)
+        assert content_type == ContentType.PROSE
+        
+        print("✓ ContentClassifier tests passed")
+        return True
+    except Exception as e:
+        print(f"✗ ContentClassifier test failed: {e}")
+        return False
+
+def test_enhanced_chunk():
+    """Test EnhancedChunk basic functionality."""
+    try:
+        from scirag.enhanced_processing import EnhancedChunk, ContentType, MathematicalContent
+        
+        # Test basic chunk creation
+        chunk = EnhancedChunk(
+            id="test_1",
+            text="Test chunk",
+            source_id="test_source",
+            chunk_index=0
+        )
+        assert chunk.id == "test_1"
+        assert chunk.content_type == ContentType.PROSE
+        
+        # Test chunk with math content
+        math_content = MathematicalContent(
+            equation_tex="E = mc^2",
+            math_norm="E=mc^2",
+            math_tokens=["E", "=", "m", "c", "^", "2"]
+        )
+        
+        chunk = EnhancedChunk(
+            id="math_1",
+            text="The equation $E = mc^2$",
+            source_id="physics",
+            chunk_index=1,
+            content_type=ContentType.EQUATION,
+            math_content=math_content
+        )
+        
+        # Test serialization
+        chunk_dict = chunk.to_dict()
+        assert chunk_dict['id'] == "math_1"
+        assert chunk_dict['content_type'] == "equation"
+        
+        # Test deserialization
+        chunk_from_dict = EnhancedChunk.from_dict(chunk_dict)
+        assert chunk_from_dict.id == "math_1"
+        assert chunk_from_dict.content_type == ContentType.EQUATION
+        
+        print("✓ EnhancedChunk tests passed")
+        return True
+    except Exception as e:
+        print(f"✗ EnhancedChunk test failed: {e}")
+        return False
+
+def test_configuration():
+    """Test configuration functionality."""
+    try:
+        from scirag.config import EnhancedProcessingConfig
+        
+        config = EnhancedProcessingConfig()
+        
+        # Test basic configuration
+        assert hasattr(config, 'ENABLE_ENHANCED_PROCESSING')
+        assert hasattr(config, 'ENABLE_MATHEMATICAL_PROCESSING')
+        assert hasattr(config, 'RAGBOOK_CHUNK_SIZE')
+        
+        # Test config dictionary
+        config_dict = config.get_config_dict()
+        assert 'enhanced_processing' in config_dict
+        assert 'mathematical_processing' in config_dict
+        
+        # Test validation
+        errors = config.validate_config()
+        assert len(errors) == 0  # Should be valid with defaults
+        
+        print("✓ Configuration tests passed")
+        return True
+    except Exception as e:
+        print(f"✗ Configuration test failed: {e}")
+        return False
+
+def main():
+    """Run all tests."""
+    print("Testing Enhanced Processing Integration...")
+    print("=" * 50)
+    
+    tests = [
+        test_imports,
+        test_mathematical_processor,
+        test_content_classifier,
+        test_enhanced_chunk,
+        test_configuration
+    ]
+    
+    passed = 0
+    total = len(tests)
+    
+    for test in tests:
+        if test():
+            passed += 1
+        print()
+    
+    print("=" * 50)
+    print(f"Results: {passed}/{total} tests passed")
+    
+    if passed == total:
+        print("🎉 All tests passed! Phase 1 integration is working.")
+        return 0
+    else:
+        print("❌ Some tests failed. Check the errors above.")
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())

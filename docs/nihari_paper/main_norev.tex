@@ -1,0 +1,1064 @@
+\PassOptionsToPackage{splitbox=false}{adjustbox}
+\documentclass[twocolumn, linenumbers, tra]{aastex631}
+\usepackage{placeins}
+
+% Packages
+\usepackage{graphicx}
+\usepackage{comment}
+\usepackage{amsmath, amssymb}
+\usepackage{bm}
+\usepackage{soul}
+\usepackage{upgreek}
+\usepackage{enumitem}
+\usepackage{textcomp}
+\usepackage{tabularx}
+\usepackage{amsmath}
+
+
+\usepackage{booktabs}
+
+\setlength{\tabcolsep}{2.5pt}
+\newlength{\myvaluelength}
+\settowidth{\myvaluelength}{$17^{\mathrm{h}}10^{\mathrm{m}}31.15(32)^{\mathrm{s}}$}
+\newlength{\myDMlen}
+\settowidth{\myDMlen}{DM [pc cm$^{-3}$]}
+\usepackage[normalem]{ulem}
+\usepackage{gensymb}
+\newcommand{\rev}[1]{{\color{purple}#1}}
+\newcommand{\nihari}{FRB\,20221219A } % stand-in
+
+\usepackage{hyperref}
+% Title, author, and date
+
+\begin{document}
+
+\title{A Heavily Scattered Fast Radio Burst Is Viewed Through Multiple Galaxy Halos}
+
+\author[0000-0001-9855-5781]{Jakob T. Faber}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+
+\author[0000-0002-7252-5485]{Vikram Ravi}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+\affiliation{Owens Valley Radio Observatory, California Institute of Technology, Big Pine CA 93513, USA.}
+
+\author[0000-0002-4941-5333]{Stella Koch Ocker}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+\affiliation{The Observatories of the Carnegie Institution for Science, Pasadena, CA 91101, USA.}
+
+\author[0000-0002-6573-7316]{Myles B. Sherman}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+
+\author[0000-0002-4477-3625]{Kritti Sharma}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+
+\author[0000-0002-7587-6352]{Liam Connor}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+
+\author[0000-0002-4119-9963]{Casey Law}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+\affiliation{Owens Valley Radio Observatory, California Institute of Technology, Big Pine CA 93513, USA.}
+
+\author[0000-0003-1226-118X]{Nikita Kosogorov}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+
+\author[0000-0002-7083-4049]{Gregg Hallinan}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+\affiliation{Owens Valley Radio Observatory, California Institute of Technology, Big Pine CA 93513, USA.}
+
+\author{Charlie Harnach}
+\affiliation{Owens Valley Radio Observatory, California Institute of Technology, Big Pine CA 93513, USA.}
+
+\author[0000-0002-8191-3885]{Greg Hellbourg}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+\affiliation{Owens Valley Radio Observatory, California Institute of Technology, Big Pine CA 93513, USA.}
+
+\author{Rick Hobbs}
+\affiliation{Owens Valley Radio Observatory, California Institute of Technology, Big Pine CA 93513, USA.}
+
+\author{David Hodge}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+
+\author{Mark Hodges}
+\affiliation{Owens Valley Radio Observatory, California Institute of Technology, Big Pine CA 93513, USA.}
+
+\author[0000-0002-5959-1285]{James W. Lamb}
+\affiliation{Owens Valley Radio Observatory, California Institute of Technology, Big Pine CA 93513, USA.}
+
+\author{Paul Rasmussen}
+\affiliation{Owens Valley Radio Observatory, California Institute of Technology, Big Pine CA 93513, USA.}
+
+\author[0000-0001-8426-5732]{Jean J. Somalwar}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+
+\author[0000-0002-9353-6204]{Sander Weinreb}
+\affiliation{Cahill Center for Astronomy and Astrophysics, MC 249-17 California Institute of Technology, Pasadena CA 91125, USA.}
+
+\author{David P. Woody}
+\affiliation{Owens Valley Radio Observatory, California Institute of Technology, Big Pine CA 93513, USA.}
+
+\collaboration{200}{(The Deep Synoptic Array team)}
+\noaffiliation
+ 
+%\date{\today}
+
+\begin{abstract}
+We present a multi-wavelength study of \nihari, an apparently non-repeating, heavily scattered fast radio burst (FRB) detected by the Deep Synoptic Array 110 (DSA-110). The burst has a scattering timescale of $\tau = 19.2_{-1.8}^{+2.0}$ ms at 1.4\,GHz, inferred from the pulse broadening, and a dispersion measure of $\mathrm{DM} = 706.7^{+0.6}_{-0.6}$ $\mathrm{pc}\ \mathrm{cm}^{-3}$. From our arcsecond-scale localization, we associate the burst with a Milky Way-like host galaxy of stellar mass $\mathrm{log}_{10}(M_{\star, \mathrm{host}}/M_\odot) = 10.20^{+0.03}_{-0.04}$ at redshift $z_{\mathrm{host}} = 0.554$. Deep optical/IR spectroscopy and archival imaging data show that the line of sight intersects two intermediate-mass galaxy halos at $z_{\mathrm{igh1}}=0.492$ and $z_{\mathrm{igh2}}=0.438$ (impact parameters $b_{\mathrm{igh1}}/\mathrm{R}_{200}=0.37$ and $b_{\mathrm{igh2}}/\mathrm{R}_{200}=0.22$, respectively), and a low-mass galaxy cluster at $z_{\mathrm{cluster}} \sim 0.16$ ($b_{\mathrm{cluster}}/\mathrm{R}_{500} = 0.75$). At $z_{\mathrm{host}}$, the halo mass function-inferred likelihood of intersecting two $\gtrsim M_{\mathrm{igh}}$ halos at $b_{\mathrm{igh1}}$ and $b_{\mathrm{igh2}}$ is $0.76\%$, indicating a clear halo overabundance. We constrain the electron column density (DM) contributions and turbulence properties (i.e., scattering capabilities) of plasmas known to lie along the line of sight. We attribute an unusually low $\mathrm{DM}_{\mathrm{host}} = 75^{+70}_{-52}\ \mathrm{pc\ cm}^{-3}$ to the host galaxy in comparison to other scattered FRBs which, under Milky Way-like turbulence assumptions, suggests that the host galaxy cannot straightforwardly account for the observed pulse broadening. Instead we show that a multiphase circumgalactic medium in either intervening galaxy halo, if composed of partially ionized, $10$--$100\ \mathrm{pc}$ scale cloudlets analogous to observed Galactic structures like high-velocity clouds (HVCs), naturally satisfies the electron column densities and turbulence conditions required to produce pulse broadening comparable to $\tau_{\mathrm{obs}}$.
+\end{abstract}
+
+\keywords{Radio bursts (1339), Radio transient sources (2008), Interstellar medium (847), Circumgalactic medium (1879), Intergalactic medium (813), Galaxy stellar halos (598), Interstellar scattering (854)}
+
+\section{Introduction}
+
+Fast radio bursts \citep[FRBs;][]{Lorimer2007} are a class of highly luminous extragalactic radio transients with durations ranging from nanoseconds to seconds \citep{Petroff2019, Cordes2019, Majid2021, Nimmo2022, chime2022}. Their dispersion measures (DMs), which quantify the electron column density along the line of sight (LoS), exceed those predicted for the Milky Way \citep{Cordes2002, Yao2017}, implying an extragalactic origin. This hypothesis has since been confirmed by an increasing number of well-localized FRBs that reside in host galaxies out to redshift z $\gtrsim$ 1 \citep{Ryder2023, Law2023, Gordon2023, Connor2024}.
+
+The physical origins of FRBs are yet unknown. Source models ranging from isolated neutron stars to compact object mergers have been proposed, although recent observations have identified magnetars as viable engines, supported in part by detections of millisecond radio bursts from the Galactic magnetar SGR\,1935$+$2154 by the STARE-2 and CHIME/FRB observatories, with measured isotropic equivalent energies of $2.2^{+0.4}_{-0.4} \times 10^{35} \ \mathrm{erg}$ and $3_{-1.6}^{+3} \times 10^{35} \ \mathrm{erg}$, respectively, just below the lower bound of the $10^{37}-10^{42}\ \mathrm{erg}$ range of known FRB source energies \citep{Bochenek2020, chime2020b}.
+
+Although their sources and emission physics remain elusive, their DMs can serve as powerful tracers of baryons on a cosmological scale. For sources with well-constrained distances, DM measurements can be used to constrain baryon distributions in galaxy halos, clusters, and filaments in the intergalactic medium \citep{McQuinn2014, Macquart2020, Shin2024, Connor2024}. Moreover, if electron column densities in the host galaxy and foreground are modeled accurately, DMs offer a unique tool for mapping diffuse, ionized gas in the Milky Way and nearby galaxies, complementing traditional tracers such as H$\alpha$ and Faraday rotation in pulsars \citep{Connor2022, Ravi2023a, Cook2023}.
+
+FRB observations are sensitive to inhomogeneities in intervening plasmas through the effects of multipath propagation, or {diffractive} scattering. {multipath propagation produces two distinct frequency-dependent signatures: (i) pulse (or image) broadening, leading to asymmetric scattering tails in the pulse profile, and (ii) scintillation, which manifests as modulations in burst intensity that arise due to interference. 
+
+Pulse broadening is typically characterized by the decay time\footnote{The decay time is defined based on the form of the pulse broadening broadening function used to model the scattering tail. If the tail is modeled as an exponential, the decay time is $1/e$. See \citet{Geiger2024} for a detailed description.} $\tau$ of the scattering tail (the ``scattering timescale''), which follows a power-law frequency scaling $\tau \propto \nu^{-\alpha}$ with ``scattering index'' $\alpha$. The scattering index depends directly on the shape of the scattered image, as well as the electron density power spectrum within the scattering medium. For a turbulent scattering screen that is both ``thin'' ($\ll$ LoS distance) and ``wide'' ($\gg$ the source image), $\alpha = 4.4$ is expected for a Kolmogorov power-law power spectrum, while $\alpha = 4$ is expected for a Gaussian power spectrum, or a power-law spectrum suppressed at small scales (see \S\ref{sec:elecfluc} and Appendix \ref{apA}, or \citet{Rickett1977} for more detail).
+
+These assumptions are, of course, highly idealized and have been challenged by shallower indices ($\alpha \lesssim 4$) inferred for myriad Galactic pulsars, particularly at lower frequencies \citep{Lohmer2001, Deneva2009, Geyer2016, Dexter2017}. The physics implied by $\alpha \lesssim 4$ is not deterministic, but it has been suggested that a flattening in $\alpha$ can be expected if the turbulence is anisotropic \citep{Tuntsov2013}. Disagreements between true and assumed pulse broadening models have also been identified as a source of confusion when constraining $\alpha$ \citep{Geiger2024}.}
+
+Diffractive scintillation is measured on the basis of a characteristic spectral width in intensity modulation, or decorrelation bandwidth $\Delta \nu_{\mathrm{d}}$. This bandwidth can be related to the scattering timescale according to $\Delta \nu_{\mathrm{d}} \sim (2 \pi \tau)^{-1}$ for a single thin screen, which highlights the relationship between geometrical path length and phase \citep[][]{Sutton1971}. The phase information held in $\nu_{\mathrm{d}}$ can provide additional insight into the scattering geometry and turbulence properties. In practice, the most convincing measurements of $\Delta \nu_{\mathrm{d}}$ thus far have indicated scintillation by our Galactic interstellar medium (ISM) \citep{Masui2015, Gajjar2018, Hessels2019, Marcote2020, Bhandari2020, Schoen2021, Ocker2022a, Sammons2023}, with the exception of FRB\,150807 \citep{Ravi2016} and FRB\,20221022A \citep{Nimmo2025}. 
+
+However, the majority of scattering timescales inferred for FRBs exceed those expected from the Galactic electron density models \citep[e.g., NE2001;][]{Cordes2002} and suggest that pulse broadening may instead occur in the circumburst medium (CBM) or host galaxy ISM \citep{Simha2020, Chittidi2021, Ocker2022a, Cordes2022}. This can be directly constrained for scattered FRBs that exhibit $\Delta \nu_{\mathrm{d}}$ consistent with Galactic predictions, for example, but larger $\tau$ (i.e., $\Delta \nu_{\mathrm{d}} \nsim (2\pi\tau)^{-1}$), which together constrain the distance at which the broadening occurs \citep[this is often referred to as ``two-screen'' scattering;][]{Ocker2022a, Sammons2023}. While the ISMs in host galaxies are more naturally conducive to both scintillation and pulse broadening, scattering in the CBM requires extraordinarily high electron densities and density fluctuations \citep[$n_{e} \gg 10^{-2}$ cm$^{-3}$, far exceeding a typical ISM;][]{Ocker2020} on small ($ \sim \mathrm{km}$) scales. When such densities are confined by strong magnetic pressure \citep[$B \gtrsim 50 \ \mu \mathrm{G}$, e.g., similar to magnetized filaments observed in the Crab nebula;][]{Bietenholz1991}, the CBM gives rise to extreme Faraday rotation as well. However, highly magnetic environments do not guarantee strong scattering \citep[e.g., FRB\,20121102A;][]{Michilli2018}. To date, evidence for circumburst scattering has only been identified in FRB\,20190520B, which exhibits rapid variability in scattering times between consecutive bursts \citep{Ocker2022c}. 
+
+The broader population of scattered FRBs shows correlations between $\tau$ and $\mathrm{DM}_{\mathrm{host}}$ \citep{Cordes2022} which appear to mimic the well-known $\tau$--$\mathrm{DM}$ correlation observed for Galactic radio pulsars \citep{Cordes1991}, further supporting the theory that scattering occurs within the host galaxy. LoS-independent correlations between $\tau$ and DM have previously gone unidentified in large sample searches due to the use of ``extragalactic'' DMs \citep[DM$_\mathrm{ex}$;][]{Ravi2019, chime2019} that represent the DM accrued from all plasmas beyond the Milky Way. The use of DM$_{\mathrm{ex}}$ masks the host galaxy contribution, which must be isolated to observe the correlation due to contributions from the IGM. The limited sample of well-localized FRBs has historically precluded our ability to precisely constrain host galaxy DMs, but the recent advent of $\lesssim$ arcsecond localizations has begun to alleviate this dilemma \citep[see also][Verdi et al., in prep.]{Sherman2023}.
+
+It has been argued theoretically that circumgalactic media (CGMs) in intervening galaxy halos could contribute meaningfully to FRB scattering as well, both in the diffractive \citep{vedantham2019} and refractive \citep{Jow2024} regimes, although this has been challenging to justify observationally \citep{Connor2020, Chawla2022, Prochaska2019b}. Models for the CGM in these contexts typically invoke a multiphase medium, pervaded by a hot ($T \gtrsim 10^{6}\ \mathrm{K}$) virialized gas \citep{Dai2010} that confines a sparse distribution of cool ($T \sim 10^{4}\ \mathrm{K}$) partially ionized $\lesssim \mathrm{pc}$ gas clumps \citep[sometimes described as cloudlets that form a larger ``mist'';][]{McCourt2018}, which quasar absorption studies of gas surrounding $L^{*}$ galaxies support \citep{Stocke2013, Werk2014}. \citet{vedantham2019} used this model to make the analytical prediction that FRBs emitted at $z \sim 1$ will encounter foreground galaxy halos at impact parameters small enough to intersect an ensemble of clumps and produce scattering timescales $\tau \gtrsim 1\ \mathrm{ms}$ at $1\ \mathrm{GHz}$. \citet{Jow2024} consider the scenario in which FRBs are strongly refracted by similar cloudlets, leading to the production of multiple images (arriving $ \sim 10\ \mathrm{ms}$ apart) that quench Galactic scintillation. However, characterizing refractive scattering requires the detection of multiple events (images), as it crucially does not produce scattering tails or lead to any distinct observables within a single burst. Furthermore, \citet{Ocker2021} and \citet{Jow2024} argue that CGM cloudlet scattering, while plausible, is directly challenged by the dearth of FRBs for which this is actually observed, which suggests that the CGM models typically assumed may not be widely applicable to most foreground halos.
+
+The association of scattering with CBMs, host galaxies ISMs, or CGMs around foreground galaxies is a crucial endeavor, as it can provide unique constraints on source formation channels, galaxy formation, and CGM turbulence on AU--pc scales, well below the scale probed by quasar absorption \citep{Cordes2016, vedantham2019, Simard2021, Ocker2022b, Jow2024, Ocker2025}.
+
+In this paper, we examine the potential origins of the pulse broadening observed in \nihari. In \protect\S\ref{sec:observations} we present \nihari and the methods by which we infer its radio properties, including its localization with the DSA-110. We also present spectroscopic optical/IR follow-up observations of its host galaxy and two foreground galaxies. In \S\protect\ref{sec:dmbudget} we model the electron column densities of component media along the LoS to construct the ``DM budget'', from which we infer the DM of the host galaxy. In \S\protect\ref{sec:scatbudget} we model the turbulence properties of the same media to systematically evaluate their relative scattering strengths and contributions to the overall ``scattering budget''. We focus primarily on the capacities of the host galaxy ISM and foreground galaxy CGMs to produce significant scattering, and argue that scattering by a foreground CGM is favored over the local ISM in the case of \nihari. We conclude in \S\protect\ref{sec:conclusions}. In this work, we adopt standard cosmological parameters from \citet{Planck2015} to estimate DM contributions from the IGM \citep[consistent with Illustris TNG;][]{Pillepich2017} and from \citet{Planck2018} for all other cosmological inferences.
+
+\section{DSA-110 Observation of \texorpdfstring{$\mathrm{FRB}\,$20221219A}{FRB 20221219A}} \label{sec:observations}
+
+\begin{table}[h]
+  \caption{Burst properties for \nihari (see Figure\ \ref{fig:nihariwfall}), as described in \S\protect\ref{sec:observations} and Appendix \protect\ref{apB}.}
+  \label{tab:nihariprops}
+  \centering
+  % Use tabular* for full width and a `p{...}` column with the measured width.
+  \begin{tabular*}{\columnwidth}{@{}l@{\extracolsep{\fill}}r@{}}
+    \hline \hline 
+    Parameter & \multicolumn{1}{r}{Value} \\ % Right-align the "Value" header
+    \hline 
+    R.A. [J2000] & $17^{\mathrm{h}}10^{\mathrm{m}}31.15(32)^{\mathrm{s}}$ \\
+    Dec. [J2000] & $+71^{\circ}37'36.6(9)''$ \\
+    Signal-to-Noise (S/N) & $8.9^{+1}_{-1}$ \\
+    Linear Polarization Fraction (L/I) & $0.502_{0.08}$ \\
+    Dispersion Measure (DM) [pc cm$^{-3}$] & $706.7^{+0.6}_{-0.6}$ \\
+    Spectral Amplitude ($c_0$) & $1.65_{-0.11}^{+0.11}$ \\
+    Spectral Index ($\gamma$) & $-0.13_{-0.92}^{+0.90}$ \\
+    Intrinsic FWHM [ms] & $0.31_{-0.14}^{+0.21}$ \\
+    Scattering Timescale ($\tau_{\mathrm{obs}}^{1.4\,\mathrm{GHz}}$) [ms] & $19.2_{-1.8}^{+2.0}$ \\
+    \hline
+  \end{tabular*}
+\end{table}
+
+\subsection{DSA-110 Discovery and Localization}\label{sec:localization}
+
+The DSA-110 is a radio interferometer located at the Owens Valley Radio Observatory (OVRO) dedicated to the discovery and arcsecond-scale localization of FRBs. \nihari, shown in Figure\ \ref{fig:nihariwfall}, was detected during commissioning observations on the Modified Julian Date (MJD) of 59932.79297813 (arrival time at 1530\,MHz at the observatory), with a real-time detection signal-to-noise ratio\footnote{The S/N was calculated using a weighted sum matched filter.} of 8.9. The antenna voltages containing the burst were measured and recorded in two linear polarizations with a time resolution of 32.768 $\mathrm{\mu s}$ across 6144 channels between 1311.25--1498.75\,MHz. By cross-correlating the voltages, we localize the burst to a sky position of (R.A. J2000, Dec. J2000) = ($+17^{h}10^{m}31.15^{s}, +71^{\circ}37\arcmin36.6\arcsec$) with $1\sigma$ uncertainties of 1.5\arcsec\ in R.A. and 0.9$\arcsec$ in Dec. A detailed overview of the real-time detection pipeline and offline localization methods can be found in \citet{Ravi2023b}. We list all relevant burst properties in Table \ref{tab:nihariprops}.
+
+\subsection{Inference of Burst Properties}\label{sec:burstprop}
+
+The dynamic spectrum of \nihari is shown in Figure\ \ref{fig:nihariwfall}. We measured the DM by maximizing the forward-derivative of the timeseries, following methods outlined in \cite{Gajjar2018}, \cite{Hessels2019}, and \cite{Josephy2019}. This was done by constructing a 2D DM transform across the burst in time for 0.075 $\mathrm{pc}\ \mathrm{cm}^{-3}$ intervals, ranging from $692$--$722$ $\mathrm{pc}\ \mathrm{cm}^{-3}$, for which we computed the forward-derivative and convolved with a $3 \times 5\left(2.7\ \mathrm{ms} \times 0.5 \ \mathrm{pc} \ \mathrm{cm}^{-3}\right)$ smoothing kernel. We then integrated the modulus of the forward-derivative in time raised to $n \in(1,2,4)$. \cite{Gajjar2018} and \cite{Hessels2019} elect to use $n=1$ and $n=2$, respectively. \cite{Josephy2019}, however, show that $n > 2$ is optimal for identifying one uniquely bright peak in the pulse profile, while $n \lesssim 2$ typically prefers a series of lower-amplitude peaks. For the curves corresponding to each value of $n$, we fit a complex polynomial and defined its peak as the structure-maximizing DM. Uncertainties were estimated by fitting a simple Gaussian function to the most prominent peak in the polynomial fit and taking the 1$\sigma$ offset. Clear and consistent peaks were found when fitting for both $n=2$ and $n=4$, pointing to a structure-optimizing DM of $706.7^{+0.6}_{-0.6}\ \mathrm{pc\ cm}^{-3}$.
+
+{
+We characterized the pulse broadening in \nihari using a Markov Chain Monte Carlo (MCMC) fitting method with Bayesian likelihood estimation similar to that outlined in \cite{Ravi2019}. Given the low S/N of \nihari, we averaged the observing band into eight $ \sim 23.4375$\,MHz channels to gather sufficient signal, and fit for a two-dimensional exponentially-modified Gaussian (EMG) pulse model, $S_{\nu}(t)$, across all channels, defined as 
+
+\begin{equation}\label{eq:expgauss}
+\begin{aligned}
+& S_{\nu}(t)=\frac{c_{\nu}}{\sqrt{2 \pi \sigma_{\nu,\ \mathrm{DM}}^2}} \exp \left[\frac{-\left(t-\Delta t_{\nu,\ \mathrm{DM}} \right)^2}{\sigma_{\nu,\ \mathrm{DM}}^2}\right] \\
+&~~~~~ \ast \Theta\left(t-t_0\right) \exp \left[\frac{t-t_0}{\tau_{1\mathrm{GHz}} \nu^{-\alpha}}\right]
+\end{aligned}
+\end{equation}
+
+\noindent
+where at the central frequency of each channel $\nu$ and timestep $t$, $c_{\nu}$ represents the spectral amplitude which scales as $\propto c_0\nu^{-\gamma}$ with a spectral index $\gamma$, $\Delta t_{\nu,\ \mathrm{DM}}$ is the shift in time due to dispersive smearing after a start time $t_0$ referenced to $1.53\ \mathrm{GHz}$, where $\Delta t_{\nu,\ \mathrm{DM}} = t_0 + t_{\nu, \mathrm{DM}}=4.15 \mathrm{~ms} \times \mathrm{\delta DM}\left(\nu / \mathrm{GHz}\right)^{-2}$, $\sigma_{\nu,\ \mathrm{DM}}$ is the intrinsic burst width\footnote{{Normally, $\sigma$ is frequency-independent, however since these data are not coherently dedispersed, we need to account for intra-channel dispersive smearing.}} that goes as $\propto \mathrm{DM}\left(\nu / \mathrm{GHz}\right)^{-3}$, $\tau$ represents the pulse broadening (i.e., scattering) timescale at 1\,GHz, scaled to 1.4\,GHz according to a scattering index $\alpha$ as $\tau \propto \nu^{-\alpha}$, $\Theta(t)$ is the Heaviside unit step function, and $\ast$ symbolizes a convolution. We kept the scaling index fixed at $\alpha = 4$, as this is presupposed by functional form of Eq.~\ref{eq:expgauss} (see Appendix \ref{apA} for details regarding the pulse model), and obtained the best-fit model shown in Figure\ \ref{fig:nihariwfall}, with a scattering timescale of $\tau^{\mathrm{1.4\ GHz}}_{\mathrm{obs}}\ =\ 19.2_{-1.8}^{+2.0}\ \mathrm{ms}$ at $1.4\ \mathrm{GHz}$ (see Appendix\ \ref{apB} for a details regarding the fitting methods). Other best-fit parameters ($c_0$, $t_0$, $\gamma$, $\sigma$) from the posterior distributions are shown in Figure\ \ref{fig:corner}.}
+
+\begin{figure*}
+  \centering
+  \hspace{-0cm}
+  \includegraphics[width = \textwidth]{figs/nihari_221219aabz_finalmodel_fourpanel_ch8.pdf}
+  \caption{{A 2D fit of the pulse model defined in Eq.~\ref{eq:expgauss} to \nihari. \textit{Panel A:} The dynamic (time-frequency) spectrum downsampled in time by a factor of 8 ($\Delta t = 0.262\ \mathrm{ms}$) and in frequency by a factor of 768 to form 8 channels across the band ($\Delta \nu = 23.438\ \mathrm{MHz}$). To better visualize the burst in the dynamic spectrum, we smoothed the data in time using a 1D Savitzky--Golay filter with a 31 bin ($8.13\ \mathrm{ms}$) smoothing kernel of polynomial order $k=3$, indicated by the hatched rectangle. The timeseries in the upper sub-panel is downsampled but not smoothed, showing both the total intensity ($\mathrm{I_{data}}$, black) and linearly polarized signal ($\mathrm{L_{data}}$, magenta). \textit{Panel B: } The best-fit model dynamic spectrum, for which the best-fit parameters can be found in Table~\ref{tab:nihariprops} and full posteriors are shown in Figure\ \ref{fig:corner}. \textit{Panel C: } The sum of the model dynamic spectrum with randomly sampled noise obeying a log-normal distribution, as characterized for each channel in the off-pulse data. \textit{Panel D: } The residual dynamic spectrum, here obtained by subtracting the model spectrum with added noise from the data.}}
+  \label{fig:nihariwfall}
+\end{figure*}
+
+\subsection{Optical/IR Follow-Up of Host \& Intervening Galaxies}\label{sec:hostID}
+
+Using the 10$^{\mathrm{th}}$ data release of the Legacy Survey\footnote{https://www.legacysurvey.org/dr10/} \citep[DR10 R-band image;][]{Dey2019} and the Pan-STARRS1 \citep[PS1;][]{Chambers2016} optical survey, we identified a plausible host galaxy for \nihari (henceforth HG\,20221219A) consistent with the radio localization ellipse (see R-band field in Figure\ \ref{fig:niharidesifield}), as well as two closely neighboring galaxies (henceforth IGH1 and IGH2).
+
+%While traditional host-validation techniques typically rely on generating estimates of false associations based on galaxy counts \citep{Bloom2002, Eftekhari2017},
+We validated the association with HG\,20221219A using \texttt{astropath} \citep{Aggarwal2021}, which employs a Bayesian approach to estimate galaxy association probabilities with tunable priors based on the FRB sky position relative to neighboring galaxies, R-band magnitude, and R-band radius \citep[see the SED fit in Figure\ \ref{fig:niharised} and][for details regarding host galaxy association methods]{Sharma2023, Law2023}. We were able to successfully associate the host galaxy to \nihari with a confidence interval of $99.6\%$ using Legacy Survey DR10 R-band imaging data from the Beijing-Arizona Sky Survey (BASS), shown in Figure\ \ref{fig:niharidesifield}. 
+
+\subsubsection{Optical/IR Photometry}
+
+Photometric measurements were made using archival images from PS1 ($g, r, i, z, y$), DECam \citep[$g, r, z$;][]{Valdes2014}, WISE \citep[$w1, w2$;][]{Wright2010}, as well as IR images we obtained with the Wide Field Infrared Camera \citep[WIRC, Ks;][]{Wilson2003} on August 16, 2022. We measured isophotes for each galaxy using PS1 $i$-band images, setting a best-fit coverage of $\gtrsim 95 \%$. The isophotes were then scaled in accordance with the point spread functions in each photometric band to perform aperture photometry. A detailed description of these methods can be found in \citet{Sharma2023}.
+
+\subsubsection{Optical/IR Spectroscopy}
+
+We obtained spectra for HG\,20221219A with the Deep Extragalactic Imaging Multi-Object Spectrograph \citep[Keck-II/DEIMOS;][]{Faber2003} on April 20, 2023, and for IGH1/IGH2 with the Low-Resolution Imaging Spectrometer on the Keck-I telescope \citep[Keck-I/LRIS;][]{Oke1995} on June 14, 2023. We created a mask of roughly 50 slits for our DEIMOS observation, placing one on HG\,20221219A and the rest on surrounding galaxies presumed to be in the foreground based on Legacy Survey DR10 photometry, including massive central members of the galaxy cluster J171039.6+713427 \citep{Wen2018}.
+
+The spectra were reduced using \texttt{PypeIt} \citep{pypeit} and \texttt{LPipe} software \citep{Perley2019}, and calibrated using the BD+28 4211 standard star. To account for slit losses, we scaled the spectra to match the PS1 photometry. Spectroscopic redshifts and line fluxes were measured using the penalized PiXel-Fitting software \citep[\texttt{pPXF;}][]{Cappellari2017, Cappellari2022}. This software jointly fits for the stellar continuum and nebular emission lines based on the MILES stellar library \citep{SanchezBlazquez2006}. Based on the \texttt{pPXF} fits, we calculated a redshift of $z_{\mathrm{host}} = 0.554$ for HG\,20221219A, $z_{\mathrm{igh1}} = 0.492$ for IGH1, and $z_{\mathrm{igh2}} = 0.438$ for IGH2, all with negligible uncertainties \citep[$\lesssim 0.4\ \%$;][]{Sharma2023}. Assuming a \citet{Planck2018} cosmology, we infer proper impact parameters of $b_{\mathrm{igh1}} = 44.9_{-11.3}^{+11.3}$ kpc and $b_{\mathrm{igh2}} = 37.7_{-11.3}^{+11.3}$ kpc for the foreground galaxies, as listed in Table~\ref{tab:hostintprops}.
+
+\subsubsection{SED Modeling}\label{sec:sed}
+
+Using the spectral energy distribution (SED) fitting software \texttt{Prospector} \citep{Johnson2021}, we performed a non-parametric fit for the stellar properties of the HG\,20221219A, IGH1, and IGH2, including stellar mass ($M_{\star}$) and star formation rate ($\dot{M}_{\star}$), which are listed in Table~\ref{tab:hostintprops}. From the SED fit for HG\,20221219A shown in Figure\ \ref{fig:niharised}, we identify the galaxy to be modestly star-forming, $\dot{M}_{\star} = 1.78_{-0.23}^{+0.24} \ M_\odot \mathrm{yr}^{-1}$, with a stellar mass of $\mathrm{log}_{10}(M_{\star, \mathrm{host}}/M_\odot) = 10.20^{+0.03}_{-0.04}$. For IGH1 and IGH2, we infer stellar masses of $\mathrm{log}_{10}(M_{\star, \mathrm{igh1}}/M_\odot) = 10.01^{+0.02}_{-0.02}$ and $\mathrm{log}_{10}(M_{\star, \mathrm{igh2}}/M_\odot) = 10.60^{+0.02}_{-0.02}$, straddling $M_{\star, \mathrm{host}}$. We were unable to obtain star formation rates for IGH1 and IGH2, however, due to low S/N in the FIR regions of their spectra.
+
+\begin{figure}
+  \centering
+  \hspace{-0.3 cm}
+  \includegraphics[width = 0.38\textwidth]{figs/nihari_SED_fit.pdf}
+  \caption{The SED of HG\,20221219A obtained with Keck-II/DEIMOS, fit non-parametrically using \texttt{Prospector} with additional photometric data from PS1 (red). Residuals for the best posterior sample are shown in green.}
+  \label{fig:niharised}
+\end{figure}
+
+\subsection{A Crowded Line of Sight}\label{sec:crowding}
+
+A full schematic of the LoS is shown in Figure\ \ref{fig:niharilos}. Together with the heavy pulse broadening observed for \nihari, the small impact parameters of IGH1 and IGH2 suggest a potentially unusual level of crowding. To evaluate whether this is the case, we calculate the mean number of expected halo intersections along the LoS at impact parameters $b_{\mathrm{igh1}}$ and $b_{\mathrm{igh2}}$, given the observed stellar masses ($M_{\star}$), redshifts ($z$), as listed in Table~\ref{tab:hostintprops}. 
+
+We estimate the halo masses ($M_h$) of IGH1 and IGH2 using the \citet{Moster2010} stellar--to--halo mass relation (SHMR), parameterized by \citet{Girelli2020} using the DUSTGRAIN-\textit{pathfinder} simulation as
+
+\begin{equation}\label{eq:shmr}
+\frac{M_\star}{M_h}(z) = 2 A(z)\left[\left(\frac{M_h}{M_A(z)}\right)^{-\beta(z)}+\left(\frac{M_h}{M_A(z)}\right)^{\gamma(z)}\right]^{-1},
+\end{equation}
+
+\noindent
+with $A = 0.0429_{-0.0026}^{+0.0026}$, $M_A = 11.87_{-0.06}^{+0.06}$, $\beta = 0.99_{-0.07}^{+0.08}$, $\gamma = 0.669_{-0.015}^{+0.016}$ for redshifts $0.2 \leq z \leq 0.5$ and a relative scatter $\sigma_R = 0.2\ \mathrm{dex}$ \citep[see Table 2 in][]{Girelli2020}. We sample these parameters and our measured stellar masses from normal distributions defined by their uncertainties and relative scatter in the SHMR using a Monte Carlo (MC) method and derive the halo masses $\log \left(M_{h, \mathrm{igh1}}/M_\odot\right) = 11.52^{+0.13}_{-0.12}$, $\log \left(M_{h, \mathrm{igh2}}/M_\odot\right) = 11.96^{+0.23}_{-0.17}$. Galaxies with halo masses between $10^{11}$--$10^{12}\ M_\odot$ will henceforth be referred to as $M_{h,12}$ galaxies, for simplicity.
+
+{We compute the co-moving number density $n\left(>M_h, z\right)$ of halos exceeding each galaxy's mass at its respective redshift assuming the \citet{Tinker2008} halo mass function (HMF), as implemented in the \texttt{hmf} Python package \citep{Murray2013}, which is reliable out to $z \lesssim 2$. The HMF can be expressed in the generalized functional form 
+
+\begin{equation}\label{eq:hmf}
+  \frac{d n}{d \ln (M_{h})} = f\left(\sigma_m\right) \frac{\rho_{m, 0}}{M_{h}} \frac{d \ln \left(\sigma_m^{-1}\right)}{d \ln (M_{h})}
+\end{equation}
+
+\noindent
+where $\rho_{m, 0}$ is the matter density at $z=0$, $\sigma_m$ is the root-mean-square (r.m.s.) variance of the linear density field, which varies with the linear matter power spectrum, and $f\left(\sigma_m\right)$ represents a redshift-independent function of $\sigma_m$.
+
+Using Eq.~\ref{eq:hmf}, we solve for $n(>M_h, z)$ within the halo mass range $M_h \in [M_{\mathrm{igh}}, 10^{15} M_{\odot}]$ for each galaxy. Following \citet{Prochaska2019b}, we then calculate the mean number of intersections, $\lambda_{N}$, expected at a separation $b_{\mathrm{igh}}$ (in Mpc) as
+
+\begin{equation} \label{eq:meanint}
+\lambda_{N} = \left( \frac{c}{H_0} \right) n(>M_\mathrm{igh}, z_{\mathrm{igh}}) \cdot \pi b_{\mathrm{igh}}^2 \cdot X(z_{\mathrm{host}}),
+\end{equation}
+
+\noindent
+where $c$ is the speed of light, $H_0$ is Hubble's constant, and $X(z) = \int H_0/H(z)(1+z)^2 d z$ is the absorption distance at the galaxy's redshift. From Eq.~\ref{eq:meanint}, we derive $\lambda_{N,\mathrm{igh1}}=0.19 \pm 0.03$ and $\lambda_{N,\mathrm{igh2}}=0.05 \pm 0.01$. Assuming Poisson statistics, we find the probability of intersecting both galaxies at $b_{\mathrm{igh1}}$ and $b_{\mathrm{igh2}}$ to be $P(N\geq2) = 0.79\%$, indicating that the LoS is indeed overcrowded under standard halo abundance assumptions.}
+
+\begin{table*}
+  \caption{Summary of observed properties for HG\,20221219A, IGH1, and IGH2, derived from spectroscopic and imaging data. We report spectroscopic redshifts ($z$, with errors $\delta z/z < 0.4\%$), stellar masses ($M_\star$), extinction-corrected r-band magnitudes ($r$), and the star formation rate (SFR; $\dot{M}_{\star}$) for HG\,20221219A. SFRs were not measurable for IGH1 and IGH2 due to low S/N in the FIR regions of their SEDs. We derive proper impact parameters ($b$) for IGH1 and IGH2, as well as halo masses ($M_h$) using the SHMR in Eq.~\ref{eq:shmr}.}
+  \label{tab:hostintprops}
+  \centering
+  \begin{tabularx}{\textwidth}{@{\extracolsep{\fill}}XXXXXXX}
+    \hline \hline
+    Object & $z$ & \hspace{-0.75cm} $\log_{10}\left(M_{\star}/M_\odot\right)$ & $r\ \left[\mathrm{mag}\right]$ & \hspace{-0.5cm} $\dot{M}_{\star}\ \left[M_{\odot}\ \mathrm{yr}^{-1}\right]$ & \hspace{-0.2cm} $b\ \left[\mathrm{kpc}\right]^{\dagger}$ & \hspace{-0.5cm} $\log_{10}\left(M_{h}/M_\odot\right)^{\dagger}$ \\
+    \hline
+    HG\,20221219A & $0.554$ & \hspace{-0.75cm} $10.20_{-0.04}^{+0.03}$ & $22.6_{-0.2}^{+0.2}$ & \hspace{-0.5cm} $1.78_{-0.23}^{+0.24}$ & \hspace{-0.2cm} $\ldots$ & \hspace{-0.5cm} $11.64_{-0.12}^{+0.15}$\\
+    IGH1 & $0.492$ & \hspace{-0.75cm} $10.01_{-0.02}^{+0.02}$ & $21.7_{-0.2}^{+0.2}$ & \hspace{-0.5cm} \ldots & \hspace{-0.2cm} $44.9_{-11.3}^{+11.3}$ & \hspace{-0.5cm} $11.52_{-0.12}^{+0.13}$ \\
+    IGH2 & $0.438$ & \hspace{-0.75cm} $10.60_{-0.02}^{+0.02}$ & $21.6_{-0.2}^{+0.2}$ & \hspace{-0.5cm} \ldots & \hspace{-0.2cm} $37.7_{-11.3}^{+11.3}$ & \hspace{-0.5cm} $11.96_{-0.17}^{+0.23}$ \\
+    \hline
+  \end{tabularx}
+\end{table*}
+
+\begin{figure}
+  \centering
+  \hspace{-1 cm}
+  %\subfigure{\includegraphics{nihari_DESI_cluster.pdf}}
+  %\subfigure{\includegraphics{nihari_DESI_zoomin.pdf}}
+  \hspace{0.88 cm}\includegraphics[width = 0.47\textwidth]{figs/nihari_dr10_cluster.pdf}\vspace{-0.45 cm}
+  \includegraphics[width = 0.47 \textwidth]{figs/nihari_dr10_zoomin.pdf}
+  \caption{Legacy Survey (BASS) R-band cutout of the field surrounding \nihari. The HG\,20221219A, IGH1, and IGH2 are outlined by white, purple, and magenta dashed circles (labels consistent with Table~\ref{tab:hostintprops}). Virial radii ($\mathrm{R}_{200}$) are plotted as larger solid circles with similar colors. The 3$\sigma$ radio localization ellipse is shown in pink. A white dashed circle with radius equal to a proper radius of 50 kpc at $z_{\mathrm{host}}$ is also plotted for reference. The upper panel shows the $\mathrm{R}_{500}$ radius of the intervening galaxy cluster J171039.6+713427 \citep{Wen2018}.}
+  \label{fig:niharidesifield}
+\end{figure}
+
+\begin{figure*}
+  \centering
+  \includegraphics[width = 0.99\textwidth]{figs/nihari_los_schematic_crop.pdf}
+  \caption{A schematic of the LoS toward \nihari, that shows HG\,20221219A, IGH1, and IGH2, including impact parameters ($b$) and virial radii ($\mathrm{R}_{200}$). The intervening galaxy cluster J171039.6+713427 is also shown, outlined by its $\mathrm{R}_{500}$ radius \citep{Wen2018}. Note that the shaded circles indicating virial extent are not drawn to scale in the longitudinal (LoS) direction, hence the coverage of the shaded regions in this direction is inflated.}
+  \label{fig:niharilos}
+\end{figure*}
+
+\section{Analysis \& Discussion} \label{sec:analysis}
+
+\subsection{The Dispersion Measure Budget} \label{sec:dmbudget}
+
+Dispersion measure (DM) is a quantity that represents the electron column density along the LoS, defined as $\mathrm{DM}=\int n_e(z) d l$ with units of $\mathrm{pc\ cm}^{-3}$, where $n_e(z)$ is the electron number density as a function of redshift. As we describe in \S\ref{sec:burstprop}, the DM is measured by correcting for the frequency-dependent delay in arrival times that arise through interaction with cold ($T \sim 10^4$) plasma, and thus scale as $\Delta t \propto \nu^{-2}$. As is now common practice in the literature, the contributions to the observed DM (i.e., total ``DM budget'') for a source at redshift $z_{\mathrm{host}}$ can be expressed as the sum
+
+\begin{equation}\label{eq:dmbudget}
+\begin{aligned}
+\mathrm{DM}_{\mathrm{obs}}& = \mathrm{DM}_{\mathrm{mw}} + \mathrm{DM}_{\mathrm{mwh}} + \mathrm{DM}_{\mathrm{igm}} \left({0 \rightarrow z_{\mathrm{host}}}\right)\\
+& +\frac{\mathrm{DM}_{\mathrm{icm}}}{1+z_{\mathrm{cluster}}} +\frac{\mathrm{DM}_{\mathrm{igh}}}{1+z_{\mathrm{igh}}}+\frac{\mathrm{DM}_{\mathrm{host}}}{1+z_{\mathrm{host}}}
+\end{aligned}
+\end{equation}
+
+\noindent
+where each term represents the DM contributed by a component medium along the LoS, including: the Milky Way disk (mw), Milky Way halo (mwh), intergalactic medium (igm), intracluster medium (icm), intervening galaxy halos (igh), and host galaxy (host). $\mathrm{DM}_{\mathrm{igm}}$ is redshift-dependent due to cosmic variance, but time dilation requires a $1 /(1+z)$ reduction in $\mathrm{DM}_{\mathrm{icm}}$, $\mathrm{DM}_{\mathrm{igh}}$, and $\mathrm{DM}_{\mathrm{host}}$ as well. For simplicity, the CBM and host galaxy ISM are treated as a single term. A schematic of the full LoS is shown in Figure\ \ref{fig:niharilos}.
+
+{In the following sub-sections, we define a series of probability density functions (PDFs) that describe the observer frame DM contributions expected from the MW, IGM, ICM, and the IGHs. All PDFs are shown in Figure \ref{fig:dmigm}, for which we quote the median values (with 16$^{\mathrm{th}}$ and 84$^{\mathrm{th}}$ percentile uncertainties) listed in Table~\ref{tab:dmpdfs}. Following methods similar to those used by \citet{Connor2023} and \citet{Sherman2023}, we derive a PDF for $\mathrm{DM}_{\mathrm{host}}$ with the convolution}
+
+\begin{equation}\label{eq:dmconv}
+\begin{aligned}
+P\left(\mathrm{DM}_{\mathrm{host,rest}}\right) &= \Biggr[ P\left(\mathrm{DM}_{\mathrm{obs}}\right) \ast P\left(-\mathrm{DM}_{\mathrm{mw+mwh}}\right) 
+\\ & \hspace{-2cm} \quad \left. \ast P\left(-\frac{\mathrm{DM}_{\mathrm{icm}}}{1+z_{\mathrm{cluster}}}\right) \ast P\left(-\frac{\mathrm{DM}_{\mathrm{igh1}}}{1+z_{\mathrm{igh1}}}\right) \right.
+\\ & \hspace{-2cm} \quad 
+\ast P\left(-\frac{\mathrm{DM}_{\mathrm{igh2}}}{1+z_{\mathrm{igh2}}}\right) \ast P\left(-\mathrm{DM}_{\mathrm{igm}}(0 \rightarrow z_{\mathrm{host}})\right) \Biggl] \\
+& \hspace{-2cm} \quad \times \left(1+z_{\mathrm{host}}\right)\ .
+\end{aligned}
+\end{equation}
+
+{For $\mathrm{DM}_{\mathrm{obs}}$, we treated the PDF as a normal distribution with a standard deviation corresponding to the measurement uncertainty (see Table~\ref{tab:nihariprops}).}
+
+\subsubsection{Milky Way and Halo}\label{sec:mwdm}
+
+The DM contribution from the MW disk (thick and thin) can be characterized using the Galactic electron density model NE2001 \citep{Cordes2002}, which estimates $\mathrm{DM}_{\mathrm{mw}}\ =\ 44^{+4}_{-4} \ \mathrm{pc} \ \mathrm{cm}^{-3}$ \citep[assuming $ \sim 10 \%$ uncertainty, following][]{Ocker2020} toward \nihari ($l$, $b$ = $102.93^{\circ}$, $33.53^{\circ}$), through the Galaxy. 
+
+While the overall electron density profile for the MW halo is not well-characterized, FRB observations have been used to place upper limits on its DM contribution along individual LoSs. \citet{Ravi2023a} constrain the DM of the MW halo to be $\mathrm{DM}_{\mathrm{mwh}} \lesssim 38\ \mathrm{pc\ cm^{-3}}$ using FRB\,20220319D, a local non-repeating source only 50 Mpc away. \citet{Cook2023} find evidence for a slightly more substantial halo contribution, however, deriving an upper limit range of $\mathrm{DM}_{\mathrm{mwh}} \lesssim 52$--$111\ \mathrm{pc\ cm^{-3}}$ based on 93 sources published in the first CHIME/FRB catalog \citep{chime2021}. For the purposes of this analysis, we assume a conservative value of $\mathrm{DM}_{\mathrm{mwh}} = 25^{+15}_{-15}\ \mathrm{pc} \ \mathrm{cm}^{-3}$, appropriate for the Galactic latitude of \nihari.
+
+We define $P\left(\mathrm{DM}_{\mathrm{mw}}\right)$ as a normal distribution and $P\left(\mathrm{DM}_{\mathrm{mwh}}\right)$ as a uniform distribution with bounds $\in[10,40]$. Convolving the two, we obtain $P\left(\mathrm{DM}_{\mathrm{mw + halo}}\right)$, as shown in Figure\ \ref{fig:dmigm}.
+
+\subsubsection{Intergalactic Medium}\label{sec:igmdm}
+
+The mean DM contribution from a constant co-moving density in the IGM is given by \citep[e.g.,][]{McQuinn2014}
+
+\begin{equation}\label{eq:dmigm}
+\langle\mathrm{DM}_{\mathrm{igm}}(z)\rangle = n_{e_0} D_{\mathrm{H}} \int_0^z d z^{\prime} \frac{\left(1+z^{\prime}\right)}{E\left(z^{\prime}\right)}
+\end{equation}
+
+\noindent
+where $n_{e_0}=2.2 \times 10^{-7} \times f_{\mathrm{IGM}}$ is the IGM electron density at $z=0$, $f_{\mathrm{IGM}}$ being the IGM baryon fraction for a \cite{Planck2018} cosmology, $D_{\mathrm{H}}=c / H_0$ is the Hubble distance and $E(z)=$ $\left[\Omega_{\mathrm{m}}(1+z)^3+1-\Omega_{\mathrm{m}}\right]^{1 / 2}$ for a flat $\Lambda$CDM universe with a matter density $\Omega_{\mathrm{m}}$. With this, we can define the PDF as
+
+\begin{equation}\label{eq:Pdmigm}
+P_{\mathrm{igm}}(\Delta) = A \Delta^{-b} \exp \left[-\frac{\left(\Delta^{-a}-C_0\right)^2}{2 a^2 \sigma_{\mathrm{DM}}^2}\right], \quad \Delta>0
+\end{equation}
+
+\noindent
+where $\Delta=\mathrm{DM}_{\mathrm{igm}} /\left\langle\mathrm{DM}_{\mathrm{igm}}\right\rangle$ and $b$ depends on the halo gas density profile. We assume $a = b = 3$ \citep{Macquart2020}. The effective standard deviation is $\sigma_{\mathrm{DM}}$, and $C_0$ impacts the transverse position, which is fitted. We assume values for $A$, $\sigma_{\mathrm{DM}}$, and $C_0$, derived from Illustris TNG simulation data by \citet{Zhang2021}. 
+
+The density of baryons along the LoS through the IGM, however, is made denser by a neighboring foreground galaxy cluster J171039.6+713427 cataloged in the WISE survey and {SDSS DR9 galaxy cluster catalog}, positioned at a redshift $z_{\mathrm{cluster}} \sim 0.16$ with mass $\log_{10}(M_{\mathrm{cluster}}/M_\odot) = 14.1^{+0.2}_{-0.2}$ \citep[we adopt the quoted 0.2 dex uncertainty for cluster masses $\mathrm{log}_{10}\left(M_{\mathrm{cluster}}/M_\odot\right) \gtrsim 14$ in][]{Wen2018} and a LoS offset $ \sim 3.2^{\prime}$, corresponding to an impact parameter $b_{\mathrm{icm}} = 558^{+11.3}_{-11.3}\ \mathrm{kpc}$. To evaluate the DM contributed by the ICM surrounding the cluster, we follow \citet{Prochaska2019b}, who invoke a three-dimensional X-ray emission measure profile parameterized by \citet{Vikhlinin2006} to compute $n_{e, \mathrm{icm}}$ at $b_{\mathrm{icm}}$, and assume a baryon mass fraction of $f_{b, \mathrm{icm}} = 0.7$ in the ICM halo. This model yields an estimate of $\mathrm{DM}_{\mathrm{icm}} = 146^{+12}_{-12}$ pc cm$^{-3}$ in the cluster frame. The quoted uncertainties do not account for spatial asymmetry in the cluster, however, which may be significant \citep{Connor2023}. We assume a normal distribution for $P(\mathrm{DM}_{\mathrm{icm}})$, raising the already dominant IGM contribution to $\mathrm{DM}_{\mathrm{igm+icm}} = 608_{-59}^{+60} \mathrm{pc \ cm}^{-3}$ when convolved with $P(\mathrm{DM}_{\mathrm{igm}})$. $P\left(\mathrm{DM}_{\mathrm{igm}}\right)$ and $P\left(\mathrm{DM}_{\mathrm{igm+icm}}\right)$ are both shown for comparison in Figure\ \ref{fig:dmigm}.
+
+\begin{figure}
+  \centering
+  \hspace{-0.3cm}
+  \includegraphics[width = 0.48\textwidth]{figs/PDM_all.pdf}
+  \caption{PDFs corresponding to each term in the DM budget defined in Eq.~\ref{eq:dmbudget}, and subsequently convolved to obtain $P(\mathrm{DM}_{\mathrm{host}})$ using Eq.~\ref{eq:dmconv}. The median values of each PDF are indicated by black dotted lines, and the 16$^{\mathrm{th}}$ to 84$^{\mathrm{th}}$ percentile uncertainties by shaded regions.}
+  \label{fig:dmigm}
+\end{figure}
+
+\subsubsection{Intervening Galaxies} \label{sec:ighdm}
+
+To estimate DM$_{\mathrm{igh}}$ accrued within the CGMs of both intervening galaxies, we infer HII column densities (N$_{\mathrm{HII}}$) based on direct N$_{\mathrm{HI}}$ measurements of similar nearby galaxies in the COS-Halos survey \cite[a study of 44 galaxy halos at $z \sim 0.2$ with cool $T \sim 10^{4}\ \mathrm{K}$ photoionized CGMs observed out to radii of $ \sim 160\ \mathrm{kpc}$;][]{Werk2014}. By adopting a photoionization model (primarily extragalactic UV background-driven), \citet{Werk2014} infer $\mathrm{N}_{\mathrm{H}}$ for the cool gas using concurrent HI and metal line absorption measurements, from which they conclude that the CGMs are highly ionized ($\mathrm{n}_{\mathrm{HII}} / \mathrm{n}_{\mathrm{H}} \gtrsim 99 \%$) with substantial reservoirs of cool gas. Using the N$_{\mathrm{H}}$, $b$, and $M_\star$ values listed for each galaxy in the COS-Halos survey \citep[see their Table 1;][]{Werk2014}, we interpolate across the parameter space using a Gaussian radial basis function. From this interpolation, we select ($b$, $M_\star$) for IGH1 and IGH2 as inputs and obtain column density estimates $\mathrm{log}_{10}(\mathrm{N}_{\mathrm{H}, \mathrm{igh1}}/\mathrm{cm}^{2}) = 19.50^{+0.1}_{-0.1}$ and $\mathrm{log}_{10}(\mathrm{N}_{\mathrm{H}, \mathrm{igh2}}/\mathrm{cm}^{2}) = 19.65^{+0.1}_{-0.1}$, which we assume are equivalent to N$_{\mathrm{HII}}$ based on the order unity ionization fraction. Converting column density to standard DM units, we estimate a cool gas contribution of $\mathrm{DM}_{\mathrm{igh1,cool}} = 10^{+5}_{-5}\ \mathrm{pc} \mathrm{\ cm}^{-3}$ and $\mathrm{DM}_{\mathrm{igh2,cool}} = 14^{+5}_{-5}\ \mathrm{pc}\ \mathrm{\ cm}^{-3}$ in the respective halo rest frames. While the DM contributed by the hot ($T \gtrsim 10^6\ \mathrm{K}$) virialized gas cannot be inferred through UV absorption, \citet{Prochaska2019a} argue that it is likely to contribute equally, if not $2$--$3$ times more to the total $\mathrm{DM}_{\mathrm{igh}}$ in $M_{h,12}$ galaxies. {Hence, if we conservatively assume $\mathrm{DM}_{\mathrm{igh,hot}} \sim \mathrm{DM}_{\mathrm{igh,cool}}$, we can set $\mathrm{DM}_{\mathrm{igh1}} = 20^{+7}_{-7}\ \mathrm{pc} \mathrm{\ cm}^{-3}$ and $\mathrm{DM}_{\mathrm{igh2}} = 28^{+7}_{-7}\ \mathrm{pc} \mathrm{\ cm}^{-3}$. We also emphasize that these values are furthermore conservative in comparison to those typically assumed from a modified-Navarro--Frenk--White profile \citep[see Eq.\,6 in][]{Prochaska2019a}, which for IGH1 and IGH2 would yield $\mathrm{DM}_{\mathrm{igh1+igh2}} \sim 250\ \mathrm{pc\ cm}^{-3}$ if the fractional content of baryons in the hot phase is assumed to be $f_b = 0.75$. Similarly to $P(\mathrm{DM}_{\mathrm{icm}})$, we define $P(\mathrm{DM}_{\mathrm{igh}})$ as a normal distribution for IGH1 and IGH2.}
+
+\subsubsection{Host Galaxy} \label{sec:hostdm}
+
+From Eq.~\ref{eq:dmconv}, we are now able to solve for $P(\mathrm{DM}_{\mathrm{host}})$ and estimate $\mathrm{DM}_{\mathrm{host}}$. We find a median contribution of $\mathrm{DM}_{\mathrm{host}} = 75_{-52}^{+70}$ pc cm$^{-3}$ (with 16$^{\mathrm{th}}$ and 84$^{\mathrm{th}}$ percentile uncertainties) in the host galaxy frame or, equivalently, $\mathrm{DM}_{\mathrm{host,obs}} = 48_{-33}^{+43}$ pc cm$^{-3}$ in the observer frame. Alternatively, if we recalculate the DM budget in the absence of DM$_{\mathrm{igh}}$ and DM$_{\mathrm{icm}}$, we find $\mathrm{DM}_{\mathrm{host\setminus \{igh, icm\}}} = 233_{-137}^{+112}$ pc cm$^{-3}$, or $\mathrm{DM}_{\mathrm{host\setminus \{igh, icm\}}, \mathrm{obs}} = 150_{-88}^{+72}$ pc cm$^{-3}$.
+
+\begin{table}[h]
+  \centering
+  \caption{Median {rest frame} DM contributions for each component medium in Eq.~\ref{eq:dmbudget}, derived from the PDFs shown in Figure\ \ref{fig:dmigm}. Uncertainties are quoted from the 16$^{\mathrm{th}}$ and 84$^{\mathrm{th}}$ percentiles.}
+  \label{tab:dmpdfs}
+  % Use tabular* and a p{...} column with the measured width.
+  \begin{tabular*}{\columnwidth}{@{}l@{\extracolsep{\fill}}r@{}}
+    \hline \hline
+    $P\mathrm{(DM)}$ & \multicolumn{1}{r}{$\mathrm{DM} \left[\mathrm{pc\ cm}^{-3}\right]$} \\ % Right-align the header
+    \hline
+    $\mathrm{MW+MW\ Halo}$ & $69^{+10}_{-10}$ \\
+    $\mathrm{IGM}$ & $501_{-81}^{+112}$ \\ 
+    %$\mathrm{IGM + ICM}$ & $599_{-63}^{+67}$ \\
+    $\mathrm{ICM}$ & $146_{-12}^{+12}$ \\ 
+    $\mathrm{IGH1}$ & $20^{+7}_{-7}$ \\
+    $\mathrm{IGH2}$ & $28^{+7}_{-7}$ \\
+    $\mathrm{HG\,20221219A}$ & $75_{-52}^{+70}$ \\
+    \hline
+  \end{tabular*}
+\end{table}
+
+\subsection{The Scattering Budget} \label{sec:scatbudget}
+
+The pulse broadening and inferred scattering timescale of $\tau^\mathrm{{1.4GHz}}_{\mathrm{obs}} = 19.2_{-1.8}^{+2.0}\ \mathrm{ms}$ observed in \nihari (see Figure\ \ref{fig:nihariwfall}) is consistent with diffractive interstellar scattering. Similar to the DM budget defined in Eq.~\ref{eq:dmbudget}, we can express $\tau_{\mathrm{obs}}$ for a source at redshift $z_{\mathrm{host}}$ as the sum 
+
+\begin{equation}\label{eq:taubudget}
+\begin{aligned}
+\tau(\nu)_{\mathrm{obs}} = & \tau_{\mathrm{mw}}(\nu)+\tau_{\mathrm{igm}}(\nu, z_{\mathrm{host}}) \ + \\
+& \hspace{-1.5 cm}\frac{\tau_{\mathrm{igh}}(\nu)}{\left(1+z_{\mathrm{igh}}\right)^{\alpha-1}}+\frac{\tau_{\mathrm{host}}(\nu)}{\left(1+z_{\mathrm{host}}\right)^{\alpha-1}} \ + \frac{\tau_{\mathrm{cbm}}(\nu)}{\left(1+z_{\mathrm{host}}\right)^{\alpha-1}}
+\end{aligned},
+\end{equation}
+
+\noindent where each term corresponds to the rest-frame scattering produced by a LoS component medium in its rest-frame, including: the Milky Way (mw), the intergalactic medium (igm), intervening galaxy halos (igh), the host galaxy (host), and the circumburst medium (cbm). The scaling index $\alpha$ is the same as that in Eq.~\ref{eq:expgauss}, for which we assume $\alpha = 4$, hence $\tau \propto (1+z)^{-3}$. The last three terms of Eq.~\ref{eq:taubudget} scale with redshift to account for the fact that, for an observation frequency $\nu$, scattering goes as $\nu^{\prime}=\nu(1+z)$ in the galaxy's rest frame and time dilation goes as $(1+z)^{-1}$ \citep{Macquart2013, Cordes2016}. In the following sections, we will consider each scattering medium along the LoS individually, {with the exception of $\tau_{\mathrm{igm}}$. Although the IGM has been shown to be a dominant contributor to the total DMs of distant FRBs \citep[][also see \S\protect\ref{sec:igmdm}]{Zhang2021, Walker2023}, the scattering effects are expected to be negligible \citep{Shin2024}. Both modeling of the diffuse gas densities in the IGM \citep{Macquart2013} and the absence of a significant correlation between observed scattering timescales and extragalactic DMs support this assumption \citep{chime2021, Chawla2022}, so $\tau_{\mathrm{igm}}$ can be safely ignored.}
+
+\subsubsection{Electron Density Fluctuations}\label{sec:elecfluc}
+
+{The electron density fluctuations for homogeneous and isotropic turbulence within an ionized medium are characterized by the three-dimensional turbulence power spectrum, defined
+
+\begin{equation}\label{eq:powspec}
+P_{\delta n_e}(k)=C_n^2 k^{-\beta}, \quad \frac{2 \pi}{l_\mathrm{o}} \leqslant k \leqslant \frac{2 \pi}{l_\mathrm{i}}
+\end{equation}
+
+\noindent
+where $\beta$ is the spectral index, $k$ is the wavenumber, $l_\mathrm{i}$ and $l_\mathrm{o}$ are the inner (smallest) and outer (largest) scales (i.e. inertial range), and $C_n^2$ is the spectral amplitude of the turbulent density fluctuations \citep{Cordes1991}. \citet{Cordes2022} (see their Appendix) and later \citet{Ocker2025} (see their Appendix A) show that when $l_\mathrm{o} \gg l_\mathrm{i}$, the power spectrum integrated across an inertial range gives the density variance $\langle \delta n_e \rangle^2 = C_n^2 l_{\mathrm{o}}^{\beta-3} (\beta-3) / 2(2 \pi)^{4-\beta}$, where $\langle \rangle$ implies an ensemble average, from which they separate out the spectral normalization constant $C_{\mathrm{SM}}=(\beta-3) / 2(2 \pi)^{4-\beta}$. Here, $C_{\mathrm{SM}}$ is a coefficient obtained when computing the scattering measure (SM), defined as $\mathrm{SM}=\int C_n^2\ ds$, which has units of $\mathrm{kpc\ m}^{-20/3}$ for $\beta = 11/3$, and scales the relationship between $C_n^2$ and the physical turbulence-driven density fluctuations. This parameterization becomes useful when considering a scenario in which there are multiple ionized media along the LoS, such as a clustered distribution of screens or clouds. 
+
+If we consider a clustered distribution of ionized clouds that are intrinsically turbulent, we can define the fractional variance in electron density around the mean within a single cloud as $\epsilon^2=\left\langle\delta n_{e}\right\rangle^2 / n_{e}^2$. Across multiple clouds, however, we must also define the mean electron density within surrounding volume as $\bar{n}_{\mathrm{e}}=f_{\mathrm{v}} n_{\mathrm{e}}$, for a volume filling fraction $f_{\mathrm{v}}$, in addition to the fractional variations in electron density between clouds, namely $\zeta=\left\langle n_{e}^2\right\rangle /\left\langle n_{e}\right\rangle^2$. With these quantities, \citet{Cordes2022} obtain the following expression for $C_n^2$ in terms of the turbulence properties
+
+\begin{equation}\label{eq:cn2}
+C_n^2=C_{\mathrm{SM}} \bar{n}_{\mathrm{e}}^2 \zeta \epsilon^2 f_{\mathrm{v}}^{-1} l_\mathrm{o}^{3-\beta},
+\end{equation}
+
+\noindent
+with units of $\mathrm{m}^{-20/3}$ for $\beta = 11/3$. To relate this directly to the scattering strength of the medium, \citet{Cordes2022} define the mean scattering delay
+
+\begin{equation}\label{eq:meantau}
+\langle\tau\rangle=\frac{1}{2 c} \int_0^d s(1-s / d) \eta(s) ds\quad
+\end{equation}
+
+\noindent
+in units of $\mathrm{s}$, where $\eta(s)$ is the mean-square scattering angle weighted in Euclidean distance by $s(1-s / d)$ per path element $s$ along the full path length $d$, with units of $\mathrm{m}^{-1}$. For a medium placed at $s$, \citet{Cordes1998} showed that the mean-square scattering angle goes as $\eta(s) \propto \lambda^4 r_{\mathrm{e}}^2 (2\pi/l_\mathrm{i})^{4-\beta} C_n^2(s)$, which notably depends on the inner scale $l_\mathrm{i}$ of the medium as well. Folding this into Eq.~\ref{eq:cn2}, it can be shown that
+$C_n^2 \propto C_{\mathrm{SM}} \bar{n}_{\mathrm{e}}^2 \zeta \epsilon^2 f_{\mathrm{v}}^{-1} l_\mathrm{o}^{3-\beta} l_\mathrm{i}^{\beta-4} = C_{\mathrm{SM}}\bar{n}_{\mathrm{e}}^2\widetilde{F}$ \citep[see][]{Cordes2022}, where $\widetilde{F}$ is referred to as the ``fluctuation parameter'', a combined quantity that describes the turbulent electron density fluctuations (i.e., turbulence strength) across a volume of one or more scattering structures. If Kolmogorov turbulence ($\beta = 11/3$) is assumed, $\widetilde{F}$ is defined
+
+\begin{equation}\label{eq:flucparam}
+\widetilde{F} = \frac{\zeta \epsilon^2}{f_{\mathrm{v}}\left(l_{\mathrm{o}}^2 l_{\mathrm{i}}\right)^{1 / 3}},
+\end{equation}
+
+\noindent
+which has units of $\left(\mathrm{pc}^2 \mathrm{~km}\right)^{-1 / 3}$ for $l_\mathrm{o}$ in $\mathrm{pc}$ and $l_\mathrm{i}$ in $\mathrm{km}$. In other formalisms, the strength of turbulence is sometimes represented by dimensionless parameter $\alpha$ \citep[e.g., Eq. 1 in][]{Prochaska2019b}, which using equates to $\alpha = (f_\mathrm{v}/\zeta\epsilon^2)^{1/2}$, such that $\widetilde{F} \propto \alpha^{-2}$.
+
+We can see from Eqns.\,\ref{eq:cn2} and \ref{eq:meantau} that $\langle \tau \rangle \propto \bar{n}_{\mathrm{e}}^2$, or $\propto \mathrm{DM}_{\ell}^2$, if $\bar{n}_{\mathrm{e}}$ is integrated along a path element through the medium. However, Eq.~\ref{eq:flucparam} reveals that scattering strength increases with electron density variability, both within and between clouds, as $\langle \tau \rangle \propto \zeta \varepsilon^2$. The scattering strength is further increased by a broader inertial range $l_\mathrm{i} \ll l_\mathrm{o}$, which enhances small-scale irregularities. We can see from $\langle \tau \rangle \propto f_{\mathrm{v}}^{-1}$ that sparser volumes ($f_{\mathrm{v}} \ll 1$) enhance the scattering strength as well, provided other properties such as $\mathrm{DM}_\ell$ are kept fixed, as this implies more concentrated clouds and therefore more amplified turbulence effects. \citet{Ocker2025} have shown that $\widetilde{F}$ is a useful tool for empirically constraining the microphysics and scattering power of CGMs through FRB observations, while buttressing against the degeneracies that exist between its component quantities. We discuss these constraints in \S\ref{sec:extmed} and \S\ref{sec:cloud} for both intervening galaxies along our LoS.} %end revision
+
+\subsubsection{Line of Sight Geometry}\label{sec:scatgeo}
+
+In addition to the electron density fluctuations, we can see from Eq.~\ref{eq:meantau} that the scattering strength of a medium critically depends on both the position of the scattering medium with respect to the source and observer, as well as its thickness. Treatments in \citet{Ocker2021}, and \citet{Cordes2022} describe this dependence with a dimensionless geometric factor $G_{\mathrm{scatt}}$, {representing the ratio in Euclidean weights between a source significantly offset from its scattering medium (far) and one placed very close to or within its scattering medium (near), as
+
+\begin{equation}
+G_{\mathrm{scatt}} = \frac{\langle \tau \rangle_{\mathrm{far}}}{\langle \tau \rangle_{\mathrm{near}}} = \frac{\int_{\mathrm{far}} s(1-s/d)\ ds }{\int_{\mathrm{near}} s(1-s/d)\ ds}.
+\end{equation}} %end revision
+\noindent
+
+In the case of \nihari, the intervening galaxies are at non-negligible redshifts ($z_{\ell}$) with respect to the host galaxy ($z_{\mathrm{s}}$), so the expression for $G_{\mathrm{scatt}}$ (see \citet{Cordes2022} for the full derivation) can be rewritten as
+
+\begin{equation} \label{eq:cordesG}
+  G_{\mathrm{scatt}} \left(z_{\ell}, z_{\mathrm{s}}\right) = \frac{2 d_{\mathrm{sl}} d_{\mathrm{lo}}}{L d_{\mathrm{so}}},
+\end{equation}
+
+\noindent
+where $d_{\mathrm{sl}}$, $d_{\mathrm{lo}}$, $d_{\mathrm{so}}$ are the source--to--intervener, intervener--to--observer, and source--to--observer angular diameter distances, respectively (see schematic in Figure\ \ref{fig:niharilos}), and $L$ is the thickness of the scattering medium. From Eq.~\ref{eq:cordesG}, we can see that in the case of host galaxy-dominated scattering, where $L \ll d_{\mathrm{so}}$, $G_{\mathrm{scatt}}$ is of order unity. For sources significantly offset from their scattering media, however, $G_{\mathrm{scatt}}$ will increase by many orders of magnitude, thereby boosting $\tau$ substantially.
+
+Combining $\widetilde{F}$, $G_{\mathrm{scatt}}$, and $\mathrm{DM}_{\ell}$, \citet{Cordes2022} show that the scattering timescale for a source at redshift $z_{\mathrm{s}}$, given a scattering region at $z_{\ell}$, can be defined as
+
+\begin{equation} \label{eq:cordesscat}
+\begin{aligned}
+\tau\left(\mathrm{DM}_{\ell}, \nu, z_{\ell}, z_{\mathrm{s}}\right) = \frac{A_\tau \widetilde{F} G\left(z_{\ell}, z_{\mathrm{s}}\right) \mathrm{DM}_{\ell,}^2}{\nu^4\left(1+z_{\ell}\right)^3} ,
+\end{aligned}
+\end{equation}
+
+\noindent
+where $\nu$ is the observing frequency in GHz and $\mathrm{DM}_{\ell}$ is the DM of the {scattering medium (e.g., intervening galaxy)} in its rest frame and contributes to the observed $\mathrm{DM}_{\mathrm{obs}}$ as $\mathrm{DM}_{\ell} /\left(1+z_{\ell}\right)$. {The quantity $A_\tau$ is a correction factor, ranging between $1/6$--$1$, that scales the scattering (decay) time $\tau$ for an arbitrary PBF to the canonical $1/e$ decay time of an exponential PBF \citep{Ocker2021, Cordes2022, Geiger2024}. More specifically, $A_\tau$ depends on the spectral index $\beta$, and the ratio between the inner scale $l_{\mathrm{i}}$ and the ``diffractive'' scale $l_{\mathrm{d}}$, defined as $l_{\mathrm{d}} = (d_{\mathrm{sl}}/d_{\mathrm{lo}})\lambda_{\mathrm{obs}}/2\pi \theta_{\mathrm{d}}$, for a characteristic scattering angle $\theta_{\mathrm{d}}$ \citep{Rickett1990}. Relating this to the observed scattering time $\tau_{\mathrm{obs}} = \sqrt{d_{\mathrm{sl}} d_{\mathrm{lo}}/ d_{\mathrm{so}}\theta_{\mathrm{d}}^2{2 c}}$, we calculate that $l_{\mathrm{d}} \sim 10^{-5}$--$10^{-3}\ \mathrm{km}$ within HG\,20221219A, and $l_{\mathrm{d}} \sim 10^{3}$--$10^{4}\ \mathrm{km}$ at IGH1 and IGH2. \citet{Cordes2022} show that for strong scattering, where $\beta = 4$ or $l_{\mathrm{i}}/l_{\mathrm{d}} \gg 1$ \citep[consistent with a square-law structure function and our pulse model in Eq.~\ref{eq:expgauss};][]{Rickett1990}, the correction factor approaches $A_\tau \rightarrow 1$. Thus for a typical inner scale $l_{\mathrm{i}} \sim 10^3\ \mathrm{km}$, as might be expected for an ISM or CGM, we see that we are well within the strong scattering regime, and can therefore assume $A_\tau=1$.}
+%(though it can realistically range from $ \sim 1 / 6$ to 1). 
+
+\subsubsection{Host Galaxy \& Circumburst Environment}\label{sec:hostscat}
+
+We observe HG\,20221219A to be MW-like in its star formation rate (SFR). While $M_{\star, \mathrm{host}}$ is a factor of $ \sim 4$ smaller than that of the MW, its SFR $\dot{M}_{\star, \mathrm{host}} = 1.78_{-0.23}^{+0.24} \ M_\odot \mathrm{yr}^{-1}$ is comparable to $\dot{M}_{\star, \mathrm{mw}} = 1.65^{+0.19}_{-0.19} \ M_\odot \mathrm{yr}^{-1}$ \citep{Licquia2015}. Assuming that the ISMs within the two galaxies are roughly comparable in their turbulence properties as well, we can attempt to infer the scattering contribution expected based on DM$_{\mathrm{host}}$ by applying a known relation between the scattering timescales and DMs of Galactic pulsars \citep[henceforth referred to as the $\tau$--$\mathrm{DM}$ relation;][]{Sutton1971, Rickett1977, Cordes1991, Bhat2004}. This relation was empirically characterized in \citet{Cordes2016} using ($\tau$, $\mathrm{DM}$) measurements for 568 Galactic pulsars, to which they fit the canonical function for mean scattering time $\widehat{\tau}(\mathrm{DM})=A \times \mathrm{DM}^a\left(1+B \times \mathrm{DM}^b\right)$ \citep{Ramachandran1997} and obtain
+
+\begin{equation}\label{eq:taudm}
+\begin{aligned}
+\left[\widehat{\tau}\left(\mathrm{DM}, \nu\right)\right]_{\mathrm{mw}, \mathrm{psr}} = 1.90 \times 10^{-7} \mathrm{\ ms} \times \nu^{-\alpha} \mathrm{DM}^{1.5} \\
+\times\left(1+3.55 \times 10^{-5} \mathrm{DM}^{3.0}\right),
+\end{aligned}
+\end{equation}
+
+\noindent
+at frequencies $\nu$ in GHz, with scatter $\sigma_{\log \tau}=0.76$ dex. 
+
+Figure\ \ref{fig:tau-DM} shows the $\tau$--$\mathrm{DM}$ relation fit by \citet{Cordes2016}. The steepening at large DMs can be explained by the cloudy nature of the inner Galaxy, where higher-DM pulsars are found, as opposed to those in the outer regions of the galaxy or near the solar neighborhood \citep{Cordes1991, Cordes2019}. We plot ($\tau_{\mathrm{obs}},\ \mathrm{DM}_{\mathrm{host}}$) measurements for a sample of well-localized FRBs against the pulsar population as well \citep{Tendulkar2017, Marcote2017, Marcote2020, Prochaska2019b, Bannister2019, Bhandari2020, Macquart2020, Day2020, Day2021, Ocker2022b}, for which DM$_{\mathrm{host}}$ contributions were inferred using budgeting methods similar to those outlined in \S\protect\ref{sec:dmbudget}. For its inferred DM$_{\mathrm{host}}$, \nihari emerges from this population as a distinctly \textit{over-scattered} outlier at $ \sim 6\sigma_{\mathrm{log}\tau}$, highlighting its uniqueness among other FRB sources and their host environments.
+
+{The dichotomy we see in Figure\ \ref{fig:tau-DM} between \nihari and other FRB sources, which emerge from distinct host galaxies and yet appear broadly consistent with the parameterized $\tau$--DM relation in Eq.~\ref{eq:taudm} to within $ \sim 3\sigma$, is a compelling indicator that the path traced through HG\,20221219A bears a significant deficit in electron density given $\tau_{\mathrm{obs}}$. This does not rule out the possibility that the observed scattering occurred locally, but it highlights a significant challenge to the explanatory power of the scenario.} 
+
+\begin{figure}
+  \centering
+  \hspace{-0.3cm}
+  \includegraphics[width = 0.48\textwidth]{figs/nihari_tau_DM_offset_galpulsars.pdf}
+  \caption{$\tau$--$\mathrm{DM}$ relation for Galactic pulsars and FRBs. The fitted line (solid black) and $\pm n \sigma$ variations (dashed black lines for $\pm 1\sigma$, dashed gray lines for $\pm(n > 1)\sigma$) are based on measurements and upper limits on $\tau$ for 568 Galactic pulsars \citep[purple x's; data provided by courtesy of J. Cordes, as published in][]{Cordes2016}. The scattering timescales ($\tau$) and inferred $\mathrm{DM}_{\mathrm{host}}$ values for a subset of well-localized FRBs are over-plotted as multi-colored diamonds \citep[from][]{Cordes2022, Ocker2022a, Shin2024}. All scattering timescales have been scaled to their nominal values at 1\,GHz. \nihari (denoted by a red diamond) dramatically exceeds the expected scattering timescale from a MW-like galaxy by $ \sim 6\sigma_{\mathrm{log}\tau}$ for its DM$_{\mathrm{host}}$.}
+  \label{fig:tau-DM}
+\end{figure}
+
+In addition to observables $\tau_{\mathrm{obs}}$ and DM$_{\mathrm{host}}$, which appear to disfavor local scattering, we can use polarization as an independent diagnostic of the magnetic field strengths and plasma densities in the circumburst medium. Other FRB sources \citep[e.g., FRB\,20121102A;][]{Michilli2018} have been found to exist in extremely dense, magnetized environments based on their high Faraday rotation measures (RM), defined as $\mathrm{RM}=0.81 \int B_{\|}(l) n_{\mathrm{e}}(l) \mathrm{d} l$ with units of $\mathrm{rad\ m}^{-2}$, where $B_{\|}$ is the magnetic field component along the LoS (in $\mu \mathrm{G}$), and $n_{\mathrm{e}}$ is the electron number density. Although the low S / N of \nihari precluded a robust constraint on RM by RM synthesis or $\mathrm{QU}$-fitting techniques, we were able to measure a linear polarization fraction ($\mathrm{L/I}$) in the non-derotated spectrum. If we can establish a lower limit on the observed $\mathrm{L/I}$, we can set an upper limit on $|\mathrm{RM}|$ by estimating the degree to which a 100\% linearly polarized burst might be Faraday depolarized.
+
+To arrive at an upper limit for $|\mathrm{RM}|$, we first calculate the likelihood of the ``true'' (intrinsic) $\mathrm{L/I}$ exceeding the measured polarization fraction in the non-derotated spectrum of \nihari ($\mathrm{L/I}_{\mathrm{obs}} = 0.502$), assuming a linearly polarized signal exclusively in Stokes $\mathrm{Q}$, a priori. To do this, we MC sample a normal distribution that conforms to the noise in the off-pulse region, and proceed to simulate $\mathrm{Q}$ and $\mathrm{U}$ for a range of hypothetical RM values $|\mathrm{RM}|_{i}$ at the observing wavelength $\lambda$ as $\mathrm{Q} = \cos \left(|\mathrm{RM}|_i \times \lambda^2\right)$ and $\mathrm{U} = -\sin \left(|\mathrm{RM}|_i \times \lambda^2\right)$. These are then summed in quadrature to obtain a linear polarization fraction $\mathrm{L/I} = \sqrt{\langle \mathrm{Q} \rangle^{2} + \langle \mathrm{U} \rangle^{2}}$, where $\langle \mathrm{Q} \rangle$ and $\langle \mathrm{U} \rangle$ represent the mean of the simulated values over the signal data. The measured values of $\mathrm{L/I} \gtrsim \mathrm{L/I}_{\mathrm{obs}}$ are counted in the distribution of the simulated spectra, from which we extract a lower limit at 10\% of $\mathrm{L/I} \gtrsim 0.42$ for \nihari. With this, we infer an upper limit of $|\mathrm{RM}| \lesssim 345\ \mathrm{rad}\ \mathrm{m}^{-2}$ for \nihari. This implies that the circumburst medium surrounding \nihari is not highly magnetic, in contrast to other sources \citep[e.g., $> 10^4\ \mathrm{rad\ m}^{-2}$ for FRB\,20190520B and FRB\,20121102A;][]{AnnaThomas2023, Michilli2018}.
+
+There is some evidence that a high RM is accompanied by strong local scattering \citep[such as in FRB\,20190520B;][]{Ocker2022c, AnnaThomas2023}. Since RM is a tracer of both $B_{\|}$ and $n_{\mathrm{e}}$, {a low RM may imply a more quiescent} local plasma environment and consequent lack of scattering power, {the inverse of which is appears to be true for Galactic pulsars in the inner disk of the MW that exhibit high RMs and significant scattering} \citep{Lazio1998, Wharton2012, Eatough2013, Cordes2022}. {It is important to note}, however, that there is {no direct relationship} between the $B_{\|}$ traced by RM and the electron density fluctuations ($\widetilde{F}$) that produce scattering. FRB\,20121102A, for instance, exhibits RM values $\gtrsim 10^{5}$ rad m$^{-2}$, indicating the presence of an extreme magneto-ionic local environment, but no significant scattering by its host galaxy ISM or circumburst environment \citep{Michilli2018}. {Correlations have been observed, however, between RM scatter ($\sigma_{\mathrm{RM}}$) and $\tau$ in a number of high-$\mathrm{RM}$ repeating sources \citep{Feng2022}, which suggest that circumburst plasmas (e.g., supernova remnants or wind nebulae) with greater magnetic field strengths are more likely to contain pronounced inhomogeneities that lead to both variability in $B_{\|}$ and increased $\tau$.}
+
+{For a single burst like \nihari, distinguishing scattering by a circumburst environment from ionized structures in the surrounding ISM on the basis of pulse broadening alone is an intractable problem. This follows from Eq.~\ref{eq:cordesG}, where we see that $G_{\mathrm{scatt}} \rightarrow 1$ in the limit $L \ll d_{\mathrm{so}}$, which holds at approximately all locations in the host galaxy, including near to the source, thus precluding any geometrical distinction between nearby scattering regions (e.g., a supernova remnant or wind nebula at $d_{\mathrm{sl}} \sim 10\ \mathrm{pc}$) and more distant scattering regions (e.g., an HII region at $d_{\mathrm{sl}} \sim 1\ \mathrm{kpc}$). And since we were unable to measure scintillation in \nihari due to low S/N or possible quenching, the distance between the scattering medium and the source cannot be further constrained \citep[e.g., with a two-screen scattering model;][]{Masui2015, Ocker2022a, Sammons2023}. 
+
+With Eq.~\ref{eq:cordesscat} we can, however, assess the likelihood of scattering occurring within the host galaxy by using measurable quantities ($G_{\mathrm{scatt}}$, $\tau$, $\nu$, $z_{\mathrm{s}}$, $z_{\ell}$) to place an empirical constraint on $\widetilde{F} \times \mathrm{DM}_{\ell}^{2}$ (with units of $\mathrm{pc}^{4/3}\mathrm{\ km}^{-1/3} \mathrm{\ cm}^{-6}$). First used by \citet{Ocker2021} to study the effects of galaxy halos on DM and scattering in FRBs, this metric is useful as it allows us to vary $\mathrm{DM}_{\ell}$ and evaluate the physical validity of $\widetilde{F}$ for various media types. We note, however, that the formalism represented within Eq.~\ref{eq:cordesscat} (outlined in \S\ref{sec:elecfluc} \& \S\ref{sec:scatgeo}) relies on the assumption that all scattering media obey a Kolmogorov turbulent cascade ($\beta = 11/3$). As is common practice in the literature, we maintain this assumption moving forward and show that it is well-motivated in most cases. Furthermore, for the sake of brevity, we omit the units for $\widetilde{F}$ and $\widetilde{F} \times \mathrm{DM}_{\ell}^{2}$ throughout. 
+
+Assuming that scattering occurs within the host galaxy ($G_{\mathrm{scatt}} \sim 1$), we find that $\widetilde{F}_{\mathrm{host}} \times \mathrm{DM}_{\mathrm{\ell}}^2 \sim 10^{5}$--$10^{6}$. The range of values that $\widetilde{F}$ can occupy within ISMs has been predicted by \citet{Ocker2022b} for various galaxy types (spirals, ellipticals, and dwarfs) based on simulated electron density fluctuations. Their constraints on $\widetilde{F}$ for spiral galaxies, the type most relevant to HG\,20221219A given its $M_{\star}$ and SFR, are quoted for both thin and thick disk structural components, where $\widetilde{F}_{\mathrm{ism}}^{\mathrm{thin}} \sim 1$ and $\widetilde{F}_{\mathrm{ism}}^{\mathrm{thick}} \sim 10^{-3}$--$10^{-2}$. For $\widetilde{F}_{\mathrm{host}} \times \mathrm{DM}_{\mathrm{\ell}}^2$, setting $\mathrm{DM}_{\ell} \lesssim \mathrm{DM}_{\mathrm{host}}$ implies that $\widetilde{F}_{\mathrm{host}} \gtrsim 10^{3}$, which exceeds $\widetilde{F}_{\mathrm{thin}}$ by $ \sim 3$ orders of magnitude and suggests extreme turbulence (e.g., high Mach numbers). Even for $\mathrm{DM}_{\mathrm{host} \backslash\{\mathrm{igh}, \mathrm{icm}\}, \mathrm{obs}} = 233_{-137}^{+112} \mathrm{pc} \mathrm{~cm}^{-3}$ inferred when ignoring ICM and IGH contribution (see \S\ref{sec:hostdm}), to produce broadening equivalent to $\tau_{\mathrm{obs}}$ the ISM would require $\widetilde{F}_{\mathrm{host}} \gtrsim 10^{2}$.
+  
+The ranges of $\widetilde{F}_{\mathrm{ism}}$ predicted by \citet{Ocker2022b} are supported observationally. Using a sample of well-localized FRBs with precise scattering measurements, \citet{Ocker2021} inferred $\mathrm{DM}_{\mathrm{host}}$ contributions to show that they emerge from ISMs for which $\widetilde{F} \lesssim 1$. \cite{Cordes2022} later performed a similar analysis using a sample of repeating and non-repeating FRB sources detected by CHIME/FRB with apparent host galaxy-dominated scattering, and again find the ISMs should exhibit $\widetilde{F} \lesssim 1$, with the exception of FRB\,20191221A, which is scattered more heavily by its host galaxy, implying an ISM of $\widetilde{F} \lesssim 10$ \citep[see Figure\ 5 in][]{Cordes2022}. These values, again, fall well below our inferred $\widetilde{F}_{\mathrm{host}}$.} 
+
+In the following section, we assess the scattering strengths of the CGMs within IGH1 and IGH2 by invoking two generalized models: (i) a smoothly varying, tenuous ionized gas that pervades the halo and (ii) a multiphase medium containing a distribution of small, dense, partially ionized clumps. We calculate the expected LoS geometries ($G_\mathrm{scatt}$) and turbulence properties ($\widetilde{F}$) for each model and assess whether they are conducive to multipath propagation.
+
+\subsubsection{\texorpdfstring{Model A: {Smooth} Extended CGM}{}}\label{sec:extmed}
+
+{The scattering strength of an extended, smoothly distributed CGM can be estimated using the formalism outlined in \S\ref{sec:hostscat}. We first constrain the combined quantity $\widetilde{F}\times\mathrm{DM}_{\ell}^{2}$ from the observed pulse broadening $\tau_{\mathrm{obs}}$ via Eq.~\ref{eq:cordesscat}. The geometrical weighting $G_{\mathrm{scatt}}$ (Eq.~\ref{eq:cordesG}) is calculated by assuming that the turbulent medium occupies the full geometric chord through a spherical halo of radius $R_{200}$ at impact parameter $b$, i.e.\ $L_{\mathrm{halo}} = 2\sqrt{R_{200}^{2}-b^{2}}$. Treating the density fluctuations as smoothly varying along this path, we list $R_{200}$, $L_{\mathrm{halo}}$, and the resulting $G_{\mathrm{scatt}}$ for IGH1 and IGH2 in Table~\ref{tab:multimed}. For either halo, reproducing $\tau_{\mathrm{obs}}$ requires that $\widetilde{F}_{\mathrm{igh}}\times\mathrm{DM}_{\ell}^{2} \sim 10^{-4}$--$10^{-3}$; importantly, this constraint is strictly empirical and phase-agnostic, as it makes no prior assumptions about gas temperature or ionization state. In practice, however, the only component expected to fill a halo out to $R_{200}$ is the virialized warm-hot phase at $T_{\mathrm{vir}} \simeq 10^{5}$-$10^{6}\,$K in $M_{h,12} \sim 1$ systems \citep{Tumlinson2017,Qu2018}. Adopting the hot-phase columns $\mathrm{DM}_{\mathrm{igh, hot}} \simeq 10$--$14\ \mathrm{pc\,cm^{-3}}$ derived in \S\ref{sec:ighdm}, the above product translates to an extreme turbulent fluctuation amplitude $\widetilde{F}_{\mathrm{igh, hot}} \sim 1$--10 for either IGH candidate. 
+
+While direct probes of turbulence in the warm-hot CGM are infeasible with current far-UV or soft-X-ray surface-brightness limits \citep{Tumlinson2017,erosita2024}, we can constrain $\widetilde{F}_{\mathrm{igh, hot}}$ with the observed kinematics of embedded cool condensations. Velocity-structure functions of $T \sim 10^{4}$-$10^{5}\,$K clouds, for instance, yield sub-sonic Mach numbers $\mathcal{M} \simeq 0.2$--0.4 and $C_{n}^{2} \approx 10^{-12}\ \mathrm{m^{-20/3}}$ on AU scales \citep{Chen2023,MChen2024,Ocker2025}. For a fiducial outer scale $l_{\mathrm{o}} \simeq 100\ \mathrm{kpc}$ and volume-averaged electron density $\langle n_{e}\rangle \approx 10^{-5}\ \mathrm{cm^{-3}}$, $C_{n,\mathrm{hot}}^{2}$ implies $\widetilde{F}_{\mathrm{igh, hot}} \sim 10^{-4}$, lying four to five orders of magnitude below the $\widetilde{F}_{\mathrm{igh}}$ demanded by \nihari. This follows directly from Eq.~\ref{eq:cn2}, which \citet{Ocker2025} simplify to $\widetilde{F} \approx 0.5 \times C_{\mathrm{n}}^2\bar{n}_e^{-2}l_{\mathrm{i}}^{-1 / 3}$ (see their Eq. 15). Spatially resolved velocity mapping of nebular emission around luminous QSOs with integral-field spectroscopy (IFS) reinforces this picture. \cite{Chen2023} have shown that $\mathcal{M}_{h, 12}$ systems can host Kolmogorov cascades from $\lesssim{\rm pc}$ to $ \sim 100\,$kpc within their CGMs, with non-thermal velocity widths of $ \sim 20\,(l/1\,{\rm kpc})^{1/3}\ \mathrm{km\,s^{-1}}$ across 1--100 kpc scales \citep[i.e. $ \sim 20$--$100\ \mathrm{km\,s^{-1}}$; ][]{MChen2024}. Such velocities exceed the $c_{s} \sim 10\ \mathrm{km\,s^{-1}}$ sound speed of $10^{4}\,$K gas, suggesting that the cascade is likely driven by the ambient hot halo rather than the quasar, yet still remains far too weak to explain the observed scattering.
+
+Indeed, $\widetilde{F} \sim 1$-10 is more characteristic of active star-forming regions in the Galactic thin disk \citep[e.g.\ HII regions;][]{Ocker2024}, rather than a typical CGM. Empirical predictions by \citet{Ocker2025} likewise show negligible scattering for smooth hot halos. We therefore conclude that an extended CGM in IGH1 or IGH2 cannot account for the pulse broadening observed in \nihari.
+
+The critical free parameters in this prescription are the thickness of the ionized volume $L$ and $\mathrm{DM}_{\mathrm{igh}}$, to which $G_{\mathrm{scatt}}$ (and therefore $\widetilde{F}$) is highly sensitive. Given the already strained DM budget, we must be cautious against over-estimating $\mathrm{DM}_{\mathrm{igh}}$ and inflating $\widetilde{F}_{\mathrm{igh}}$. Given the wide dynamic range of fluctuation scales in a typical $M_{h,12}$ halo, however, reducing $L$ to the scale of individual condensations would lower $\widetilde{F}_{\mathrm{igh}}$ into a physically plausible range while preserving sufficient scattering strength. We therefore turn next to a fragmented CGM composed of small-scale clumps or cloudlets (\S\ref{sec:cloud}).}
+
+%The critical free parameter in this prescription is the path length $L_{\mathrm{halo}}$: $G_{\mathrm{scatt}}$—and hence $\widetilde{F}_{\mathrm{igh}}$—is highly sensitive to it. Given the wide dynamic range of fluctuation scales in a typical $M_{h,12}$ halo, reducing $L$ to the scale of individual condensations would lower $\widetilde{F}_{\mathrm{igh}}$ into a physically plausible range while preserving sufficient scattering strength. We therefore turn next to a fragmented CGM composed of small-scale clumps or cloudlets (\S\ref{sec:cloud}).
+
+
+%The scattering strength of an extended, smoothly distributed CGM can be estimated using the formalism outlined in \S\ref{sec:hostscat}. We first constrain the combination $\widetilde{F}\times\mathrm{DM}_{\ell}^{2}$ from the observed pulse broadening $\tau_{\mathrm{obs}}$ via Eq.~\ref{eq:cordesscat}. The geometrical weighting $G_{\mathrm{scatt}}$ (Eq.~\ref{eq:cordesG}) is calculated by assuming that the turbulent medium occupies the full geometric chord through a spherical halo of radius $R_{200}$ at impact parameter $b$, i.e.\ $L_{\mathrm{halo}} = 2\sqrt{R_{200}^{2}-b^{2}}$. Treating the density fluctuations as smoothly varying along this path, we list $R_{200}$, $L_{\mathrm{halo}}$, and the resulting $G_{\mathrm{scatt}}$ for IGH1 and IGH2 in Table~\ref{tab:multimed}. For either halo, reproducing $\tau_{\mathrm{obs}}$ requires that $\widetilde{F}_{\mathrm{igh}}\times\mathrm{DM}_{\ell}^{2} \sim 10^{-4}$--$10^{-3}$; importantly, this constraint is strictly empirical and phase-agnostic, as it makes no prior assumptions about gas temperature or ionization state.
+
+%In practice, the only component expected to fill the halo out to $R_{200}$ is the virialized warm-hot medium at $T_{\mathrm{vir}} \simeq 10^{5.5}$--$10^{6.3}\,$K in $M_{h,12} \sim 1$ systems \citep{Tumlinson2017,Qu2018}. Adopting the hot-phase column densities $\mathrm{DM}_{\mathrm{igh}} \simeq 10$--$14\ \mathrm{pc\,cm^{-3}}$ derived in \S\ref{sec:ighdm} and substituting them into the above product implies $\widetilde{F}_{\mathrm{igh}} \sim 1$--$10$ for either IGH candidate, suggesting extreme fluctuation amplitudes.
+
+%Direct turbulence measurements in the warm-hot CGM remain elusive because the gas is so tenuous that its far-UV metal lines and soft-X-ray emission lie well below observable surface-brightness limits \citep{Tumlinson2017,erosita2024}. Consequently, most constraints are indirect and come from the kinematics of embedded cool condensations. Velocity-structure functions (VSFs) of $ \sim 10^{4}$--$10^{5}\,\mathrm{K}$ clouds in absorption and nebular emission yield sub-sonic Mach numbers $\mathcal{M} \simeq 0.2$--$0.4$ and a density-fluctuation spectrum characterised by $C_{n}^{2} \approx 10^{-12}\ \mathrm{m^{-20/3}}$ on AU scales \citep{Chen2023,MChen2024,Ocker2025}. With $l_{\rm o} \simeq 100\ \mathrm{kpc}$ and $\langle n_{e}\rangle \approx 10^{-5}\ \mathrm{cm^{-3}}$, this translates to $\widetilde{F}_{\rm hot} \sim 10^{-4}$, four to five orders of magnitude below the $\widetilde{F}_{\rm igh} \sim 1$--$10$ demanded by \nihari. Unless the hot halo hosts unphysical density contrasts or energy-injection rates far beyond those implied by quasar lifetimes of $\lesssim10\ \mathrm{Myr}$ \citep{Khrykin2021}, a smooth, extended CGM cannot supply the observed scattering, reinforcing the need for a denser, more strongly fluctuating component (explored \S\ref{sec:cloud}).
+
+%Spatially resolved velocity mapping of the circumgalactic medium (CGM) with integral-field spectroscopy (IFS) of nebular emission around luminous QSOs, together with non-thermal line-width measurements from high-resolution absorption spectroscopy, reveals that the cool ($T \sim 10^4$--$10^5\ \mathrm{K}$) phase hosts a sub-sonic Kolmogorov cascade from parsec to $ \sim 10\ \mathrm{kpc}$ scales \citep{Chen2023, MChen2024, Qu2022}. On sub-kpc scales, \citet{Chen2023} measure the empirical relation $b_{\mathrm{NT}}(l_{\mathrm{cloud}}) \simeq 20\ \mathrm{km\ s^{-1}},(l_{\mathrm{cloud}}/1\ \mathrm{kpc})^{1/3}$, implying Mach numbers $\mathcal{M}\ll1$ within individual clumps. Similar $l^{1/3}$ behaviour extends to $ \sim 100\ \mathrm{kpc}$ in extended nebulae, where $b_{\mathrm{NT}} \sim 100\ \mathrm{km\ s^{-1}}$ is observed \citep{MChen2024}. Because such velocities exceed the sound speed of $10^4\ \mathrm{K}$ gas ($c_s \sim 10\ \mathrm{km\ s^{-1}}$), the largest-scale fluctuations must trace cool condensations entrained in the hot ($T\gtrsim10^6\ \mathrm{K}$) halo, indicating that the cascade is driven by the ambient virialized medium rather than the quasar. The associated turbulent-heating time of $ \sim 100\ \mathrm{Myr}$ therefore surpasses typical quasar lifetimes of $\lesssim10\ \mathrm{Myr}$, reinforcing the view that energy injection originates in the hot CGM.
+
+%In fact, $\widetilde{F} \sim 1$--$10$ more closely matches values expected for a galactic thin disk, particularly in regions of high star formation \citep[e.g., HII regions;][]{Ocker2024}, and is therefore physically too extreme for any typical CGM. Hence, we find that an extended CGM within IGH1 or IGH2 is unlikely to contribute to the scattering observed in \nihari. This conclusion is consistent with empirical predictions made by \citet{Ocker2025}, who show that $C_n^2$ and $\widetilde{F}$ values derived from quasar absorption features for hot CGMs, which mirror the smooth and extended model, suggest negligible scattering strengths. 
+
+%The critical free parameter in this prescription is $L_{\mathrm{halo}}$), to which $G_{\mathrm{scatt}}$, and hence the inferred $\widetilde{F}_{\mathrm{igh}}$, are highly sensitive. The same is true for $\mathrm{DM}_{\mathrm{igh}}$, though given the already strained DM budget, it might be argued that we are prone to over-estimating $\mathrm{DM}_{\mathrm{igh}}$, inflating $\widetilde{F}_{\mathrm{igh}}$ even more. The multi-decade range of spatial scales on which plasma densities within a typical $M_{h,12}$ CGM are known to fluctuate, on the other hand, warrants the tuning of $L$ to smaller scales, particularly if the gas is multiphase. Shrinking $L$ would bring $\widetilde{F}_{\mathrm{igh}}$ closer to a physically valid range for a MW-like CGM while maintaining sufficient scattering strength to produce $\tau_{\mathrm{obs}}$. We explore the scattering power of a fragmented CGM composed of small-scale clumps or cloudlets in \S\protect\ref{sec:cloud}.}
+
+%{The scattering strength of a smooth, extended CGM pervaded by turbulent gas can be characterized using the approach in \S\protect\ref{sec:hostscat}. We begin by constraining $\widetilde{F} \times \mathrm{DM}_{\ell}^{2}$ from known quantities using Eq.~\ref{eq:cordesscat}, to assess if the electron density fluctuations implied for IGH1 or IGH2, assuming $\tau_\mathrm{obs}$, would be plausible for a typical $M_{h,12}$ CGM. It is important to emphasize that constraints on $\widetilde{F} \times \mathrm{DM}_{\ell}^{2}$ are strictly empirical and agnostic to the gas phase ($T$, ionization state, etc.). 
+
+%Although the factor $\widetilde{F} \times \mathrm{DM}_{\ell}^{2}$ that enters Eq.~\ref{eq:cordesscat} is inferred directly from the observed $\tau_{\mathrm{obs}}$, the halo-thickness $L_{\rm halo}$, and the geometric weighting $G_{\rm scatt}$, its derivation is strictly empirical and agnostic to the thermal or ionization state of the gas. Any phase that uniformly fills the entire chord length could, in principle, provide the required scattering strength. In practice, however, the only component expected to permeate the halo out to $R_{200}$ is the virialized warm-hot medium at $T_\mathrm{vir} \simeq 10^{5.5}$--$10^{6.3}\,\mathrm{K}$ in $M_{h,12} \sim 1$ systems \citep{Tumlinson2017,Qu2018}. Substituting the hot-phase values $\mathrm{DM}_\mathrm{igh} \simeq 10$--$14\ \mathrm{pc\ cm^{-3}}$ derived in \S\ref{sec:ighdm} into $\widetilde{F}\,\mathrm{DM}_{\ell}^{2} \sim 10^{-4}$--$10^{-3}$ implies $\widetilde{F}_\mathrm{igh} \sim 1$--$10$ for either IGH candidate.
+
+%To calculate the geometrical factor $G_{\mathrm{scatt}}$ in Eq.~\ref{eq:cordesG}, we assume the thickness of the scattering medium to be the geometric chord length $l_{\mathrm{chord}}$ through the spherical halo of virial radius $\mathrm{R}_{200}$ at impact parameter $b$, where $L_\mathrm{halo} = l_{\mathrm{chord}} = 2\sqrt{\mathrm{R}_{200}^{2} - b^{2}}$. The density fluctuations in the ionized gas are considered to be smoothly varying and continuously distributed along the path. We list estimates of $\mathrm{R}_{200}$, $L_{\mathrm{halo}}$, and $G_{\mathrm{scatt}}$ for each intervening halo in Table~\ref{tab:multimed}, and find that a scattering timescale $\tau_{\mathrm{obs}}$ requires $\widetilde{F}_{\mathrm{igh}} \times \mathrm{DM}_{\mathrm{\ell}}^2 \sim 10^{-4}$--$10^{-3}$. 
+
+%Considering that in order for gas to fill the halo out to $\mathrm{R}_{200}$ it must be virialized at $T_{\mathrm{vir}} \sim 10^5$--$10^6\ \mathrm{K}$, we will warm-hot CGM, ignoring cooler phases. If we substitute in the values for DM$_{\mathrm{igh}} \sim 10$--$14\ \mathrm{pc\ cm}^{-3}$ inferred for the hot phase in \S\protect\ref{sec:ighdm} (see Table~\ref{tab:dmpdfs}), we find $\widetilde{F}_{\mathrm{igh}} \sim 1$--$10$.
+
+%To evaluate if $\widetilde{F}_{\mathrm{igh}}$ is physically reasonable, we can compare to turbulence properties indirect tracers warm-hot CGMs in typical $M_{h, 12}$ halos at $z \lesssim 1$. While the warm-hot phase can in principle be seen in far-UV or soft X-ray emission lines, its extremely low density makes those surface brightnesses nearly unobservable
+
+%Spatially resolved kinematic mapping of the CGM with integral field spectroscopy (IFS) of nebular emission around bright QSOs, in addition to decomposition of non-thermal broadening with of non-thermal line widths ($b_\mathrm{NT}$) in high-resolution quasar absorption spectra, have been used to characterize turbulence in the $T \sim 10^4$--$10^5\ \mathrm{K}$ cool phase on pc--kpc scales \citep{Chen2023, MChen2024, Qu2022}. While $10^6\ \mathrm{K}$ At $\lesssim \mathrm{kpc}$ scales, \citet{Chen2023} measured the empirical relation $b_{\mathrm{NT}}\left(L_{\mathrm{cloud}}\right) \simeq 20 \mathrm{~km} \mathrm{~s}^{-1}\left(L_{\mathrm{cloud}} / 1\ \mathrm{kpc}\right)^{1 / 3}$ between inferred cloud size and non-thermal broadening, consistent with a subsonic ($\mathcal{M} \ll 1$) Kolmogorov cascade. IFS observations of extended nebulae around luminous quasars corroborated the $L^{1/3}$ scaling out to $ \sim 100\ \mathrm{kpc}$, with $b_{\rm NT} \sim \ 100\ \mathrm{km\ s}^{-1}$. At such large scales, the line widths begin to greatly exceed the $ \sim 10\ \mathrm{km\ s}^{-1}$ sound speed of $ \sim 10^4\ \mathrm{K}$ gas, however, indicating that the turbulent cascade continues into the hot, ambient phase. Moreover, the implied turbulent heating times ($ \sim 100$ Myr) greatly exceed typical quasar lifetimes ($\lesssim10$ Myr), pointing to energy injection by the hot CGM rather than by the central engine.
+
+
+%Spatially resolved velocity mapping of the CGM via integral field spectroscopy (IFS) of nebular emission around bright QSOs, together with measurements of non-thermal line broadening in high-resolution QSO absorption spectra of foreground halos, has enabled detailed characterization of turbulence in $ \sim 10^4$--$10^5\ \mathrm{K}$ gas on pc--kpc scales \citep{Chen2023, MChen2024, Qu2022}. Relationships between cool cloud size $l_\mathrm{cloud}$ and non-thermal broadening $b_{\mathrm{NT}}$ have been for $M_{h,12}$ galaxies at $z \lesssim 1$ appear consistent with subsonic Kolmogorov turbulence (Mach number $\mathcal{M} \ll 1$) on $\lesssim 10\ \mathrm{kpc}$ scales. Similar cascades were later identified in IFS data of nebulae that showed velocity fluctuations of $b_{\mathrm{NT}} \sim 100\ \mathrm{km\ s}^{-1}$, implying structures out to $ \sim 100\ \mathrm{kpc}$ scales \citet{MChen2024}. At such large scales, however, nebula begin to trace $\gtrsim 10^6\ \mathrm{K}$ gas as large $b_{\mathrm{NT}}$ exceed the sound speed for cool gas, $c_s \sim 10\ \mathrm{km\ s}^{-1}$, suggesting that turbulence is driven by condensation and extends well into the hot phase. It has also been argued that the heating timescales implied far exceed the activity period of a QSO, lending support to injection by $\gtrsim 10^6\ \mathrm{K}$ gas.
+
+%[UNFINISHED PARAGRAPH HERE!!!] The understanding that CGM turbulence is predominantly subsonic is useful, as it implies that density fluctuations will behave as a passive scalar and evolve with the velocity field. This offers a means by which to relate the velocity and electron density power spectra directly. \citet{Ocker2025} delineated this, providing a framework with which [.....]  
+
+%[UNFINISHED PARAGRAPH HERE!!!] provided the turbulence is subsonic. Using spatially-resolved velocity maps and velocity structure functions (VSFs) \citep[e.g.,][]{Chen2023, MChen2024}, \citet{Ocker2025} derive a corresponding density structure function by typical Mach numbers of $\mathcal{M}_{12} \sim 0.2$--$1$ (with scatter), consistent with sub-sonic Kolmogorov turbulence. They  show that show that typically spans $\widetilde{F} \sim 10^{-8}$--$10^{-4}$ using spatially-resolved velocity maps, which in turn can be used to compute velocity structure functions (VSFs) \citet[e.g., ][]{Chen2023}.\citet{Ocker2025} use VSFs to compute a typical Mach number $\mathcal{M} \sim 0.3$. \citet{Ocker2025} further show that the spectral amplitude $C_n^2$ of turbulent electron density fluctuations in a hot CGM can be defined as $C_n^2 = \langle n_e \rangle^2 \mathcal{M}^4 l_\mathrm{o}^{-2/3}$. Given $L_{\mathrm{halo}}$, and our inferred $\mathrm{DM}_{\mathrm{igh}}$, we can estimate $\langle n_e \rangle \sim 10^{-5}\ \mathrm{cm}^{-3}$. driving scale of $ l_\mathrm{o} \sim 100\ \mathrm{kpc}$. Using velocity structure functions (VSFs) of $M_{h,12}$ galaxies (within $0.4 \lesssim z \lesssim 1$) measured by , they also $\mathcal{M} \sim 0.3$ for virialized gas in an $M_{h,12}$ halo.
+
+%[UNFINISHED PARAGRAPH HERE!!!] which lies well below our estimates. To show this, we know that for a smoothly varying, extend medium, $\zeta$, $\epsilon^2$, and $f_\mathrm{v}$ should all be of order unity. If we then assume driving scales $l_\mathrm{o} \sim 1\ \mathrm{kpc}$ and $l_\mathrm{i} \sim 10^4\ \mathrm{km}$ dissipation scales consistent with the ion inertial lengths in virialized halo gas \citep[assuming $T \sim 10^{6}\ \mathrm{K}$, $n_e \sim 10^{-4}\ \mathrm{cm}^{-3}$;][]{Ocker2025}, we find $\widetilde{F}_{\mathrm{hot}} \sim 10^{-4}$.
+
+%The range of $\widetilde{F}$ is largely informed by the volume filling fraction of the gas which, for a hot coronal gas phase is thought to be $f_\mathrm{v} \sim 10^{-4}$, as inferred from areal covering fractions measured using quasar (QSO) absorption spectroscopy and photoionization modeling \citep{Stocke2013, McCourt2018}. The volume filling fraction relies on the assumption that the CGM can be described as a two-phase medium: a warm $T \gtrsim 10^{6}$ K medium of tenuous coronal gas that hosts within it a cooler $T \lesssim 10^{6}$ K medium, which becomes unstable around $T \sim 10^{4}$ K and fragments or shatters into discrete photoionized cloudlets that populate the tenuous gas with a high covering fraction, but low filling factor \citep{McCourt2018}. We conclude that scattering by an extended CGM is physically unreasonable.
+
+\begin{table}[htbp]
+  \centering
+  %\scriptsize
+  \caption{Derived turbulence properties for both intervening galaxies given $\tau_{\mathrm{obs}}$. For IGH1 and IGH2, we estimate halo masses ($M_{h}$), virial radii ($\mathrm{R}_{200}$), impact parameters ($b$), geometrical chord lengths through the spherical halos ($L_{\mathrm{halo}}$). For Model A (see \S\ref{sec:extmed}) we calculate the geometrical factor ($G_{\mathrm{scatt}}$) empirically using the path length through the halo $L_{\mathrm{halo}}$, which we derive from $\mathrm{R}_{200}$, to obtain $\widetilde{F} \times \mathrm{DM}_{\ell}^2$. The fluctuation parameter ($\widetilde{F}$) is then estimated using $\mathrm{DM}_{\mathrm{igh}}$. For Model B (see \S\protect\ref{sec:cloud}), we assume an outer scale ($l_\mathrm{o}$) equal to the cloudlet scale size ($L_{\mathrm{cloud}}$) to similarly constrain $\widetilde{F} \times \mathrm{DM}_{\ell}^2$, along with an inner scale $l_\mathrm{i} \lesssim r_{\mathrm{F}}$, which satisfies the condition for diffractive scattering. Fiducial values are assumed for electron density fluctuation strengths ($\zeta, \epsilon^2$), and the volume-filling factor ($f_{v}$), which allow us to estimate $\widetilde{F}$ and thus infer the requisite $\mathrm{DM}_{\mathrm{cloud}}$ to achieve $\tau_{\mathrm{obs}}$. We motivate these assumptions \S\protect\ref{sec:cloud}. \\ $^{\dagger}$ Here we distinguish between assumed or inferred quantities and empirical measurements. All quoted uncertainties for inferred values were propagated from measured values through Monte Carlo sampling (deriving the $16^{\mathrm{th}}$ and $84^{\mathrm{th}}$ percentiles), assuming normal distributions.}
+  %$\mathrm{DM}_{\mathrm{halo}}$ for the two intervening galaxy halos.} 
+  %and fluctuation parameters ($\widetilde{F}$; Eq.~\ref{eq:flucparam}) for each intervening galaxy.}
+  \label{tab:multimed}
+  %\hspace*{-1.4cm}
+  %\resizebox{\columnwidth}{!}{
+  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}
+   l  % natural width for Parameter
+   c  % IGH1
+   c  % IGH2
+   l  % Units
+  }
+  \hline \hline
+   Parameter & IGH1 & IGH2 & Units \\
+   \hline
+   $\log_{10}\left(M_{h}/M_\odot\right)$ & $11.52^{+0.05}_{-0.05}$ & $11.96^{+0.01}_{-0.01}$ & - \\
+   $\mathrm{R}_{200}$ & $122^{+13}_{-11}$ & $177^{+33}_{-31}$ & kpc \\
+   $b$ & $44.9^{+11.3}_{-11.3}$ & $37.7^{+11.3}_{-11.3}$ & kpc \\ 
+   \hline
+   \hline
+   \noalign{\smallskip}
+   \multicolumn{4}{@{}l@{}}{{\itshape Model A: A Smooth Extended CGM} (\S\ref{sec:extmed})} \\
+   \hline
+   $L_{\mathrm{halo}}$ & $226^{+28}_{-27}$ & $347^{+66}_{-65}$ & kpc \\
+   $G_{\mathrm{scatt}}$ & $1.1^{+0.1}_{-0.2}\times10^{3}$ & $1.3^{+0.3}_{-0.2}\times10^{3}$ & - \\
+   $\widetilde{F} \times \mathrm{DM}_{\ell}^2$ & $4.6^{+0.8}_{-0.7} \times 10^{3}$ & $3.5^{+0.8}_{-0.7}\times10^{3}$ & $\mathrm{pc}^{4 / 3}\mathrm{~km}^{-1 / 3} \mathrm{~cm}^{-6}$ \\
+   $\mathrm{DM}_{\mathrm{igh}}$ & $20^{+7}_{-7}$ & $28^{+7}_{-7}$ & $\mathrm{pc \ cm}^{-3}$ \\
+   $^{\dagger}\ \widetilde{F}$ & $11_{-5}^{+16}$ & $5_{-2}^{+4}$ & $\left(\mathrm{pc}^2 \mathrm{~km}\right)^{-1 / 3}$ \\
+   \hline
+   \hline
+   \noalign{\smallskip}
+   \multicolumn{4}{@{}l@{}}{{\itshape Model B: A Clumpy Fragmented CGM} (\S\ref{sec:cloud})} \\
+   %\addlinespace
+   \hline
+   $^{\dagger}\ l_{\mathrm{o}},\ L_{\mathrm{cloud}}$ & 10 & 10 & pc \\
+   $^{\dagger}\ l_{\mathrm{i}}$, $r_{\mathrm{F}}$ & $\lesssim 2.96 \times 10^{8}$ & $\lesssim 4.03 \times 10^{8}$ & km \\
+   $^{\dagger}\ \zeta $ & $10^{4}$ & $10^{4}$ & - \\
+   $^{\dagger}\ \epsilon^2$ & $10^{-4}$ & $10^{-4}$ & - \\
+   $^{\dagger}\ f_{\mathrm{v}}$ & $10^{-2}$ & $10^{-2}$ & - \\
+   $^{\dagger}\ G_{\mathrm{scatt}}$ & $2.4 \times 10^{7}$ & $4.4 \times 10^{7}$ & -\\
+   $^{\dagger}\ \widetilde{F} \times \mathrm{DM}_{\ell}^2$ & $5^{+0.7}_{-0.7} \times 10^{-4}$ & $2^{+0.3}_{-0.3} \times 10^{-4}$ & $\mathrm{pc}^{4 / 3}{\mathrm{~km}^{-1 / 3} \mathrm{~cm}^{-6}}$\\
+   $^{\dagger}\ \widetilde{F}$ & $\gtrsim 3.2\times10^{-2}$ & $\gtrsim 2.9\times10^{-2}$ & $\left(\mathrm{pc}^2 \mathrm{~km}\right)^{-1 / 3}$ \\
+   $^{\dagger}\ \mathrm{DM}_{\mathrm{cloud}}$ & $\lesssim 2.5^{+0.1}_{-0.1}$ & $\lesssim 1.9^{+0.1}_{-0.1}$ & $\mathrm{pc} \mathrm{~cm}^{-3}$ \\ 
+   \hline
+   \hline
+   \end{tabular*}
+   %}
+\end{table}
+
+\subsubsection{\texorpdfstring{Model B: A {Clumpy Fragmented} CGM}{}}\label{sec:cloud}
+
+{Contrary to Model A in \S\protect\ref{sec:extmed}, the CGM of a MW-like galaxy is typically expected to contain a clumpy, multiphase structure shaped by dynamical processes such as turbulence, feedback, and cooling-driven thermal instabilities, which lead to fragmentation of the gas into cool ($T \sim 10^4\ \mathrm{K}$), dense, ``cloudlets'' surrounded by hot ($T \gtrsim 10^6\ \mathrm{K}$), virialized gas \citep{Tumlinson2017, FaucherGiguere2023}. The presence of clumpy, cloudlet-like structures is supported by extensive observations of absorption features in the spectra of distant quasars (QSOs) and lensing thereof \citep{Lau2016}, as well as fluorescent Ly-$\alpha$ emission in halos \citep{Hennawi2015}. Absorption line widths indicate that cloudlets can range in scale size between $ \sim 1\ \mathrm{pc}$--$1\ \mathrm{kpc}$, with areal covering fractions $f_{\mathrm{A}} \gg 1$ due to overlapping structures along LoSs. non-thermal absorption line broadening further indicates that cloudlets are internally turbulent, and in certain cases consistent with a Kolmogorov ($\beta = 11/3$) cascade \citep{Chen2023, MChen2023}. These inferred scales align with analytical models of pressure-confined cloudlet formation via thermal instabilities. For example, \citet{McCourt2018} predict a characteristic fragmentation scale of $ \sim 0.1\ \mathrm{pc} \times (n_e/10^{-3})^{-1}$, analogous to a ``Jeans length'', only driven by cooling rather than gravity. It has been argued, however, that turbulent mixing can disrupt these cloudlets via shear forces, increasing the characteristic scale to $\gtrsim\ \mathrm{pc}$. Furthermore, the formation of structures at smaller ($\ll 1\ \mathrm{pc}$) scales remains poorly understood due to the limited resolving power of both observations and simulations \citep{Hummels2019, Butsky2024}. Similarly to Model A, the formalism outlined in \S\ref{sec:scatbudget} allows us to remain agnostic to the gas phase within the halo. The observed cool gas properties we discuss here are therefore purely intended to serve as motivation for the generalized clumpy model.
+
+While the ionization states of CGM cloudlets can vary, particularly if they are cool and harbor significant amounts of neutral gas, a substantial fraction are expected to be photoionized on their surfaces by extralagalactic UV background radiation \citep{Werk2014}, thereby contributing, if modestly, to $\mathrm{DM}_\ell$ (see \S\ref{sec:ighdm}). Furthermore, $f_{\mathrm{A}} \gg 1$ implies that a random LoS through the halo is likely to intersect $N>1$ cloudlets, some of which will be partially ionized. 
+
+In the following analysis, we consider the simplest scenario in which \nihari interacts with a single, partially ionized cloudlet, assuming realistic turbulence properties informed by those inferred for a typical cool ($T \sim 10^{4}$ K) CGM around an $M_{h,12}$ galaxy. We motivate our assumptions of these properties here, and list them in Table~\ref{tab:multimed}. The aim will be to evaluate $\widetilde{F}$, which will inform the $\mathrm{DM}_{\ell}$ (here $\mathrm{DM_{\mathrm{cloud}}}$), required to produce $\tau_{\mathrm{obs}}$. To do so, we first assume a fiducial cloudlet scale size $L_\mathrm{cloud} \sim 10\ \mathrm{pc}$ across which an over-density of fragmented gas is expected to remain stable \citep{McCourt2018}. The cloudlet size scale is also taken to be the injection or outer scale ($l_\mathrm{o}$) for turbulence within the cloudlet. This yields a geometrical factor $G_{\mathrm{scatt}} \gtrsim 10^7$ and $\widetilde{F} \times \mathrm{DM}_{\ell}^2 \sim 10^{-3}$--$10^{-4}$ for IGH1 and IGH2 (see Table~\ref{tab:multimed}). 
+
+The expected inner scale ($l_{\mathrm{i}}$) of turbulence within cool cloudlets is not well understood, as neither observations nor simulations can achieve resolutions fine enough to probe dissipation. We can, however, set an upper limit on $l_\mathrm{i}$ based on the condition that for diffractive scattering to become significant, the inner scale $l_\mathrm{i}$ must lie at or well-below the Fresnel scale, defined as}
+
+\begin{equation}\label{eq:fresnel}
+  r_{\mathrm{F}} = \sqrt{\frac{\lambda_{\mathrm{obs}} d_{\mathrm{sl}} d_{\mathrm{lo}}}{2 \pi d_{\mathrm{so}} {(1+z_{\ell})}}}
+\end{equation}
+
+\noindent
+{where, $d_{\mathrm{sl}},\ d_{\mathrm{lo}},\ d_{\mathrm{so}}$ are angular diameter distances, as they are Eq.~\ref{eq:cordesG}, and $\lambda_{\mathrm{obs}}$ is the observing wavelength, which is scaled to the rest frame of the scattering medium by $(1+z_{\ell})^{-1}$ \citep{Macquart2013}. The Fresnel scale effectively describes the transverse distance over which the wavefront accumulates a phase difference of $ \sim 1\ \mathrm{radian}$ due to geometric path length differences through free-space propagation \citep{Rickett2009}. For IGH1 and IGH2, we find $r_{\mathrm{F}} \sim 10^{8}\ \mathrm{km}$. We emphasize, however, that $r_{\mathrm{F}}$ is likely to be significantly higher than the actual $l_\mathrm{i}$, for which \citet{Ocker2025} consider length scales down to the ion intertial scale, which is of order $l_\mathrm{i} \sim  10^{3}$--$10^{5}\ \mathrm{km}$ for $n_e \sim  10^{-5}$--$10^{-2}\ \mathrm{cm}^{-3}$.
+
+The presence of clumps or cloudlets necessarily implies $\zeta > 1$, which can be thought of as a ``clumping'' factor \citep{Ocker2025}. Assuming that the cloudlets contain electron densities $\bar{n}_e \sim 10^{-2}$ (typical for a cool CGM) and are surrounded by a more tenuous extended medium with electron densities $\bar{n}_e \sim 10^{-4}$ (typical for a hot CGM), we can set $\zeta \sim 10^4$. \citet{Ocker2025} show that integrating the turbulence power spectrum in Eq.~\ref{eq:powspec} for $l_\mathrm{o} \sim 10\ \mathrm{pc}$ and $\bar{n}_e \sim 10^{-2}$, yields $\epsilon^2 \sim 10^{-4}$. Hence, we can reasonably assume that the clumpiness of the CGM balances the fractional density variance within the cloudlets such that $\zeta\epsilon^2 \sim 1$. Lastly, we assume a fiducial volume filling factor of $f_{\mathrm{v}} \sim 10^{-2}$. While $f_{\mathrm{v}}$ for cloudlets critically depends on the assumed photoionization model, QSO absorption studies suggest small values ranging from $f_{\mathrm{v}} \sim 10^{-6}$--$10^{-2}$ \citep{Crighton2013, Prochaska2008, Lau2016}. Thus, we make a more conservative estimate typical for $T \sim 10^{4}\ \mathrm{K}$ gas \citep{Werk2014}, consistent with a ``misty'' CGM model containing many small-scale cloudlets \citep{McCourt2018}. 
+
+%For $l_{\mathrm{i}} = r_{\mathrm{F}}$, our assumptions thus far imply $f_{\mathrm{v}}$ as well as the inner ($l_{\mathrm{i}}$) and outer ($l_{\mathrm{o}}$) scales of the turbulence power spectrum within the cloudlet. Under the well-justified assumption of homogeneous and isotropic turbulence, we take $\zeta \varepsilon^2 \sim 1$ \citep{Spangler1990, Armstrong1995, Rickett2009}. We also assume $f_{\mathrm{v}} \sim 10^{-2}$ \citep[typical for $T \sim 10^{4} \ \mathrm{K}$ gas;][]{Werk2014, McCourt2018}, though this is largely uncertain for individual clouds due to the inability to resolve and characterize this gas at sub-pc scales.
+
+%\noindent
+%where, $d_{\mathrm{sl}}, \quad d_{\mathrm{lo}}, \quad d_{\mathrm{so}}$ are angular diameter distances, as they are Eq.~\ref{eq:cordesG}, and $\lambda_{\mathrm{obs}}$ is the observing wavelength, which is scaled to the rest frame of the scattering medium by $(1+z_{\ell})^{-1}$ \citep{Macquart2013}. We therefore set $l_\mathrm{i} \lesssim r_{\mathrm{F}}$ {\sout{in this case $l_{\mathrm{i}} = 0.1 \times r_{\mathrm{F}}$}} \footnote{\mbox{{\sout{This is a somewhat arbitrary choice and can be adjusted. We set}}} \mbox{{\sout{this inner scale as $0.1 \times r_{\mathrm{F}}$ as it concretely satisfies the condition}}} \mbox{{\sout{that, in order for scattering to occur, the inner scale of the}}} \mbox{{\sout{medium must lie below $r_{\mathrm{F}}$}.}}} at the distance of IGH1 or IGH2, and $l_{\mathrm{o}} = L_{\mathrm{cloud}}$, assuming that the {injection scale of the turbulence is set by the cloud scale}. 
+Under the assumed turbulence properties outlined here and in Table~\ref{tab:multimed} for a generalized clumpy CGM, we estimate that $\widetilde{F} \gtrsim 10^{-2}$--$10^{-1}$ for a single cloudlet, which implies that a modest $\mathrm{DM}_{\mathrm{cloud}} \lesssim 3\ \mathrm{pc\ cm}^{-3}$ is required to produce pulse broadening equivalent to $\tau_{\mathrm{obs}}$.} If we reduce our assumed inner scale from its upper limit $l_\mathrm{i} \lesssim r_\mathrm{F}$ to a more physical dissipation scale $l_\mathrm{i} \sim 10^3\ \mathrm{km}$ \citep[e.g., the ion inertial scale or gyroradius in a cool CGM;][]{Ocker2025}, we find $\widetilde{F} \sim 1$ and $\mathrm{DM}_{\mathrm{cloud}} \sim 0.1\ \mathrm{pc\ cm}^{-3}$. For a cloudlet on the scale of $ \sim 10\ \mathrm{pc}$, this implies $n_e \sim 10^{-2}\ \mathrm{cm}^{-3}$, consistent with a cool CGM.  
+
+%Under the assumptions outlined in Table~\ref{tab:multimed}, we find that for IGH2, a DM$_{\mathrm{cloud}}$ of only $5.8^{+0.5}_{-0.5} \ \mathrm{pc \ cm}^{-3}$ is required to achieve $\tau_{\mathrm{obs}}$. 
+
+%\subsubsection{An Intersection with A High-Velocity Cloud (UNFINISHED THOUGHTS)}\label{sec:hvc}
+%
+%{Pulse broadening of order $\tau_{\mathrm{obs}}$ can be produced by a single, marginally ionized clump provided it contributes $\mathrm{DM}_{\rm cloud}\lesssim3\ {\rm pc\,cm^{-3}}$ and hosts strong small‑scale density fluctuations. Rather than invoking ad hoc cloudlets, we ask whether the best-studied population of cool halo structures, intermediate and high‑velocity clouds (IVCs and HVCs), could supply such a foreground screen if encountered in either IGH1 or IGH2.
+%
+%Galactic HVCs typically lie at heliocentric distances $d \simeq 5$--20 kpc and heights $|z|\lesssim10$ kpc, but compact and ultra‑compact sub‑populations reach 40--80 kpc from the MW or M31 discs \citep{Putman2003, Westmeier2007, Adams2013, Lehner2022}. H$\alpha$ measurements give emission measures ${\rm EM}=0.14$--0.45 ${\rm pc\,cm^{-6}}$ and hence $\mathrm{DM}_{\rm HVC} \approx 2$-6 ${\rm pc\,cm^{-3}}$ for characteristic path lengths 10--100 pc \citep{Tufte1999, Shull2011}. Photoionization fractions of 50--90\% imply mean electron densities $\langle n_{\rm e}\rangle \sim 10^{-2}$-$10^{-1}\ {\rm cm^{-3}}$ and subsonic internal motions ($\sigma_v\lesssim20$ km s$^{-1}$), while linewidths of embedded clumps can reach 100 km s$^{-1}$ owing to entrainment in a hotter ambient medium \citep{Shull2011, McCourt2018}.
+%
+%UV absorption surveys behind external galaxies reveal analogous, multiphase ``cloudlets'' with linear sizes $l \sim 30$--300 pc and covering factors $f_{\rm c}\gtrsim0.6$ out to $ \simeq 0.5\,R_{200}$ \citep{Werk2014, Stocke2013, Lehner2022}. Their ionic columns (e.g.\ Si\,{\sc ii}, O\,{\sc vi}) and ionization models suggest densities and ionized fractions indistinguishable from local HVCs, supporting the view that HVCs are simply the nearby end of a galaxy‑wide population of CGM condensations \citep{Tumlinson2017, McCourt2018}.
+%
+%Adopting $\mathrm{DM}_{\rm cloud}=3\ {\rm pc\,cm^{-3}}$, $\langle n_{\rm e}\rangle=3\times10^{-2}\ {\rm cm^{-3}}$, and a cloud radius $L=50$ pc gives a fluctuation amplitude $C_{n}^{2} \simeq 10^{-5}\,{\rm m^{-20/3}}$ for a Kolmogorov spectrum extending from an inner scale $l_i \sim 50$ km to an outer scale $l_o \sim L$ (see Eq.~\ref{eq:cn2}). With a geometric factor $G_{\rm scatt} \approx 3\times10^{3}$ at the $b=36$--42 kpc impact parameters of IGH1/IGH2, Eq.~\ref{eq:cordesscat} yields $\tau_{1\,{\rm GHz}} \approx 0.5$-2 ms, comfortably matching the observed 19.2 ms. Thus, a single HVC‑like cloudlet can dominate the scattering while adding negligible DM to the overall budget.
+%
+%Hydrodynamic simulations show that compact HVCs striking a hot halo at $\mathcal{M} \lesssim 0.7$ survive $\gtrsim 50$ Myr, develop turbulent head-tail morphologies, and retain enough cool mass to remain detectable \citep{Sander2021}. Their lifetimes exceed the $ \sim 1$ Myr crossing time through an FRB beam, so an intersection along either halo is plausible. Given their substantial covering fractions ($f_{\rm c} \sim 0.6$ at $|z|>6$ kpc) and broad velocity distribution \citep{Lehner2022}, the chance alignment of \nihari with a single ionized HVC cloudlet is therefore a natural explanation for the scattering excess. Next, we quantify how a population of such cloudlets, rather than a lone survivor, would behave in a fragmented multiphase CGM $\S\ref{sec:cloud}$.}
+%
+%From an observational perspective, there are a variety of ionized structures in CGM that could reasonably provide an electron column density $ \sim \mathrm{DM}_\mathrm{cloud} \lesssim 3\ \mathrm{pc\ cm}^{-3}$. Some of the better understood structures local to the MW are high-velocity clouds (HVCs), typically identified as infalling, cool ($T \lesssim 10^4\ \mathrm{K}$), dense ($\bar{n}_e \sim 10^{-2}$--$1\ \mathrm{cm}^{-3}$) clouds of neutral hydrogen (HI) gas \citep{Wakker1997}. The mechanism by which HVCs are ionized is still a topic of debate, though photoionization by the extragalactic UV background or Galactic Lyman-continuum, as well as collisional excitation appear to play important roles \citep{BlandHawthorn1999, Kalberla2009}. \citet{Tufte1999}, however, report H$\alpha$ luminosities between $I_{\mathrm{H}\alpha} \sim 0.06$--$0.2\ \mathrm{R}$, which translate to an emission measure (EM; defined as $\mathrm{EM} \equiv \int n_{\mathrm{e}}^2 d l$ with units of $\mathrm{pc\ cm}^{-6}$) of $\mathrm{EM} \sim 0.14$--$0.45\ \mathrm{pc\ cm}^{-6}$. For an assumed electron (HII) temperature of $T \sim 10^{4}$ K and a scale size $ \sim 10$--$100\ \mathrm{pc}$, this corresponds to a DM contribution of $\mathrm{DM}_{\mathrm{HVC}} \sim 2$--$6\ \mathrm{pc\ cm}^{-3}$, which could in principle accommodate the $\mathrm{DM}_{\mathrm{cloud}} \lesssim 3 \ \mathrm{pc} \ \mathrm{cm}^{-3}$ we estimate in \S\ref{sec:cloud}.
+
+%While many Galactic HVCs appear to lie at extra-planar distances $\lesssim 10$ kpc \citep{Wakker2008, Thom2006, Thom2008}, they have been observed to extend out to extraplanar distances of $ \sim 50\ \mathrm{kpc}$, and even $ \sim 150\ \mathrm{kpc}$ in the Magellanic Stream \citep[a tidal gas stream of HVCs traversing $\gtrsim 100^{\circ}$ over the Galactic South Pole;][]{Besla2010}. 
+%Tidal gas streams are not unique to the MW, as tidal interactions occur often between more massive galaxies and their neighboring dwarfs , particularly at higher $z$ \citep{MiroCarretero2024, Fakhouri2008}. 
+%While the presence of HVCs extending to extraplanar distances of $30$--$50$ kpc ($ \sim b_{\mathrm{igh}}$) cannot be directly identified with the spectroscopic or imaging data obtained for IGH1 and IGH2, we maintain that it is a plausible scenario. Galactic and Local Group HI surveys have also placed a subpopulation of ``compact'' HVCs out to distances of $ \sim 40$--$80\ \mathrm{kpc}$ from the Galactic disk, and $ \sim 50$ kpc around Andromeda \citep{Putman2003, Pisano2007, Westmeier2007}. Similar, even smaller ``ultra-compact'' HVCs have been observed within the Local Group \citep{Adams2013}. Consequently, they present as interesting candidate media for producing scattering in FRBs.
+
+%Absorption line spectroscopy of QSOs has illuminated the intricate structures and dynamic processes characterizing the CGMs of galaxies beyond the MW as well. HVC-like structures, akin to those observed in the MW's halo, have been detected in the CGMs of other galaxies, showcasing a wide range of ionization states and physical scales. QSOs intersecting the CGMs of intervening galaxies reveal the presence of ionized cloudlets through the detection of species ranging from low ions like Si II and Mg II to highly ionized O VI and Ne VIII \citep{Fox2014, Prochaska2017}. These findings suggest that the CGM is a complex, multiphase medium where different regions exhibit varying degrees of ionization \citep{Werk2013, Tumlinson2017}. The column density distribution and the spatial coherence of QSO absorption features suggest that these ionized clouds range from tens to hundreds of parsecs across, similar to HVCs in the MW \citep{Stocke2013, Prochaska2017}. 
+
+%The distributions of these ionized structures within the galactic halos are substantial, extending from several tens to hundreds of kiloparsecs. This vast reach underscores the CGM's role as a reservoir of baryonic material that can influence galaxy evolution \citep{Werk2014, Burchett2016}. Ionization models employed to interpret the absorption spectra indicate that some regions within these clouds are nearly fully ionized, revealing a complex CGM phase structure \citep{Oppenheimer2013, Stocke2013}. They also indicate that these clouds occupy diverse thermal phases of the CGM, from cool ($T \sim 10^{4}$ K), photoionized gas to hot ($T\gtrsim 10^{6}$ K), collisionally ionized plasma \citep{Werk2016, Tumlinson2017}.
+
+%The evidence obtained from spectroscopic studies not only confirms the presence of multiphase, dynamic HVC-like structures but also reveals their substantial physical scales and diverse ionization fractions, making it even more reasonable that an intersection with a single, marginally ionized cloudlet could occur for both IGH1 and IGH2, given their respective impact parameters, and therefore dominate the scattering budget of \nihari. 
+
+%\begin{table}
+%  \centering
+%  \caption{}
+%  \label{tab:multimed}
+%  \begin{tabularx}{0.47\textwidth}{@{\extracolsep{\fill}}XXX}
+%  \hline \hline
+%   Parameter & IGH1 & IGH2 &
+%   \hline
+%   $L_{\mathrm{cloud}}^{*}$ (pc) & $10$ & $10$ &
+%   $(\zeta \varepsilon^2)^{*}$ & $1$ & $1$ &
+%   $l_{\mathrm{i}}^{*}$ (pc) & $1.5\times10^{-6}$ & $1.2\times10^{-6}$ &
+%   $l_{\mathrm{o}}^{*}$ (pc) & $10$ & $10$ &
+%   $f_{v}^{*}$ & $1$ & $1$ &
+%   $G^{*}$ & $4.4\times10^{7}$ & $2.5\times10^{7}$ &
+%   $\widetilde{F} \left(\mathrm{pc}^2 \mathrm{\ km}\right)^{-1 / 3}$ & $2.7\times10^{-2}$ & $3\times10^{-2}$ & 
+%   $\mathrm{DM}_{\mathrm{cloud}} \left(\mathrm{pc \ cm}^{-3}\right)$ & $1.9$ & $2.5$ &
+%   \hline
+%  \end{tabularx}
+%\end{table}
+
+\subsection{A High-Velocity Cloud as the Scattering Screen}
+\label{subsec:hvc}
+
+Our analysis in \S\ref{sec:cloud} shows that the heavy scattering of \nihari can be explained by a compact, turbulent plasma structure within a foreground halo. This model requires a screen that contributes minimally to the total dispersion measure (DM) yet possesses sufficient internal turbulence to cause the observed pulse broadening. Here, we argue that such structures are not an \textit{ad hoc} solution but are an expected component of the circumgalactic medium (CGM) of L$^*$ galaxies like IGH1 and IGH2. We establish the physical basis for this clumpy CGM model by demonstrating its quantitative consistency with observations and providing a framework for the rarity of such an event.
+
+The halos of IGH1 and IGH2 ($\log(M_h/M_{\odot}) \approx 11.5-12.0$; \S2.4) are massive enough to sustain a stable virial shock and host a hot, volume-filling medium \citep{Dekel2006, Keres2005}. Even allowing for the 0.2~dex scatter in the SHMR \citep{Girelli2020}, the halos of the intervening galaxies are at or above this critical mass. Within this hot gas, cooler, denser structures delivered by ``cold mode'' accretion streams are expected to exist, creating a multiphase environment \citep{FaucherGiguere2023}. Such structures are observed locally as High-Velocity Clouds (HVCs) and in external galaxies via quasar absorption lines (QALs) \citep{Putman2012, Werk2014}. These cool clouds are highly ionized, primarily by the extragalactic UV background, forming an ``ionized skin'' over a neutral core. Photoionization modeling of QALs confirms that the cool CGM at these redshifts is predominantly ionized ($n_{\rm HII}/n_{\rm H} \ge 99\%$; \citealp{Werk2014}), providing the necessary plasma for both dispersion and scattering.
+
+The proposed scattering screen is quantitatively consistent with observations. First, its required DM contribution ($\mathrm{DM}_{\rm cloud} \lesssim 3$~pc~cm$^{-3}$) is easily accommodated within our halo DM budget (\S3.1) and matches the DM inferred from H$\alpha$ emission of Galactic HVCs ($\approx 2-6$~pc~cm$^{-3}$; \citealp{Tufte1999, Shull2011}). Second, its required location ($\sim 40$~kpc) and size ($\sim 10-100$~pc) are consistent with the observed distribution of compact HVCs and the hierarchically structured nature of the CGM \citep{Lehner2022, McCourt2018, Chen2023}.
+
+Crucially, the level of turbulence observed in CGM clouds is sufficient to produce the measured scattering. The empirical velocity-size relation from \citet{Chen2023} implies a non-thermal line width $b_{\rm NT} \approx 4.3$~km~s$^{-1}$ for a 10~pc cloudlet, corresponding to a subsonic Mach number $\mathcal{M} \approx 0.53$ in $10^4$~K gas. Using the formalism of \citet{Ocker2025} to translate this kinematic information into a plasma density fluctuation parameter, we derive an observationally-grounded value of $\widetilde{F} \approx 0.6~(\mathrm{pc}^2~\mathrm{km})^{-1/3}$. Inserting this into our scattering model (Eq.~\ref{eq:cordesscat}) predicts a scattering timescale of $\tau \approx 16$~ms, in remarkable agreement with the observed $\tau_{\rm obs} = 19.2$~ms. The model is therefore quantitatively self-consistent.
+
+The long-term survival of such cloudlets, which face destruction from hydrodynamic instabilities \citep{Klein1994}, is plausible in modern models that include radiative cooling and magnetic fields \citep{Gronke2022, Sparre2019}. Our low Rotation Measure limit ($|RM| \le 345$~rad~m$^{-2}$) implies a weak large-scale halo field ($\langle B_{||} \rangle_{\rm igh} \lesssim 28~\mu$G), but is consistent with a tangled, dynamically important field on small scales that would aid cloud survival. The rarity of our observation provides the final piece of supporting evidence. The average CGM is a poor scatterer \citep{Prochaska2019b, Connor2022}. While the areal covering fraction of \textit{any} cool gas is high ($f_A \sim 1$), this is a geometric consequence of a low volume-filling factor ($f_V \sim 3-5\%$) of many small clouds, where $f_A \approx f_V (R_{\rm vir}/r_{\rm cl})$ \citep{Stocke2013}. The rarity of our event stems not from the improbability of intersecting a cool cloud, but from the low probability of intersecting a cloudlet with the specific physical properties---high density and strong internal turbulence---required to produce strong scattering.
+
+We conclude that a chance alignment with an HVC-like cloudlet provides an observationally consistent explanation for the unique properties of \nihari.
+
+%Compact high-velocity HI clouds (HVCs) in the Milky Way are the nearest, best-studied analogues of the cool, clumpy circum-galactic medium (CGM) predicted around galaxies.  The GALFA–HI GC3 catalogue lists 1\,964 compact clouds with 4–20 arcmin diameters and 3–30 km s$^{-1}$ line-widths \citep{Saul2012}; placing those clouds at the commonly inferred deviation-velocity distances of $d\simeq0.1$–few kpc converts to physical diameters $L=0.12$–6 pc.  Selecting the 25th–75th percentiles of that distribution (6–60 arcmin) gives a fiducial compact-cloud family with $L=30$–300 pc at $d=10$–15 kpc.  Interferometric follow-up resolves sub-0.1 pc cold cores within these envelopes \citep{Begum2010}, so $L$ should be viewed as the outer scale of a turbulent hierarchy rather than a single blob size.  On larger scales, Westerbork mosaics reveal 0.6–1.5 kpc HI clouds with $M_{\mathrm{HI}}\!\sim\!10^{5}\,{\rm M}_{\odot}$ at projected radii 40–50 kpc around M 31 and M 33 \citep{Westmeier2005}.  Because a kiloparsec-thick slab would alter the thin-screen geometry by only $\lesssim10\%$, we retain the compact-cloud case for scattering estimates.
+
+%Ultraviolet spectroscopy of Complex C yields hydrogen ionization fractions $x_e=0.97$–0.99, electron densities $n_e=0.01$–0.05 cm$^{-3}$ and path lengths 40–120 pc \citep{Fox2005}.  Re-running the photo-ionisation balance with a metagalactic UV background plus a 0.4 L$^\star$ stellar field, using \textsc{cloudy} \citep{Ferland2017}, still gives $x_e\gtrsim0.7$ for the metallicities inferred in \S\ref{sec:cloud}.  Metal-line Doppler parameters in low-$z$ CGM sight-lines imply non-thermal widths $b_{\rm turb}=9\pm3$ km s$^{-1}$ \citep{Werk2014}, supporting Mach-number unity turbulence.  Adopting $x_e=0.3$–0.7 and $L=30$–300 pc therefore gives $\langle n_e\rangle=0.04$–0.14 cm$^{-3}$ and DM$_{\rm cloud}=1$–13 pc cm$^{-3}$.
+
+%The turbulence outer-scale turnover in the warm ionised medium occurs near 0.5–1 pc \citep[][Fig.\,7]{Hill2008}; we therefore set $\ell_0=1$ pc.  With the \citet{Cordes2003} scattering formalism the corresponding scattering measures are ${\rm SM}=1\text{--}8\times10^{-4}\,{\rm kpc\,m^{-20/3}}$.  The pulse-broadening time
+
+%\[
+% \tau_\nu=\frac{1.10\ {\rm ms}}{1+z_d}\,
+%           \Bigl(\frac{{\rm SM}}{10^{-3}\,{\rm kpc\,m^{-20/3}}}\Bigr)
+%           \Bigl(\frac{G_{\rm scatt}}{10^{3}}\Bigr)
+%           \Bigl(\frac{\nu}{1\,{\rm GHz}}\Bigr)^{-4},
+%\]
+
+%with $z_d=0.031$, $z_s=0.181$ and $G_{\rm scatt}=2.9\times10^{3}$, yields
+
+%\[
+% \tau_{1\,{\rm GHz}}=55\text{–}260\ {\rm ms},\qquad
+% \tau_{1.4\,{\rm GHz}}=7\text{–}35\ {\rm ms},
+%\]
+
+%comfortably bracketing the observed $\tau_{1\,{\rm GHz}}\approx74\pm5$ ms and $\tau_{1.4\,{\rm GHz}}=19.2\pm1.9$ ms.  Increasing $\ell_0$ to 10 pc reduces $\tau$ by a factor 1.8; changing the spectral index from our Kolmogorov default $\alpha=-4.0\pm0.2$ to $-3.5$ or $-4.4$ alters $\tau_{1\,{\rm GHz}}$ by only ±18 ms, well inside the SM envelope.
+
+%For the probability of interception, the all-sky ionised-HVC covering fraction $f_c=0.60\pm0.15$ at $|z|\ge7$ kpc \citep{Lehner2022} implies a mean free path $\lambda\approx140$ kpc assuming spherical symmetry; an 80 kpc CGM chord therefore has $\langle N\rangle=0.57$, making a single-cloud encounter most likely.  Serial screens would raise $\tau$ further but are sub-dominant (Poisson $P[N\!\ge\!2]=0.14$).
+
+%Foreground galactic discs are disfavoured.  For the inclinations ($<40^{\circ}$) and surface-star-formation rates ($\Sigma_{\rm SFR}\sim0.02\,{\rm M_\odot\,yr^{-1}\,kpc^{-2}}$) of IGH1/2, the vertical pressure–balance model of \citet{KrumholzBurkhart2017} gives a gas scale height $h>500$ pc, and the $\Sigma_\mathrm{SFR}$–scattering scaling of \citet{Vedantham2019} limits the disc scattering measure to ${\rm SM}_{\rm disc}\lesssim3\times10^{-3}\,{\rm kpc\,m^{-20/3}}$, two orders of magnitude below the requirement.  A host-galaxy or IGM screen is still less economical, demanding ${\rm SM}\gtrsim0.07$ kpc m$^{-20/3}$ at $G_\mathrm{scatt}=1$ or 0.25, beyond any observed value \citep{Macquart2020}.
+
+%Magneto-hydrodynamic simulations of $10^{4}$–$10^{5}\,\mathrm{M_\odot}$ clouds travelling at 200 km s$^{-1}$ through a 2 MK halo retain $>50\%$ of their cold gas and sustain $C_n^{2}=10^{-5}$–$10^{-4}\,\mathrm{m^{-20/3}}$ for 50 Myr despite $\mu$G-level magnetic draping \citep{SanderHensler2021}.  With virial speeds $v_c\simeq170$ km s$^{-1}$ for IGH1/2, an FRB beam crosses even a 300 pc cloud in 1.7 Myr, leaving ample lifetime margin.
+
+%Consequently, a partially ionised, turbulent HVC intersecting the line of sight at $b\simeq40$ kpc---with $L=30$–300 pc, $\langle n_e\rangle=0.04$–0.14 cm$^{-3}$, and $C_n^{2}\sim10^{-4}\,{\rm m^{-20/3}}$---reproduces the 74 ms scattering tail of FRB 20221219A while adding at most a few pc cm$^{-3}$ to the dispersion measure.  Alternative sites would require scattering measures an order of magnitude larger than any measured to date, making the HVC scenario the most economical and physically plausible explanation.
+
+
+%\subsubsection{Other FRB Sources with Intervening Galaxies (UNFINISHED... a collection of ideas...)}\label{sec:otherIGH}
+%
+%A growing number of precisely–localized fast radio bursts (FRBs) have
+%been shown to propagate through the halos of \emph{foreground} galaxies,
+%providing empirical leverage on circumgalactic plasma that is
+%complementary to the single–sightline analysis presented for
+%\nihari. In this section, we summarize the key cases that already
+%inform models of CGM dispersion, scattering, and magnetization.
+%
+%The small but growing set of FRBs whose sight-lines \emph{definitively}
+%intersect foreground halos already shows a puzzling diversity. In
+%FRB\,181112, a $29$ kpc passage through an
+%$M_{\mathrm h}\!\sim\!10^{12.3}\,M_\odot$ quiescent halo contributes
+%$\mathrm{DM}_{\rm IGH}\!\approx\!50$–120 pc cm$^{-3}$ yet leaves only the
+%upper limit
+%$\tau_{1.3\mathrm{\,GHz}}\!<\!40\;\mu\mathrm s$ \citep{Prochaska2019b}. By
+%contrast, FRB\,190608 meets a similar halo at
+%$b\!\approx\!158$ kpc and shows $\tau_{1.3\mathrm{\,GHz}}\!\simeq\!3.3$ ms,
+%but modelling attributes almost all of that broadening to a dense host
+%environment rather than the foreground screen \citep{Simha2020}. A
+%catalogue-level cross-match between CHIME/FRB events and nearby
+%($<\!40$ Mpc) halos finds that intersecting bursts have mean
+%extragalactic DM larger by $\sim\!10^{2}$ pc cm$^{-3}$ while their
+%scatter-time distribution is statistically indistinguishable from the
+%control sample \citep{Connor2022}. Our own case, FRB~\nihari,
+%occupies the opposite extreme—strong millisecond scattering that
+%\textit{can} be explained by a pair of $\sim L_\ast$ halos at small
+%impact parameters (§ 3.2.6).
+%
+%Two broad interpretations remain viable:
+%
+%\begin{enumerate}
+% \item \textbf{Selection-limited turbulence hypothesis.} 
+%    If halo turbulence sometimes produces AU-scale electron-density
+%    fluctuations—e.g.\ in cold cloudlets with volume-filling factor
+%    $f_v\!\lesssim\!10^{-3}$—then a few per-cent of foreground
+%    intersections should exhibit
+%    $\tau_{1.4\mathrm{\,GHz}}\!\gtrsim\!1$–10 ms. Current searches
+%    rapidly lose sensitivity once the broadened width exceeds their
+%    matched-filter banks; injection tests show completeness falling
+%    by $\gtrsim50$ \% for
+%    $\tau_{1.4\mathrm{\,GHz}}\!\gtrsim\!5$ ms \citep[][their
+%    Fig.~13]{}. In this picture, the dearth of
+%    catalogued broad pulses is an observational artefact, and
+%    FRB~\nihari\ represents the small fraction that survive
+%    pipeline filtering.
+% \item \textbf{Smooth-but-dense halo hypothesis.} 
+%    Hot ($T\!\gtrsim\!10^{6}$ K) CGM plasma can drive the inner
+%    dissipation scale to
+%    $l_i\!\gtrsim\!10^{12}$ cm—orders of magnitude above the
+%    diffractive scale—while a spectrum steeper than Kolmogorov
+%    further suppresses small-scale power
+%    \citep{Ocker2025, vedantham2019}. In that case halos readily
+%    add tens of pc cm$^{-3}$ to the DM budget without generating
+%    detectable multi-path broadening; FRB~\nihari\ would then
+%    require an unusually clumpy screen or an additional host/ISM
+%    contribution that has escaped modelling.
+%\end{enumerate}
+%
+%\smallskip
+%\noindent\emph{Forthcoming observables can decide between these
+%pictures.} (i) VLBI angular-broadening measurements will tie
+%$\theta_{\rm scatt}$ to screen distance; (ii) secondary-spectrum arc
+%curvature can localise scattering to the host, halo or Milky Way;
+%(iii) broadband $\tau(\nu)$ slopes will test for large $l_i$ or
+%non-Kolmogorov turbulence; (iv) integral-field spectroscopy of the
+%intervening galaxies can reveal $n_e$ fluctuations directly; and
+%(v) wide-template searches with full base-band capture (e.g.\ DSA-2000,
+%CHIME/Outriggers) will calibrate survey completeness out to
+%$\tau_{1.4\mathrm{\,GHz}}\!\sim\!30$ ms. A decisive trend—either a
+%hidden population of halo-anchored broad pulses or a persistent lack of
+%millisecond scattering despite pervasive DM excess—will transform our
+%understanding of how the circumgalactic medium shapes FRB propagation.
+
+%%-----------------------------------------------------
+%
+%
+%\paragraph{Why don’t \emph{all} FRB/halo intersections look like \nihari?}
+%Among the $\gtrsim10$ FRBs whose sight-lines are known to pierce $\sim L_\ast$ foreground halos, only two display millisecond-scale scattering. FRB\,181112, which grazes a quiescent $M_{\rm h}\!\approx\!10^{12}\,M_\odot$ halo at $R_\perp\!=\!29$\,kpc, shows $\tau_{1.3\,\mathrm{GHz}}\!<\!40\;\mu$s despite a foreground $\mathrm{DM}_{\rm IGH}\!\sim\!50$–120\,pc\,cm$^{-3}$ \citep{Prochaska2019b}. FRB\,190608 intersects a similar–mass halo at $b\!=\!158$\,kpc yet its $\tau_{1.3\,\mathrm{GHz}}\!\simeq\!3.3$ ms almost certainly originates in the host/CBM rather than the halo because the required $n_e$ would exceed halo constraints by an order of magnitude \citep{Simha2020, Prochaska2019b}. On a statistical footing, CHIME bursts whose localization ellipses overlap $<\!40$ Mpc halos have extragalactic DM larger by $\sim$90 pc cm$^{-3}$, but their scattering-time distribution is indistinguishable from control events \citep{Prochaska2019b}. The implication is that geometry alone is insufficient: strong scattering demands \emph{both} a small impact parameter \emph{and} rare micro-physical conditions—e.g.\ a high cloudlet filling factor or a turbulent inner scale $\ll1$ pc—that are absent in the majority of halos.
+%
+%\begin{itemize}
+% \item \textbf{Why the same thing usually \emph{doesn’t} happen:} 
+%    Typical CGM densities ($\langle n_e\rangle\!\sim\!10^{-4}$ cm$^{-3}$) and cloudlet volume-filling factors ($f_v\!\lesssim\!10^{-3}$) predict $\tau_{1.4\,\mathrm{GHz}}\!<\!0.1$ ms for Kolmogorov turbulence unless the sight-line crosses a dense ($n_e\!\gtrsim\!10^{-2}$ cm$^{-3}$), $\lesssim$pc-scale clump—an intrinsically low-probability event.
+% \item \textbf{Biases against discovering similar sight-lines:} 
+%    Standard search pipelines down-weight or miss bursts whose intrinsic width plus pulse broadening exceeds the matched-filter bank (typically $\lesssim4$–6 ms at CHIME), and visibilities decorrelate for broad pulses in interferometric back-ends. Simulations show detection efficiency drops by $\gtrsim$50\% once $\tau_{1.4\,\mathrm{GHz}}\!\gtrsim\!5$ ms \citep{Shin2024}. The discovery of \nihari\ with a wide-template search underscores this selection effect.
+% \item \textbf{Do we simply fail to observe them?} 
+%    Given the CHIME/FRB Catalog I rate and the optical depth of nearby halos, one expects $\sim$20–25 foreground intersections; only a handful are seen, and none with $\tau\!>\!5$ ms \citep{Prochaska2019b}. The deficit is therefore consistent with the combined geometric + selection bias rather than an absence of such sight-lines.
+% \item \textbf{Future discriminants:} 
+%    (i) Broadband decorrelation bandwidths and secondary-spectrum arcs \citep{Wu2024} to triangulate screen distances; 
+%    (ii) dual-frequency $0.4$–$4$ GHz $\tau(\nu)\!\propto\!\nu^{-\alpha}$ slopes to isolate small-scale turbulence; 
+%    (iii) VLBI angular broadening to measure $\theta_{\rm scatt}$ directly; 
+%    (iv) $<$1-rad m$^{-2}$ rotation-measure precision to detect coherent halo fields; 
+%    (v) deep IFU spectroscopy of the intervening galaxies to map $N_{\mathrm{H\,II}}$ and metallicity gradients; and 
+%    (vi) wide-field FRB searches with sub-ms baseband buffers (e.g.\ DSA-2000, CHIME/Outriggers) that retain sensitivity up to $\tau\!\sim\!30$ ms.
+%\end{itemize}
+%
+%\paragraph{FRB\,181112 at $z_{\mathrm{HG}}=0.475$ (ASKAP).}
+%The sight-line passes $R_\perp = 29$\,kpc in front of a massive
+%quiescent galaxy at $z_{\rm IGH}=0.367$ \citealt{Prochaska2019b}.\footnote{Throughout
+% we drop the “DES~J2149\dots” designation and refer to the system as
+% IGH-181112 for brevity.}
+%Halo–gas modelling implies a foreground contribution
+%$\mathrm{DM}_{\rm IGH}\simeq50$–$120\;\mathrm{pc\;cm^{-3}}$, well below the
+%total $\mathrm{DM}_{\rm FRB}=589.3\;\mathrm{pc\;cm^{-3}}$, so the burst does
+%\emph{not} appear DM-enhanced relative to the cosmic mean at this
+%redshift \citep{Prochaska2019b}.
+%The ASKAP baseband capture resolves the burst into two $\sim40\,\mu$s
+%components and sets a stringent upper limit
+%$\tau_{1.3\,\mathrm{GHz}}<40\,\mu$s on temporal broadening, which in turn
+%constrains the diffractive scale in the CGM to
+%$r_{\rm diff}\gtrsim10^{10}$\,m (Kolmogorov spectrum; see Appendix \ref{apB}) and
+%rules out $\gtrsim10^{-3}$\,cm$^{-3}$ density fluctuations on $\lesssim1$-pc
+%scales \citep{Prochaska2019b}.
+%The measured rotation measure,
+%$\mathrm{RM}=10.9\pm0.9\;\mathrm{rad\,m^{-2}}$, is entirely consistent with
+%Galactic foreground expectations; after subtracting the Milky Way
+%contribution the residual implies an ordered field
+$\left| B_\parallel \right| \lesssim 0.8\,\mu$G through the halo \citep[see Supplementary Material in][]{Prochaska2019b}. 
+
+%Taken together, FRB 181112 demonstrates that even a Milky-Way–mass halo
+%can imprint a modest DM while producing negligible scattering and only
+%weak coherent magnetisation along a single pencil beam.
+
+%\paragraph{FRB\,190608 at $z_{\rm src}=0.118$ (ASKAP).}
+%This burst exhibits an “excess” dispersion,
+%$\mathrm{DM}_{\rm cosmic}=98$–$154\;\mathrm{pc\;cm^{-3}}$, above the
+%Macquart relation after subtracting a well-constrained host term of
+%$110\pm37\;\mathrm{pc\;cm^{-3}}$.
+%Integral-field spectroscopy with KCWI reveals only one foreground halo
+%within 200\,kpc, whose expected contribution is
+%$\mathrm{DM}_{\rm halos}\lesssim28\;\mathrm{pc\;cm^{-3}}$ \citep{Simha2020}.
+%\citet{Simha2020} conclude that \emph{most} of the dispersion arises in the
+%diffuse IGM rather than intervening halos, and that neither the extreme
+%temporal broadening ($\tau_{1.3\,\mathrm{GHz}}\simeq3.3$ ms) nor the large
+%$\mathrm{RM}=353\;\mathrm{rad\,m^{-2}}$ can be attributed to the foreground
+%galaxy population because densities $\gtrsim6\times10^{-4}$\,cm$^{-3}$
+%would be required.
+%Thus, FRB\,190608 provides a counter-example where intervening CGM
+%appears dynamically unimportant for both scattering and Faraday
+%rotation, even though the total DM is above average.
+
+%Using the first CHIME/FRB catalogue, \citet{Connor2022} cross-matched
+%474 bursts with the \textsc{gwgc} galaxy compilation and isolated a
+%subset whose sight-lines traverse nearby ($<40$\,Mpc) halos. The mean
+%dispersion of these “intersecting” FRBs exceeds that of non-intersecting
+%events by $\gtrsim90\;\mathrm{pc\;cm^{-3}}$ at $>95\%$ confidence, while
+%no analogous excess is seen in the scattering time distribution \citep{Connor2022}.
+%Although the CHIME localisations are coarse, the population result
+%supports the picture that halos \emph{can} measurably elevate DM but
+%rarely dominate the multi-path propagation budget.
+
+%The three lines of evidence above converge on a scenario in which
+%foreground halos generally contribute tens of
+%$\mathrm{pc\;cm^{-3}}$ to the total dispersion but—unless intersected at
+%very small impact parameters—exert only weak influence on Faraday
+%rotation and are inefficient scatterers at GHz frequencies.
+%In the context of FRB~\nihari, whose sight-line is predicted to pass
+%within $\sim\!R_{\rm vir}$ of $N_{\rm halo}\sim\!{\cal O}(1)$ $L_\ast$
+%halos (Section 3.2.6), we therefore regard any CGM-induced temporal
+%broadening $\gtrsim100\,\mu$s as unlikely and treat
+%$\mathrm{DM}_{\rm CGM}\approx30$–$100\;\mathrm{pc\;cm^{-3}}$ as a plausible
+%prior, consistent with the empirical brackets set by FRB 181112 and the
+%CHIME excess.
+
+\section{Conclusions} \label{sec:conclusions}
+
+\begin{itemize}
+  \item Using CHIME/Outriggers to investigate $10^{11}$--$10^{13}\ M_\odot$ halos at large.
+\end{itemize}
+
+By constructing detailed DM and scattering budgets for \nihari, we find that the event is highly over-scattered in its host galaxy and lies along an unusually rich LoS. We also find that the IGM and ICM likely dominate the DM budget, which confines DM$_{\mathrm{host}}$ to a modest value.
+
+We consider the possibility of scattering occurring in the CGMs of two closely intervening galaxies, and find it plausible. Specifically, we note that a fortuitous intersection with a single, partially ionized cloudlet in one of the CGMs could produce $\tau_{\mathrm{obs}}$. The geometric leverage offered by compact scattering structures at large distances from both the source and observer, as well as the potential presence of partially ionized structures at the impact parameters of both IGH1 and IGH2 along the LoS, make this scenario likely. We further find that nothing about the host galaxy or local environment is unusual with respect to other FRBs (and pulsars) with far lower scattering, lending credence to this suggestion.
+
+The fact that {not all FRBs} are scattered by the CGMs of intervening galaxies can be explained by the far sparser distributions of such galaxies along most lines of sight, as well as the known bias against observing highly scattered FRBs. We further note that scattering is highly stochastic for fixed DMs, as evidenced by MW pulsars, inflating this bias even more.
+
+%In evaluating the scattering budget, we consider the scattering power of the circum-burst medium and host galaxy, and find that the measured linear polarization fraction and inferred scattering based on the estimated DM$_{\mathrm{host}}$ disfavor the scenario that either medium gives rise to scattering to a degree consistent with $\tau_{\mathrm{obs}}$. We find, instead, . This is supported by the geometric leverage offered by scattering structures at large distances from both the source and observer, as well as the potential presence of partially ionized structures at the impact parameters of both IG1 and IG2 along the LoS. 
+
+In future case studies, it would be of great use, where possible, to measure decorrelation bandwidths in addition to pulse broadening to better understand FRB scattering mechanisms and disentangle distinct LoS scattering media. Comparisons between scintillation and pulse broadening of a single burst can assist in constraining whether the scattering effects in FRBs are due to one or multiple screens along the LoS. Still, it is crucial to search for repeat bursts from heavily scattered FRBs to characterize additional time-variable effects.
+
+%Scenarios we have yet to consider involve the presence of discrete plasma lenses in the host galaxy or intervening material that fortuitously lead to anomalously high scattering timescales. Geometry is, again, an important factor in such cases. It is possible, for instance, that the orientation of Nihari within its host would allow for an intersection with a closely positioned lens without an additional high degree of DM that is typically observed for Galactic pulsars -- thus invalidating our $\tau -$DM comparison with the Milky Way.
+
+\section{Acknowledgements}
+
+The authors would like to thank Jim Cordes for insightful conversations, as well as the staff members of the Owens Valley Radio Observatory and the Caltech radio group whose efforts were vital to the success of the DSA-110, including Kristen Bernasconi, Stephanie Cha-Ramos, Sarah Harnach, Tom Klinefelter, Lori McGraw, Corey Posner, Andres Rizo, Michael Virgin, Scott White, and Thomas Zentmyer. The DSA-110 is supported by the National Science Foundation Mid-Scale Innovations Program in Astronomical Sciences (MSIP) under grant AST-1836018. 
+
+This research is based in part on data gathered with the W.M. Keck Observatory, which is operated, in scientific partnership, by the California Institute of Technology, the University of California, and the National Aeronautics and Space Administration. The Observatory was made possible by the generous financial support of the W.M. Keck foundation.
+
+The Legacy Surveys consist of three individual and complementary projects: the Dark Energy Camera Legacy Survey (DECaLS; Proposal ID \#2014B-0404; PIs: David Schlegel and Arjun Dey), the Beijing-Arizona Sky Survey (BASS; NOAO Prop. ID \#2015A-0801; PIs: Zhou Xu and Xiaohui Fan), and the Mayall z-band Legacy Survey (MzLS; Prop. ID \#2016A-0453; PI: Arjun Dey). DECaLS, BASS and MzLS together include data obtained, respectively, at the Blanco telescope, Cerro Tololo Inter-American Observatory, NSF’s NOIRLab; the Bok telescope, Steward Observatory, University of Arizona; and the Mayall telescope, Kitt Peak National Observatory, NOIRLab. Pipeline processing and analyses of the data were supported by NOIRLab and the Lawrence Berkeley National Laboratory (LBNL). The Legacy Surveys project is honored to be permitted to conduct astronomical research on Iolkam Du’ag (Kitt Peak), a mountain with particular significance to the Tohono O’odham Nation.
+
+NOIRLab is operated by the Association of Universities for Research in Astronomy (AURA) under a cooperative agreement with the National Science Foundation. LBNL is managed by the Regents of the University of California under contract to the U.S. Department of Energy.
+
+This project used data obtained with the Dark Energy Camera (DECam), which was constructed by the Dark Energy Survey (DES) collaboration. Funding for the DES Projects has been provided by the U.S. Department of Energy, the U.S. National Science Foundation, the Ministry of Science and Education of Spain, the Science and Technology Facilities Council of the United Kingdom, the Higher Education Funding Council for England, the National Center for Supercomputing Applications at the University of Illinois at Urbana-Champaign, the Kavli Institute of Cosmological Physics at the University of Chicago, Center for Cosmology and Astro-Particle Physics at the Ohio State University, the Mitchell Institute for Fundamental Physics and Astronomy at Texas A\&M University, Financiadora de Estudos e Projetos, Fundacao Carlos Chagas Filho de Amparo, Financiadora de Estudos e Projetos, Fundacao Carlos Chagas Filho de Amparo a Pesquisa do Estado do Rio de Janeiro, Conselho Nacional de Desenvolvimento Cientifico e Tecnologico and the Ministerio da Ciencia, Tecnologia e Inovacao, the Deutsche Forschungsgemeinschaft and the Collaborating Institutions in the Dark Energy Survey. The Collaborating Institutions are Argonne National Laboratory, the University of California at Santa Cruz, the University of Cambridge, Centro de Investigaciones Energeticas, Medioambientales y Tecnologicas-Madrid, the University of Chicago, University College London, the DES-Brazil Consortium, the University of Edinburgh, the Eidgenossische Technische Hochschule (ETH) Zurich, Fermi National Accelerator Laboratory, the University of Illinois at Urbana-Champaign, the Institut de Ciencies de l’Espai (IEEC/CSIC), the Institut de Fisica d’Altes Energies, Lawrence Berkeley National Laboratory, the Ludwig Maximilians Universitat Munchen and the associated Excellence Cluster Universe, the University of Michigan, NSF’s NOIRLab, the University of Nottingham, the Ohio State University, the University of Pennsylvania, the University of Portsmouth, SLAC National Accelerator Laboratory, Stanford University, the University of Sussex, and Texas A\&M University.
+
+BASS is a key project of the Telescope Access Program (TAP), which has been funded by the National Astronomical Observatories of China, the Chinese Academy of Sciences (the Strategic Priority Research Program “The Emergence of Cosmological Structures” Grant \#XDB09000000), and the Special Fund for Astronomy from the Ministry of Finance. The BASS is also supported by the External Cooperation Program of Chinese Academy of Sciences (Grant \#114A11KYSB20160057), and Chinese National Natural Science Foundation (Grant \#12120101003, \#11433005).
+
+The Legacy Survey team makes use of data products from the Near-Earth Object Wide-field Infrared Survey Explorer (NEOWISE), which is a project of the Jet Propulsion Laboratory/California Institute of Technology. NEOWISE is funded by the National Aeronautics and Space Administration.
+
+The Legacy Surveys imaging of the DESI footprint is supported by the Director, Office of Science, Office of High Energy Physics of the U.S. Department of Energy under Contract No. DE-AC02-05CH1123, by the National Energy Research Scientific Computing Center, a DOE Office of Science User Facility under the same contract; and by the U.S. National Science Foundation, Division of Astronomical Sciences under Contract No. AST-0950945 to NOAO.
+
+The Pan-STARRS1 Surveys (PS1) and the PS1 public science archive have been made possible through contributions by the Institute for Astronomy, the University of Hawaii, the Pan-STARRS Project Office, the Max-Planck Society and its participating institutes, the Max Planck Institute for Astronomy, Heidelberg and the Max Planck Institute for Extraterrestrial Physics, Garching, The Johns Hopkins University, Durham University, the University of Edinburgh, the Queen's University Belfast, the Harvard-Smithsonian Center for Astrophysics, the Las Cumbres Observatory Global Telescope Network Incorporated, the National Central University of Taiwan, the Space Telescope Science Institute, the National Aeronautics and Space Administration under Grant No. NNX08AR22G issued through the Planetary Science Division of the NASA Science Mission Directorate, the National Science Foundation Grant No. AST-1238877, the University of Maryland, Eotvos Lorand University (ELTE), the Los Alamos National Laboratory, and the Gordon and Betty Moore Foundation.
+
+\vspace{5mm}
+\facilities{DSA-110, Keck-I/LRIS \citep{Oke1995}, Keck-II/DEIMOS \citep{Faber2003}}
+
+\software{\texttt{astropy} \citep{astropy2018}, \texttt{scipy} \citep{scipy2020}, \texttt{numpy} \citep{numpy2020}, \texttt{hmf} \citep{hmf}, \texttt{matplotlib} \citep{matplotlib2007}, \texttt{LPipe} \citep{Perley2019}, \texttt{pPXF} \citep{Cappellari2017, Cappellari2022}, \texttt{PypeIt} \citep{pypeit}, \texttt{prospector} \citep{Johnson2021}, \texttt{astropath} \citep{Aggarwal2021}}
+
+\appendix
+
+{
+\section{The Pulse Broadening Function}\label{apA}
+
+Here we outline the assumptions under which a one-sided exponential pulse-broadening function (PBF) arises and show that those same assumptions force the scattering index to be $\alpha = 4$. First, ignoring instrumental effects, the received pulse from an FRB is the convolution of the (unknown) intrinsic pulse shape $G(\nu,t)$ with the PBF $H(\nu,t)$, plus noise $\varepsilon$,
+
+\begin{equation}\label{eq:pulse}
+ S(\nu,t)=\bigl[G(\nu,t)\ast H(\nu,t)\bigr]+\varepsilon\,.
+\end{equation}
+
+We model $G$ as a Gaussian in time for simplicity, though it may take other forms. If $G = \delta(t)$, then $H(\nu,t)$ is equivalent to the impulse response function of the scattering medium. We assume a one-sided exponential PBF, 
+
+\begin{equation}\label{eq:pbf}
+ H(\nu,t)=\Theta(t-t_0)\,\exp\Bigl[\frac{-(t-t_0)}{\tau\,\nu^{-\alpha}}\Bigr]\,,
+\end{equation}
+
+where $\Theta$ is the Heaviside step, $\tau$ is the scattering time at a reference frequency $\nu_0$, and $\alpha$ is the scattering index.
+
+An exponential PBF arises if and only if the scattering medium is (i) \emph{thin} ($\ll$ source-observer distance), (ii) \emph{wide} (its transverse extent $\gg$ the source image), and (iii) the phase structure function across the screen is a \emph{square law}, 
+
+\begin{equation}\label{eq:strfunc}
+  D_\phi(r)\equiv\bigl\langle[\phi(\mathbf{x}+r)-\phi(\mathbf{x})]^2\bigr\rangle\propto r^2\,.
+\end{equation}
+
+A square-law $D_\phi$ produces a Gaussian angular image, which Fourier-transforms into the exponential ``scattering'' tail of Eq.~\ref{eq:pbf} \citep{Lee1975b}.
+
+More generally, if the electron-density power spectrum is a power law, 
+
+\begin{equation}
+  P_{\delta n_e}(k)\propto k^{-\beta}\quad(2\pi/l_{\rm o}\le k\le2\pi/l_{\rm i})\,,
+\end{equation}
+
+then the phase structure function scales as 
+
+\begin{equation}
+ D_\phi(r)\propto r^m,\quad m=\beta-2\quad(0<m<2).
+\end{equation}
+
+In that inertial range one can show \citep{Cordes1986, Romani1986} that the scattering index is 
+\begin{equation}
+ \alpha=\frac{2\beta}{\beta-2} \;=\;2+\frac{4}{m}\,.
+\end{equation}
+
+Only when $m=2$ (so $\beta=4$ or when $r$ falls entirely below the inner scale $l_{\rm i}$) does $\alpha=4$. But $m=2$ is exactly the condition for a square-law structure function and hence an exponential PBF. Thus the assumption of an exponential $H(\nu,t)$ \emph{necessarily} implies $\alpha=4$.
+
+%----------------------------------------------------------------
+%Ignoring instrumental effects, a pulse from an FRB or pulsar $S(\nu, t)$ can be modeled as the convolution of an assumed intrinsic pulse shape $G(\nu, t)$ with the impulse response function (a.k.a., ``pulse broadening function'', or PBF) of the medium through which is passes $H(\nu, t)$ as
+
+%\begin{equation}
+%  S(\nu, t)= (G(\nu, t) \ast H(\nu, t)) + \varepsilon,
+%\end{equation}
+
+%\noindent where $\varepsilon$ is an added noise term. Since the intrinisc pulse shapes of FRBs are largely unknown, we define $G(\nu, t)$ as a single Gaussian. The most common PBF, %and the one we assume in Eq.~\ref{eq:expgauss}, is a truncated exponential, defined as
+
+%\begin{equation}
+%H(\nu, t) = \mathbb{H}\left(t-t_0\right)\exp \left[\frac{t-t_0}{\tau\nu^{-\alpha}}\right],
+%\end{equation}
+
+%\noindent where $\mathbb{H}$ is the Heaviside unit step function, and $\tau$ is the pulse broadening time which scales with frequency according to $\alpha$. 
+
+%The important point to raise here is that the exponential form of $H(\nu, t)$ necessarily assumes that the scattering medium is: (i) ``thin'' or screen-like ($\ll$ source-observer distance), (ii) ``wide'' ($\gg$ transverse extent of the source image), and (iii) well-described by a square-law phase structure function $D_\phi(r)=\left\langle[\phi(\mathbf{x}+r)-\phi(\mathbf{x})]^2\right\rangle \propto r^{2}$, which describes how the variance in phase ($\phi(\mathbf{x})$) difference evolves with transverse separation $r$ due to turbulent fluctuations. In the case of a thin medium $D_\phi(r) \propto r^2$ leads to a Gaussian scattered image, which implies that $H(\nu, t)$ will have an exponential form \citep{Lee1975b}. 
+
+%The manner in which $D_\phi(r)$ evolves with $r$ depends on the turbulence power spectrum $P_{\delta n_e}(k)$, which represents the spatial distribution of turbulent fluctuations. Fluctuations are bounded by injection at (large) outer scales $l_\mathrm{o}$ and (small) inner scales $l_\mathrm{i}$, such that $2 \pi / l_\mathrm{o} \leqslant k \leqslant 2 \pi/l_\mathrm{i}$. To obtain $D_\phi(r) \propto r^2$, small-scale fluctuations in the power spectrum must be suppressed. This is most straightfowardly achieved for a Gaussian or ``uni-scale'' spectrum, where $P_{\delta n_e}(k)=C_n^2 \exp \left(-k^2 / k_0^2\right)$, and $D_\phi(r)\propto r^2$ by definition. However, as discussed in this work, power-law or ``multi-scale'' spectra (see Eq.~\ref{eq:powspec}) tend to be more physically relevant due to prevalent turbulence in astrophysical plasmas. For a power-law spectrum $P_{\delta n_e}(k) \propto k^\beta$ defined across an inertial range $2\pi/l_\mathrm{o} \leq k \leq 2 \pi/l_\mathrm{i}$, the structure function $D_\phi(r) \propto r^{m}$ scales with $r$ according to the spectral index $\beta$ as $m=\beta-2$ for $2<\beta< 4$. In the limit $\beta \rightarrow 4$, we see that the structure function becomes $D_\phi(r) \propto r^2$. Alternatively, the same square-law scaling is achieved by truncating the inner scale at $r \ll l_\mathrm{i}$, which yields $D_\phi(r) \propto r^2$ for all scales below $l_\mathrm{i}$, regardless of $\beta$. 
+
+%For transverse scales that fall within the inertial range $l_\mathrm{i} \lesssim r \lesssim l_\mathrm{o}$, the index $\alpha$ by which broadening scales with frequency can be defined in terms of $\beta$ as $\alpha = 2\beta/(\beta-2)$ \citep{Cordes1986, Romani1986}. Recalling that $m=\beta-2$, we can rewrite the expression as $\alpha$ as $\alpha = 2 + 4/m$, which shows that $D_\phi(r) \propto r^{2}$ will lead to $\alpha = 4$ by definition, and is therefore necessarily implied by the exponential form of $H(\nu, t)$. Furthermore, the expression for $\alpha$ in terms of $m$ holds for all transverse scales.
+
+\section{The Pulse Modeling Methods}\label{apB}
+
+To confirm the presence of an asymmetric scattering tail in \nihari, we fit two competing models to the channel-averaged dynamic spectrum (see Panel A in Figure\ \ref{fig:nihariwfall}): 
+
+\begin{enumerate}
+  \item An exponentially-modified Gaussian (EMG) with fixed scattering index $\alpha=4$ (Eq.~\ref{eq:expgauss}), and 
+  \item A Gaussian (no scatter-broadening), 
+\begin{equation}\label{eq:gauss}
+ G_\nu(t)
+ =\frac{c_{\nu}}{\sqrt{2\pi\,\sigma_{\nu,\mathrm{DM}}^2}}\,
+  \exp\Biggl[-\frac{(t-\,t_{\nu,\mathrm{DM}})^2}{2\,\sigma_{\nu,\mathrm{DM}}^2}\Biggr]\,,
+\end{equation}
+where $c_\nu$, $t_{\nu}$, and $\sigma_\nu$ are the spectral amplitude, centroid, and intrinsic width at the central frequency $\nu$ of each channel.
+\end{enumerate}
+
+We sampled parameter spaces for each model with the \texttt{emcee} affine-invariant MCMC ensemble sampler \citep{ForemanMackey2013}, using 1000 burn-in steps, and 3000 subsequent steps. Uniform priors were adopted on all parameters. The log-likelihood function we defined as
+
+\begin{equation}\label{eq:loglike}
+  \ln\mathcal{L}(\theta)
+ =-\tfrac12\sum_{i=1}^N\Biggl[\frac{(d_i-m_i(\theta))^2}{\varepsilon_i^2}
+  +\ln(2\pi\,\varepsilon_i^2)\Biggr], 
+\end{equation}
+
+where $d_i$ is the data sample, $m_i$ the model, and $\varepsilon_i$ the off-pulse noise RMS. Self-noise was neglected given the relatively low S/N.
+
+To select the best model we computed the Bayesian Information Criterion, 
+
+\begin{equation}
+  \mathrm{BIC}=-2\ln\mathcal{L}_{\rm max}+k\ln N, 
+\end{equation}
+
+\noindent
+where $k$ is the number of free parameters, $N$ the number of data samples, and $\mathcal{L}_{\rm max}$ the maximized likelihood (Eq.~\ref{eq:loglike}) for the given model. The model with the lower BIC is preferred; if $\Delta\mathrm{BIC}\equiv\mathrm{BIC}_{\rm EMG}-\mathrm{BIC}_{\rm G}\le6$, the simpler (Gaussian) model would be chosen. We find $\Delta\mathrm{BIC}=112.8\gg6$, firmly favoring the EMG model and thus providing strong evidence for scattering.
+
+\begin{figure}
+ \centering
+ \includegraphics[width=0.75\linewidth]{nihari_221219aabz_corner_ch8.pdf}
+ \caption{Posterior distributions for the EMG fit parameters (fixed $\alpha=4$). Magenta lines mark medians; dashed lines mark the 16th and 84th percentiles.}
+ \label{fig:corner}
+\end{figure}
+}
+
+%\section{The Pulse Modeling Techniques}\label{apB} 
+
+%We assume an exponentially-modified Gaussian (EMG) pulse model, defined in Eq.~\ref{eq:expgauss}, as the model for \nihari, keeping $\alpha = 4$ as a fixed parameter throughout, as we motivated in Appendix\ \ref{apA}. To validate our adoption of an EMG as the appropriate pulse model and more robustly confirm the presence of asymmetric broadening, we perform an additional fit for a simple Gaussian pulse (un-broadened; $G_{\nu}(t)$)
+%
+%\begin{equation}\label{eq:gauss}
+% G_\nu(t) = \frac{c_{\nu}}{\sqrt{2 \pi \sigma_{\nu,\ \mathrm{DM}}^2}} \exp \left[\frac{-\left(t-\Delta t_{\nu,\ \mathrm{DM}} \right)^2}{\sigma_{\nu,\ \mathrm{DM}}^2}\right] ,
+%\end{equation}
+%
+%\noindent
+%where the parameter definitions are consistent with those described for Eq.~\ref{eq:expgauss}.
+%
+%Following a method similar to that outlined by \citet{Ravi2019}, we explored the parameter space for each model using the \texttt{emcee} Markov Chain Monte Carlo Ensemble sampler \citep{ForemanMackey2013}. Uniform prior distributions were assumed for all free parameters. To compute the posterior distributions, we defined our log-likelihood function as
+%
+%\begin{equation}
+% \ln \mathcal{L}(\theta)=-\frac{1}{2} \sum_i^N\left[\frac{\left(d_i-m_i(\theta)\right)^2}{\varepsilon_i^2}+\ln \left(2 \pi \varepsilon_i^2\right)\right],  
+%\end{equation}
+%
+%\noindent where, for sample $i$, $d_i$ represents the data, $m_i(\theta)$ is the model prediction given parameters $\theta$, and $\varepsilon_i^2$ is the noise variance characterized in the off-pulse region. We do not account for self-noise due to the low S/N of \nihari.
+%
+%We computed the posterior with $N=4000$ samples, discarding $N=1000$ samples during a burn-in stage. A mean acceptance fraction of $ \sim 0.55$ was obtained for the EMG model (Eq.~\ref{eq:expgauss}) and $ \sim 0.2$ for the Gaussian model (Eq.~\ref{eq:gauss}). To select for the best model, we computed the Bayesian information criteria (BIC), defined as $-2 \ln \mathcal{L}(\hat{\theta})+k \ln N$, where $k$ is the number of free parameters, $N$ is the number of measurements (samples) to which we fit, and $\widehat{\mathcal{L}}$ represents the log-likelihood function maximized at $\hat{\theta}$. As is common practice, the preferred model is that with the greatest BIC, unless $\Delta \mathrm{BIC} \leq 6$, in which case the model with the fewest $k$ is preferred. For the EMG and Gaussian pulse models, this yielded $\Delta \mathrm{BIC} = \mathrm{BIC}_{\mathrm{EMG}} - \mathrm{BIC}_{\mathrm{G}} = 112.8$, which shows that our the assumed EMG pulse model is securely favored and provides strong evidence for the presence of scattering.} 
+%
+%
+%\begin{figure}
+%  \centering
+%  \includegraphics[width=0.75\linewidth]{nihari_221219aabz_corner_ch8.pdf}
+%  \caption{Posterior density distributions and histograms, illustrating covariances between the model parameters in Eq.~\ref{eq:expgauss} for a fixed $\alpha = 4$. The magenta lines represent median values, adopted as the best-fit value for each parameter, and dashed lines in the 1D histograms represent $16^{\mathrm{th}}$ and $84^{\mathrm{th}}$ percentile uncertainties.}
+%  \label{fig:corner}
+%\end{figure}
+%
+\bibliography{refs}
+\bibliographystyle{aasjournal}
+
+\end{document}
+

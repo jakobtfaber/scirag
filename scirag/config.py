@@ -1,6 +1,6 @@
 from pathlib import Path
 import vertexai
-from google import genai
+import google.generativeai as genai
 from glob import glob
 import os
 from googleapiclient.discovery import build
@@ -61,7 +61,8 @@ vertexai.init(project=PROJECT,location=LOCATION,credentials=credentials)
 # )
 # creds.refresh(Request())
 # vertexai.init(project=PROJECT, location=LOCATION, credentials=creds)
-vertex_client = genai.Client(vertexai=True,project=PROJECT,location=LOCATION)
+# Note: genai.GenerativeModel is used directly, not genai.Client
+# vertex_client = genai.Client(vertexai=True,project=PROJECT,location=LOCATION)
 
 
 
@@ -340,3 +341,120 @@ index_settings = Settings(
                     "recurse_subdirectories": True
                 }}
             )
+
+# Enhanced Processing Configuration
+class EnhancedProcessingConfig:
+    """Configuration for RAGBook-SciRAG integration."""
+    
+    # Feature flags (can be overridden by environment variables)
+    ENABLE_ENHANCED_PROCESSING = os.getenv('SCIRAG_ENHANCED_PROCESSING', 'false').lower() == 'true'
+    ENABLE_MATHEMATICAL_PROCESSING = os.getenv('SCIRAG_MATH_PROCESSING', 'true').lower() == 'true'
+    ENABLE_ASSET_PROCESSING = os.getenv('SCIRAG_ASSET_PROCESSING', 'true').lower() == 'true'
+    ENABLE_GLOSSARY_EXTRACTION = os.getenv('SCIRAG_GLOSSARY_EXTRACTION', 'true').lower() == 'true'
+    ENABLE_ENHANCED_CHUNKING = os.getenv('SCIRAG_ENHANCED_CHUNKING', 'true').lower() == 'true'
+    
+    # Fallback settings
+    FALLBACK_ON_ERROR = os.getenv('SCIRAG_FALLBACK_ON_ERROR', 'true').lower() == 'true'
+    LOG_ENHANCED_PROCESSING = os.getenv('SCIRAG_LOG_ENHANCED', 'true').lower() == 'true'
+    
+    # Performance thresholds
+    MAX_PROCESSING_TIME = float(os.getenv('SCIRAG_MAX_PROCESSING_TIME', '30.0'))
+    MEMORY_LIMIT_MB = int(os.getenv('SCIRAG_MEMORY_LIMIT_MB', '1024'))
+    MAX_ERRORS_BEFORE_FALLBACK = int(os.getenv('SCIRAG_MAX_ERRORS', '10'))
+    
+    # RAGBook-specific settings
+    RAGBOOK_CHUNK_SIZE = int(os.getenv('SCIRAG_CHUNK_SIZE', '320'))
+    RAGBOOK_OVERLAP_RATIO = float(os.getenv('SCIRAG_OVERLAP_RATIO', '0.12'))
+    RAGBOOK_ENABLE_SYMPY = os.getenv('SCIRAG_ENABLE_SYMPY', 'true').lower() == 'true'
+    RAGBOOK_ENABLE_OCR = os.getenv('SCIRAG_ENABLE_OCR', 'true').lower() == 'true'
+    
+    # Content classification thresholds
+    CLASSIFICATION_CONFIDENCE_THRESHOLD = float(os.getenv('SCIRAG_CLASSIFICATION_THRESHOLD', '0.3'))
+    EQUATION_CONFIDENCE_THRESHOLD = float(os.getenv('SCIRAG_EQUATION_THRESHOLD', '0.5'))
+    FIGURE_CONFIDENCE_THRESHOLD = float(os.getenv('SCIRAG_FIGURE_THRESHOLD', '0.4'))
+    TABLE_CONFIDENCE_THRESHOLD = float(os.getenv('SCIRAG_TABLE_THRESHOLD', '0.4'))
+    GLOSSARY_CONFIDENCE_THRESHOLD = float(os.getenv('SCIRAG_GLOSSARY_THRESHOLD', '0.5'))
+    
+    # Mathematical processing settings
+    MATH_KGRAM_SIZE = int(os.getenv('SCIRAG_MATH_KGRAM_SIZE', '3'))
+    MATH_MAX_VARIABLES = int(os.getenv('SCIRAG_MATH_MAX_VARIABLES', '20'))
+    MATH_MAX_OPERATORS = int(os.getenv('SCIRAG_MATH_MAX_OPERATORS', '50'))
+    
+    # Chunking settings
+    CHUNK_OVERLAP_SENTENCES = int(os.getenv('SCIRAG_CHUNK_OVERLAP_SENTENCES', '2'))
+    PRESERVE_MATH_CONTEXT = os.getenv('SCIRAG_PRESERVE_MATH_CONTEXT', 'true').lower() == 'true'
+    PRESERVE_ASSET_CONTEXT = os.getenv('SCIRAG_PRESERVE_ASSET_CONTEXT', 'true').lower() == 'true'
+    
+    # Monitoring settings
+    ENABLE_PERFORMANCE_MONITORING = os.getenv('SCIRAG_ENABLE_MONITORING', 'true').lower() == 'true'
+    ENABLE_HEALTH_CHECKS = os.getenv('SCIRAG_ENABLE_HEALTH_CHECKS', 'true').lower() == 'true'
+    ENABLE_AUTO_ROLLBACK = os.getenv('SCIRAG_ENABLE_AUTO_ROLLBACK', 'true').lower() == 'true'
+    
+    # Rollback settings
+    ROLLBACK_ERROR_THRESHOLD = float(os.getenv('SCIRAG_ROLLBACK_THRESHOLD', '0.05'))
+    ROLLBACK_TIME_WINDOW = int(os.getenv('SCIRAG_ROLLBACK_WINDOW', '300'))  # seconds
+    
+    @classmethod
+    def get_config_dict(cls) -> dict:
+        """Get configuration as dictionary."""
+        return {
+            'enhanced_processing': cls.ENABLE_ENHANCED_PROCESSING,
+            'mathematical_processing': cls.ENABLE_MATHEMATICAL_PROCESSING,
+            'asset_processing': cls.ENABLE_ASSET_PROCESSING,
+            'glossary_extraction': cls.ENABLE_GLOSSARY_EXTRACTION,
+            'enhanced_chunking': cls.ENABLE_ENHANCED_CHUNKING,
+            'fallback_on_error': cls.FALLBACK_ON_ERROR,
+            'log_enhanced_processing': cls.LOG_ENHANCED_PROCESSING,
+            'max_processing_time': cls.MAX_PROCESSING_TIME,
+            'memory_limit_mb': cls.MEMORY_LIMIT_MB,
+            'max_errors_before_fallback': cls.MAX_ERRORS_BEFORE_FALLBACK,
+            'chunk_size': cls.RAGBOOK_CHUNK_SIZE,
+            'overlap_ratio': cls.RAGBOOK_OVERLAP_RATIO,
+            'enable_sympy': cls.RAGBOOK_ENABLE_SYMPY,
+            'enable_ocr': cls.RAGBOOK_ENABLE_OCR,
+            'classification_threshold': cls.CLASSIFICATION_CONFIDENCE_THRESHOLD,
+            'equation_threshold': cls.EQUATION_CONFIDENCE_THRESHOLD,
+            'figure_threshold': cls.FIGURE_CONFIDENCE_THRESHOLD,
+            'table_threshold': cls.TABLE_CONFIDENCE_THRESHOLD,
+            'glossary_threshold': cls.GLOSSARY_CONFIDENCE_THRESHOLD,
+            'math_kgram_size': cls.MATH_KGRAM_SIZE,
+            'math_max_variables': cls.MATH_MAX_VARIABLES,
+            'math_max_operators': cls.MATH_MAX_OPERATORS,
+            'chunk_overlap_sentences': cls.CHUNK_OVERLAP_SENTENCES,
+            'preserve_math_context': cls.PRESERVE_MATH_CONTEXT,
+            'preserve_asset_context': cls.PRESERVE_ASSET_CONTEXT,
+            'enable_performance_monitoring': cls.ENABLE_PERFORMANCE_MONITORING,
+            'enable_health_checks': cls.ENABLE_HEALTH_CHECKS,
+            'enable_auto_rollback': cls.ENABLE_AUTO_ROLLBACK,
+            'rollback_error_threshold': cls.ROLLBACK_ERROR_THRESHOLD,
+            'rollback_time_window': cls.ROLLBACK_TIME_WINDOW
+        }
+    
+    @classmethod
+    def validate_config(cls) -> List[str]:
+        """Validate configuration and return any errors."""
+        errors = []
+        
+        # Validate numeric ranges
+        if cls.MAX_PROCESSING_TIME <= 0:
+            errors.append("MAX_PROCESSING_TIME must be positive")
+        
+        if cls.MEMORY_LIMIT_MB <= 0:
+            errors.append("MEMORY_LIMIT_MB must be positive")
+        
+        if not 0 <= cls.RAGBOOK_OVERLAP_RATIO <= 1:
+            errors.append("RAGBOOK_OVERLAP_RATIO must be between 0 and 1")
+        
+        if not 0 <= cls.CLASSIFICATION_CONFIDENCE_THRESHOLD <= 1:
+            errors.append("CLASSIFICATION_CONFIDENCE_THRESHOLD must be between 0 and 1")
+        
+        if cls.MATH_KGRAM_SIZE <= 0:
+            errors.append("MATH_KGRAM_SIZE must be positive")
+        
+        if cls.MAX_ERRORS_BEFORE_FALLBACK <= 0:
+            errors.append("MAX_ERRORS_BEFORE_FALLBACK must be positive")
+        
+        return errors
+
+# Create global config instance
+enhanced_config = EnhancedProcessingConfig()

@@ -25,7 +25,14 @@ from google.genai.types import (
     VertexRagStoreRagResource,
 )
 
-from vertexai import rag
+from vertexai.preview.rag import (
+    create_corpus, delete_corpus, delete_file, get_corpus, get_file,
+    import_files, import_files_async, list_corpora, list_files,
+    retrieval_query, update_corpus, upload_file,
+    RagCorpus, RagFile, RagResource, VertexRagStore,
+    RagVectorDbConfig, RagEmbeddingModelConfig, VertexPredictionEndpoint,
+    TransformationConfig, ChunkingConfig
+)
 
 
 from .config import (vertex_client,
@@ -91,7 +98,7 @@ class SciRagVertexAI(SciRag):
         print("Listing RAG Corpora:")
 
         corpora_found = False
-        for corpus in rag.list_corpora():
+        for corpus in list_corpora():
             corpora_found = True
             print(f"--- Corpus: {corpus.display_name} ---")
             print(f"  Name (Resource Path): {corpus.name}")
@@ -227,11 +234,11 @@ class SciRagVertexAI(SciRag):
 
     def create_vector_db(self, folder_id = folder_id):
 
-        rag_corpus = rag.create_corpus(
+        rag_corpus = create_corpus(
             display_name=self.corpus_name,
-            backend_config=rag.RagVectorDbConfig(
-                rag_embedding_model_config=rag.RagEmbeddingModelConfig(
-                    vertex_prediction_endpoint=rag.VertexPredictionEndpoint(
+            backend_config=RagVectorDbConfig(
+                rag_embedding_model_config=RagEmbeddingModelConfig(
+                    vertex_prediction_endpoint=VertexPredictionEndpoint(
                         publisher_model=VERTEX_EMBEDDING_MODEL
                     )
                 )
@@ -261,11 +268,11 @@ class SciRagVertexAI(SciRag):
         # import sys
         # sys.exit()
 
-        rag.import_files(
+        import_files(
             corpus_name=rag_corpus.name,
             paths=["gs://cmbagent"],
-            transformation_config=rag.TransformationConfig(
-                chunking_config=rag.ChunkingConfig(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
+            transformation_config=TransformationConfig(
+                chunking_config=ChunkingConfig(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
             ),
         )
         # rag.import_files(

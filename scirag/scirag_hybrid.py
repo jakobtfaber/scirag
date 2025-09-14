@@ -22,7 +22,14 @@ from google.genai.types import (
     VertexRagStoreRagResource,
 )
 
-from vertexai import rag
+from vertexai.preview.rag import (
+    create_corpus, delete_corpus, delete_file, get_corpus, get_file,
+    import_files, import_files_async, list_corpora, list_files,
+    retrieval_query, update_corpus, upload_file,
+    RagCorpus, RagFile, RagResource, VertexRagStore,
+    RagVectorDbConfig, RagEmbeddingModelConfig, VertexPredictionEndpoint,
+    TransformationConfig, ChunkingConfig
+)
 import faiss
 import pickle
 
@@ -57,7 +64,7 @@ import tiktoken
 import tiktoken
 
 # LangChain imports for document processing and utilities
-from langchain.document_loaders import (
+from langchain_community.document_loaders import (
     PyPDFLoader, 
     TextLoader, 
     CSVLoader,

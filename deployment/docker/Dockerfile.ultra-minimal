@@ -1,0 +1,28 @@
+# Ultra-minimal Enhanced SciRAG Dockerfile
+FROM python:3.12-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV SCIRAG_ENHANCED_PROCESSING=true
+ENV SCIRAG_MATH_PROCESSING=true
+ENV SCIRAG_ASSET_PROCESSING=true
+ENV SCIRAG_GLOSSARY_EXTRACTION=true
+
+# Set work directory
+WORKDIR /app
+
+# Install only the absolute essentials
+RUN pip install --no-cache-dir fastapi uvicorn pydantic requests
+
+# Copy only the core scirag package
+COPY scirag/ scirag/
+
+# Create necessary directories
+RUN mkdir -p logs data cache temp markdown_files
+
+# Expose port
+EXPOSE 8000
+
+# Run a simple test instead of the full API server
+CMD ["python", "-c", "import sys; sys.path.append('scirag'); from enhanced_processing.mathematical_processor import MathematicalProcessor; processor = MathematicalProcessor(); result = processor.process_equation('E = mc^2'); print('✅ Enhanced SciRAG is working!'); print('Mathematical processing result:', result['equation_type'])"]

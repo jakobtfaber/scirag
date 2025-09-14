@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+"""
+Safe Linting Fix Script
+
+This script safely fixes only the most critical linting errors without breaking code.
+"""
+
+import os
+import re
+from pathlib import Path
+
+def safe_fix_whitespace(file_path: Path):
+    """Safely fix only whitespace issues."""
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Fix 1: Remove trailing whitespace (safe)
+    content = re.sub(r'[ \t]+$', '', content, flags=re.MULTILINE)
+    
+    # Fix 2: Remove blank lines with only whitespace (safe)
+    content = re.sub(r'^\s+$', '', content, flags=re.MULTILINE)
+    
+    # Fix 3: Ensure file ends with exactly one newline (safe)
+    content = content.rstrip() + '\n'
+    
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+def safe_fix_unused_imports(file_path: Path):
+    """Safely remove only clearly unused imports."""
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    lines = content.split('\n')
+    fixed_lines = []
+    
+    for line in lines:
+        # Only remove imports that are clearly unused
+        if (line.strip().startswith('from pathlib import Path') and 
+            'Path(' not in content.replace(line, '') and
+            'Path.' not in content.replace(line, '')):
+            continue
+        elif (line.strip().startswith('import sympy as sp') and 
+              'sp.' not in content.replace(line, '') and
+              'sp(' not in content.replace(line, '')):
+            continue
+        elif (line.strip().startswith('import time') and 
+              'time.' not in content.replace(line, '') and
+              'time(' not in content.replace(line, '')):
+            continue
+        else:
+            fixed_lines.append(line)
+    
+    content = '\n'.join(fixed_lines)
+    
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+def main():
+    """Safely fix linting errors in enhanced processing modules."""
+    enhanced_processing_dir = Path(__file__).parent / "scirag" / "enhanced_processing"
+    
+    if not enhanced_processing_dir.exists():
+        print(f"Directory not found: {enhanced_processing_dir}")
+        return
+    
+    # Get all Python files
+    python_files = list(enhanced_processing_dir.glob("*.py"))
+    
+    print(f"Found {len(python_files)} Python files to fix safely")
+    
+    for file_path in python_files:
+        if file_path.name == "__init__.py":
+            continue  # Skip __init__.py for now
+        
+        print(f"\nSafely processing {file_path.name}...")
+        
+        try:
+            # Fix whitespace issues (safe)
+            safe_fix_whitespace(file_path)
+            
+            # Fix unused imports (safe)
+            safe_fix_unused_imports(file_path)
+            
+            print(f"✅ Safely fixed {file_path.name}")
+            
+        except Exception as e:
+            print(f"❌ Error fixing {file_path.name}: {e}")
+
+if __name__ == "__main__":
+    main()

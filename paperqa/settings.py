@@ -1,0 +1,47 @@
+# Mock paperqa.settings module for notebook compatibility
+from dataclasses import dataclass
+from typing import Optional, Dict, Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .settings import AnswerSettings, AgentSettings
+
+@dataclass
+class AnswerSettings:
+    """Mock AnswerSettings class"""
+    evidence_k: int = 3
+    answer_max_sources: int = 5
+    evidence_skip_summary: bool = False
+    answer_length: str = "1-2 sentences maximum"
+
+@dataclass
+class AgentSettings:
+    """Mock AgentSettings class"""
+    agent_llm: str = "gpt-4"
+    agent_llm_config: dict = None
+    
+    def __post_init__(self):
+        if self.agent_llm_config is None:
+            self.agent_llm_config = {}
+
+@dataclass
+class Settings:
+    """Mock Settings class"""
+    llm: str = "gpt-4"
+    llm_config: dict = None
+    summary_llm: str = "gpt-4"
+    summary_llm_config: dict = None
+    answer: AnswerSettings = None
+    agent: AgentSettings = None
+    embedding: str = "sentence-transformers/all-MiniLM-L6-v2"
+    temperature: float = 0.1
+    paper_directory: str = ""
+    
+    def __post_init__(self):
+        if self.llm_config is None:
+            self.llm_config = {}
+        if self.summary_llm_config is None:
+            self.summary_llm_config = {}
+        if self.answer is None:
+            self.answer = AnswerSettings()
+        if self.agent is None:
+            self.agent = AgentSettings()

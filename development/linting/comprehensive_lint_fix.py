@@ -1,0 +1,189 @@
+#!/usr/bin/env python3
+"""
+Comprehensive Linting Fix Script
+
+This script fixes the most critical linting errors in the enhanced processing modules.
+"""
+
+import os
+import re
+from pathlib import Path
+
+def fix_whitespace_and_formatting(file_path: Path):
+    """Fix whitespace and formatting issues."""
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Fix 1: Remove all trailing whitespace
+    content = re.sub(r'[ \t]+$', '', content, flags=re.MULTILINE)
+    
+    # Fix 2: Remove blank lines with only whitespace
+    content = re.sub(r'^\s+$', '', content, flags=re.MULTILINE)
+    
+    # Fix 3: Ensure file ends with exactly one newline
+    content = content.rstrip() + '\n'
+    
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+def fix_type_annotations(file_path: Path):
+    """Fix type annotation issues."""
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Fix default parameter type issues
+    # Change metadata: dict[str, Any] = None to metadata: Optional[dict[str, Any]] = None
+    content = re.sub(
+        r'metadata: dict\[str, Any\] = None',
+        'metadata: Optional[Dict[str, Any]] = None',
+        content
+    )
+    
+    # Fix source_ids: list[str] = None to source_ids: Optional[List[str]] = None
+    content = re.sub(
+        r'source_ids: list\[str\] = None',
+        'source_ids: Optional[List[str]] = None',
+        content
+    )
+    
+    # Add missing imports if needed
+    if 'Optional[' in content and 'from typing import' in content:
+        if 'Optional' not in content.split('from typing import')[1].split('\n')[0]:
+            content = re.sub(
+                r'from typing import ([^)]+)',
+                r'from typing import \1, Optional',
+                content
+            )
+    
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+def fix_unused_imports(file_path: Path):
+    """Remove unused imports."""
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    lines = content.split('\n')
+    fixed_lines = []
+    
+    for line in lines:
+        # Remove unused imports
+        if line.strip().startswith('from pathlib import Path') and 'Path(' not in content.replace(line, ''):
+            continue
+        elif line.strip().startswith('import sympy as sp') and 'sp.' not in content.replace(line, ''):
+            continue
+        elif line.strip().startswith('import time') and 'time.' not in content.replace(line, ''):
+            continue
+        elif line.strip().startswith('from typing import Optional') and 'Optional[' not in content.replace(line, ''):
+            continue
+        else:
+            fixed_lines.append(line)
+    
+    content = '\n'.join(fixed_lines)
+    
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+def fix_line_length(file_path: Path):
+    """Fix line length issues by breaking long lines."""
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    lines = content.split('\n')
+    fixed_lines = []
+    
+    for line in lines:
+        if len(line) > 79:
+            # Try to break long lines at logical points
+            if ' = ' in line and len(line) > 79:
+                # Break long assignments
+                indent = len(line) - len(line.lstrip())
+                spaces = ' ' * (indent + 4)
+                
+                if ' = (' in line:
+                    # Already has parentheses, try to break inside
+                    var_name = line.split(' = ')[0]
+                    value = line.split(' = ')[1]
+                    if len(value) > 60:
+                        fixed_lines.append(f"{var_name} = (")
+                        # Try to break the value
+                        if ',' in value:
+                            parts = [p.strip() for p in value[1:-1].split(',')]
+                            for i, part in enumerate(parts):
+                                if i == len(parts) - 1:
+                                    fixed_lines.append(f"{spaces}{part})")
+                                else:
+                                    fixed_lines.append(f"{spaces}{part},")
+                        else:
+                            fixed_lines.append(f"{spaces}{value}")
+                    else:
+                        fixed_lines.append(line)
+                else:
+                    fixed_lines.append(line)
+            elif 'def ' in line and len(line) > 79:
+                # Break long function definitions
+                indent = len(line) - len(line.lstrip())
+                spaces = ' ' * (indent + 4)
+                
+                if '(' in line and ')' in line:
+                    func_name = line.split('(')[0]
+                    params = line[line.find('(')+1:line.rfind(')')]
+                    if len(params) > 50:
+                        fixed_lines.append(f"{func_name}(")
+                        # Split parameters
+                        param_parts = [p.strip() for p in params.split(',')]
+                        for i, param in enumerate(param_parts):
+                            if i == len(param_parts) - 1:
+                                fixed_lines.append(f"{spaces}{param})")
+                            else:
+                                fixed_lines.append(f"{spaces}{param},")
+                    else:
+                        fixed_lines.append(line)
+                else:
+                    fixed_lines.append(line)
+            else:
+                # For other long lines, just keep them for now
+                fixed_lines.append(line)
+        else:
+            fixed_lines.append(line)
+    
+    content = '\n'.join(fixed_lines)
+    
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+def main():
+    """Fix linting errors in all enhanced processing modules."""
+    enhanced_processing_dir = Path(__file__).parent / "scirag" / "enhanced_processing"
+    
+    if not enhanced_processing_dir.exists():
+        print(f"Directory not found: {enhanced_processing_dir}")
+        return
+    
+    # Get all Python files
+    python_files = list(enhanced_processing_dir.glob("*.py"))
+    
+    print(f"Found {len(python_files)} Python files to fix")
+    
+    for file_path in python_files:
+        if file_path.name == "__init__.py":
+            continue  # Skip __init__.py for now
+        
+        print(f"\nProcessing {file_path.name}...")
+        
+        # Fix whitespace and formatting
+        fix_whitespace_and_formatting(file_path)
+        
+        # Fix type annotations
+        fix_type_annotations(file_path)
+        
+        # Fix unused imports
+        fix_unused_imports(file_path)
+        
+        # Fix line length
+        fix_line_length(file_path)
+        
+        print(f"✅ Fixed {file_path.name}")
+
+if __name__ == "__main__":
+    main()

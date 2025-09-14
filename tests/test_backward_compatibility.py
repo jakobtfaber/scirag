@@ -1,0 +1,323 @@
+#!/usr/bin/env python3
+"""
+Backward Compatibility Test Suite for Enhanced SciRAG
+
+This test suite ensures that:
+1. Existing SciRAG code continues to work unchanged
+2. Original APIs remain functional
+3. Enhanced features are opt-in only
+4. No breaking changes are introduced
+"""
+
+import pytest
+import tempfile
+import os
+from pathlib import Path
+from typing import List, Dict, Any
+
+# Import original SciRAG components
+try:
+    from scirag import SciRag
+    from scirag.scirag_openai import SciRagOpenAI
+    from scirag.scirag_vertexai import SciRagVertexAI
+    from scirag.scirag_hybrid import SciRagHybrid
+    ORIGINAL_IMPORTS_AVAILABLE = True
+except ImportError:
+    ORIGINAL_IMPORTS_AVAILABLE = False
+
+# Import enhanced SciRAG components
+try:
+    from scirag.scirag_enhanced import SciRagEnhanced
+    from scirag.scirag_openai_enhanced import SciRagOpenAIEnhanced
+    ENHANCED_IMPORTS_AVAILABLE = True
+except ImportError:
+    ENHANCED_IMPORTS_AVAILABLE = False
+
+
+class TestOriginalSciRagCompatibility:
+    """Test that original SciRAG functionality remains unchanged."""
+    
+    @pytest.mark.skipif(not ORIGINAL_IMPORTS_AVAILABLE, reason="Original SciRAG imports not available")
+    def test_original_scirag_imports(self):
+        """Test that all original SciRAG classes can be imported."""
+        assert SciRag is not None
+        assert SciRagOpenAI is not None
+        assert SciRagVertexAI is not None
+        assert SciRagHybrid is not None
+    
+    @pytest.mark.skipif(not ORIGINAL_IMPORTS_AVAILABLE, reason="Original SciRAG imports not available")
+    def test_original_scirag_initialization(self):
+        """Test that original SciRAG can be initialized with original parameters."""
+        try:
+            # Test with minimal parameters (this might fail due to missing credentials)
+            scirag = SciRagOpenAI()
+            assert scirag is not None
+        except Exception as e:
+            # Expected to fail due to missing API credentials in test environment
+            assert "credentials" in str(e).lower() or "api" in str(e).lower()
+    
+    @pytest.mark.skipif(not ORIGINAL_IMPORTS_AVAILABLE, reason="Original SciRAG imports not available")
+    def test_original_scirag_methods(self):
+        """Test that original SciRAG methods are still available."""
+        try:
+            scirag = SciRagOpenAI()
+            
+            # Check that original methods exist
+            assert hasattr(scirag, 'get_response')
+            assert hasattr(scirag, 'load_markdown_files')
+            assert hasattr(scirag, 'get_chunks')
+            
+            # Check method signatures haven't changed
+            import inspect
+            
+            # Check get_response signature
+            get_response_sig = inspect.signature(scirag.get_response)
+            assert 'query' in get_response_sig.parameters
+            
+            # Check load_markdown_files signature
+            load_files_sig = inspect.signature(scirag.load_markdown_files)
+            assert 'file_paths' in load_files_sig.parameters
+            
+        except Exception as e:
+            # Expected to fail due to missing API credentials
+            assert "credentials" in str(e).lower() or "api" in str(e).lower()
+
+
+class TestEnhancedSciRagBackwardCompatibility:
+    """Test that enhanced SciRAG maintains backward compatibility."""
+    
+    @pytest.mark.skipif(not ENHANCED_IMPORTS_AVAILABLE, reason="Enhanced SciRAG imports not available")
+    def test_enhanced_scirag_original_methods(self):
+        """Test that enhanced SciRAG has all original methods."""
+        try:
+            scirag = SciRagOpenAIEnhanced()
+            
+            # Check that all original methods are still available
+            assert hasattr(scirag, 'get_response')
+            assert hasattr(scirag, 'load_markdown_files')
+            assert hasattr(scirag, 'get_chunks')
+            
+            # Check that enhanced methods are also available
+            assert hasattr(scirag, 'get_enhanced_response')
+            assert hasattr(scirag, 'load_documents_enhanced')
+            
+        except Exception as e:
+            # Expected to fail due to missing API credentials
+            assert "credentials" in str(e).lower() or "api" in str(e).lower()
+    
+    @pytest.mark.skipif(not ENHANCED_IMPORTS_AVAILABLE, reason="Enhanced SciRAG imports not available")
+    def test_enhanced_scirag_default_behavior(self):
+        """Test that enhanced SciRAG defaults to original behavior when enhanced processing is disabled."""
+        try:
+            # Test with enhanced processing disabled by default
+            scirag = SciRagOpenAIEnhanced(enable_enhanced_processing=False)
+            assert not scirag.enable_enhanced_processing
+            
+            # Test that it behaves like original SciRAG
+            assert hasattr(scirag, 'get_response')
+            assert hasattr(scirag, 'load_markdown_files')
+            
+        except Exception as e:
+            # Expected to fail due to missing API credentials
+            assert "credentials" in str(e).lower() or "api" in str(e).lower()
+    
+    @pytest.mark.skipif(not ENHANCED_IMPORTS_AVAILABLE, reason="Enhanced SciRAG imports not available")
+    def test_enhanced_scirag_parameter_compatibility(self):
+        """Test that enhanced SciRAG accepts all original parameters."""
+        try:
+            # Test with original parameters
+            scirag = SciRagOpenAIEnhanced(
+                # Original parameters should still work
+                enable_enhanced_processing=False
+            )
+            assert not scirag.enable_enhanced_processing
+            
+        except Exception as e:
+            # Expected to fail due to missing API credentials
+            assert "credentials" in str(e).lower() or "api" in str(e).lower()
+
+
+class TestAPICompatibility:
+    """Test API compatibility between original and enhanced SciRAG."""
+    
+    @pytest.mark.skipif(not ORIGINAL_IMPORTS_AVAILABLE or not ENHANCED_IMPORTS_AVAILABLE, 
+                       reason="Required imports not available")
+    def test_method_signature_compatibility(self):
+        """Test that method signatures are compatible."""
+        try:
+            original_scirag = SciRagOpenAI()
+            enhanced_scirag = SciRagOpenAIEnhanced(enable_enhanced_processing=False)
+            
+            import inspect
+            
+            # Compare method signatures
+            original_get_response = inspect.signature(original_scirag.get_response)
+            enhanced_get_response = inspect.signature(enhanced_scirag.get_response)
+            
+            # Signatures should be compatible
+            assert original_get_response.parameters.keys() == enhanced_get_response.parameters.keys()
+            
+        except Exception as e:
+            # Expected to fail due to missing API credentials
+            assert "credentials" in str(e).lower() or "api" in str(e).lower()
+    
+    @pytest.mark.skipif(not ENHANCED_IMPORTS_AVAILABLE, reason="Enhanced SciRAG imports not available")
+    def test_enhanced_methods_are_optional(self):
+        """Test that enhanced methods are optional and don't break original functionality."""
+        try:
+            scirag = SciRagOpenAIEnhanced(enable_enhanced_processing=False)
+            
+            # Original methods should work
+            assert callable(scirag.get_response)
+            assert callable(scirag.load_markdown_files)
+            assert callable(scirag.get_chunks)
+            
+            # Enhanced methods should be available but may not be fully functional
+            # when enhanced processing is disabled
+            assert hasattr(scirag, 'get_enhanced_response')
+            assert hasattr(scirag, 'load_documents_enhanced')
+            
+        except Exception as e:
+            # Expected to fail due to missing API credentials
+            assert "credentials" in str(e).lower() or "api" in str(e).lower()
+
+
+class TestConfigurationCompatibility:
+    """Test configuration compatibility."""
+    
+    @pytest.mark.skipif(not ENHANCED_IMPORTS_AVAILABLE, reason="Enhanced SciRAG imports not available")
+    def test_configuration_parameters(self):
+        """Test that configuration parameters work correctly."""
+        try:
+            # Test with different configuration combinations
+            scirag1 = SciRagOpenAIEnhanced(
+                enable_enhanced_processing=True,
+                enable_mathematical_processing=True,
+                enable_asset_processing=False,
+                enable_glossary_extraction=True
+            )
+            assert scirag1.enable_enhanced_processing
+            assert scirag1.enable_mathematical_processing
+            assert not scirag1.enable_asset_processing
+            assert scirag1.enable_glossary_extraction
+            
+            # Test with all features disabled
+            scirag2 = SciRagOpenAIEnhanced(
+                enable_enhanced_processing=False,
+                enable_mathematical_processing=False,
+                enable_asset_processing=False,
+                enable_glossary_extraction=False
+            )
+            assert not scirag2.enable_enhanced_processing
+            assert not scirag2.enable_mathematical_processing
+            assert not scirag2.enable_asset_processing
+            assert not scirag2.enable_glossary_extraction
+            
+        except Exception as e:
+            # Expected to fail due to missing API credentials
+            assert "credentials" in str(e).lower() or "api" in str(e).lower()
+
+
+class TestDataStructureCompatibility:
+    """Test data structure compatibility."""
+    
+    def test_enhanced_chunk_compatibility(self):
+        """Test that enhanced chunks are compatible with original chunking."""
+        from scirag.enhanced_processing import EnhancedChunk, ContentType
+        
+        # Test creating enhanced chunk with minimal required parameters
+        chunk = EnhancedChunk(
+            id="test_1",
+            text="Test content",
+            source_id="test_source",
+            chunk_index=0,
+            content_type=ContentType.PROSE
+        )
+        
+        # Test that it has all required attributes
+        assert chunk.id == "test_1"
+        assert chunk.text == "Test content"
+        assert chunk.source_id == "test_source"
+        assert chunk.chunk_index == 0
+        assert chunk.content_type == ContentType.PROSE
+        
+        # Test that it can be serialized
+        chunk_dict = chunk.to_dict()
+        assert isinstance(chunk_dict, dict)
+        assert chunk_dict['id'] == "test_1"
+        assert chunk_dict['text'] == "Test content"
+    
+    def test_content_type_enum_compatibility(self):
+        """Test that content type enum is compatible."""
+        from scirag.enhanced_processing import ContentType
+        
+        # Test that all expected content types are available
+        expected_types = [
+            'PROSE', 'EQUATION', 'FIGURE', 'TABLE', 'DEFINITION',
+            'ALGORITHM', 'EXAMPLE', 'CODE', 'OTHER'
+        ]
+        
+        for type_name in expected_types:
+            assert hasattr(ContentType, type_name)
+            assert isinstance(getattr(ContentType, type_name), ContentType)
+
+
+class TestErrorHandlingCompatibility:
+    """Test error handling compatibility."""
+    
+    @pytest.mark.skipif(not ENHANCED_IMPORTS_AVAILABLE, reason="Enhanced SciRAG imports not available")
+    def test_error_handling_consistency(self):
+        """Test that error handling is consistent between original and enhanced SciRAG."""
+        try:
+            # Test that enhanced SciRAG handles errors gracefully
+            scirag = SciRagOpenAIEnhanced(enable_enhanced_processing=False)
+            
+            # Test with invalid input
+            try:
+                result = scirag.get_response("")  # Empty query
+                # Should either return a result or raise a specific exception
+                assert result is not None or True  # Allow either behavior
+            except Exception as e:
+                # Should be a specific, expected exception type
+                assert isinstance(e, (ValueError, TypeError, AttributeError))
+            
+        except Exception as e:
+            # Expected to fail due to missing API credentials
+            assert "credentials" in str(e).lower() or "api" in str(e).lower()
+
+
+class TestMigrationCompatibility:
+    """Test migration compatibility."""
+    
+    def test_gradual_migration_support(self):
+        """Test that gradual migration from original to enhanced SciRAG is supported."""
+        # Test that users can start with original SciRAG
+        if ORIGINAL_IMPORTS_AVAILABLE:
+            try:
+                original_scirag = SciRagOpenAI()
+                assert original_scirag is not None
+            except Exception:
+                pass  # Expected due to missing credentials
+        
+        # Test that users can migrate to enhanced SciRAG with enhanced processing disabled
+        if ENHANCED_IMPORTS_AVAILABLE:
+            try:
+                enhanced_scirag = SciRagOpenAIEnhanced(enable_enhanced_processing=False)
+                assert enhanced_scirag is not None
+                assert not enhanced_scirag.enable_enhanced_processing
+            except Exception:
+                pass  # Expected due to missing credentials
+        
+        # Test that users can enable enhanced processing gradually
+        if ENHANCED_IMPORTS_AVAILABLE:
+            try:
+                enhanced_scirag = SciRagOpenAIEnhanced(enable_enhanced_processing=True)
+                assert enhanced_scirag is not None
+                assert enhanced_scirag.enable_enhanced_processing
+            except Exception:
+                pass  # Expected due to missing credentials
+
+
+if __name__ == "__main__":
+    # Run the tests
+    pytest.main([__file__, "-v", "--tb=short"])

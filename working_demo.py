@@ -1,0 +1,148 @@
+#!/usr/bin/env python3
+"""
+Working Enhanced SciRAG Demo
+This demonstrates the Enhanced SciRAG functionality without import issues.
+"""
+
+import sys
+import os
+sys.path.append('.')
+
+def test_enhanced_processing():
+    """Test Enhanced SciRAG processing directly."""
+    print("🚀 Enhanced SciRAG Working Demo")
+    print("=" * 50)
+    
+    try:
+        # Test mathematical processing
+        print("1. Testing Mathematical Processing...")
+        from scirag.enhanced_processing.mathematical_processor import MathematicalProcessor
+        processor = MathematicalProcessor()
+        
+        equations = ["E = mc^2", "\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}"]
+        for eq in equations:
+            result = processor.process_equation(eq)
+            print(f"   ✅ {eq} → {result['equation_type']} (complexity: {result['complexity_score']:.2f})")
+        
+        print("\n2. Testing Content Classification...")
+        from scirag.enhanced_processing.content_classifier import ContentClassifier
+        classifier = ContentClassifier()
+        
+        test_content = [
+            "E = mc^2",
+            "The equation E = mc^2 represents mass-energy equivalence.",
+            "Figure 1: Mass-energy relationship",
+            "| Mass | Energy |\n|------|--------|\n| 1kg  | 9e16J  |"
+        ]
+        
+        for content in test_content:
+            content_type = classifier.classify_content(content)
+            print(f"   ✅ '{content[:30]}...' → {content_type}")
+        
+        print("\n3. Testing Enhanced Chunking...")
+        from scirag.enhanced_processing.enhanced_chunker import EnhancedChunker
+        chunker = EnhancedChunker()
+        
+        document = "The equation E = mc^2 represents mass-energy equivalence. This famous equation shows that mass and energy are interchangeable."
+        chunks = chunker.chunk_document(document, "demo_doc")
+        print(f"   ✅ Generated {len(chunks)} enhanced chunks")
+        
+        for i, chunk in enumerate(chunks):
+            print(f"   ✅ Chunk {i+1}: {chunk.content_type} - {chunk.content[:50]}...")
+        
+        print("\n4. Testing Asset Processing...")
+        from scirag.enhanced_processing.asset_processor import AssetProcessor
+        asset_processor = AssetProcessor()
+        
+        assets = [
+            ("Figure 1: Mass-energy relationship diagram", "figure"),
+            ("| Mass | Energy |\n|------|--------|\n| 1kg  | 9e16J  |", "table")
+        ]
+        
+        for content, asset_type in assets:
+            result = asset_processor.process_asset(content, asset_type)
+            print(f"   ✅ {asset_type}: {result.asset_type}")
+        
+        print("\n5. Testing Glossary Extraction...")
+        from scirag.enhanced_processing.glossary_extractor import GlossaryExtractor
+        extractor = GlossaryExtractor()
+        
+        text = "Mass-energy equivalence is a concept in physics. The speed of light (c) is a fundamental constant."
+        terms = extractor.extract_glossary_terms(text)
+        print(f"   ✅ Extracted {len(terms)} glossary terms")
+        
+        for term in terms[:3]:  # Show first 3 terms
+            print(f"   ✅ {term.term}: {term.definition[:50]}...")
+        
+        print("\n" + "=" * 50)
+        print("🎉 Enhanced SciRAG is working perfectly!")
+        print("✅ All components are functional and ready to use!")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        print("\nThis is likely due to the Google Cloud import issue.")
+        print("The Enhanced SciRAG components are implemented but need dependency resolution.")
+        return False
+
+def show_usage_guide():
+    """Show how to use Enhanced SciRAG."""
+    print("\n📚 How to Use Enhanced SciRAG:")
+    print("=" * 50)
+    
+    print("""
+1. DIRECT COMPONENT USAGE:
+   ```python
+   from scirag.enhanced_processing.mathematical_processor import MathematicalProcessor
+   processor = MathematicalProcessor()
+   result = processor.process_equation('E = mc^2')
+   ```
+
+2. ENHANCED DOCUMENT PROCESSING:
+   ```python
+   from scirag.enhanced_processing.enhanced_chunker import EnhancedChunker
+   chunker = EnhancedChunker()
+   chunks = chunker.chunk_document('Your document...', 'doc_id')
+   ```
+
+3. CONTENT CLASSIFICATION:
+   ```python
+   from scirag.enhanced_processing.content_classifier import ContentClassifier
+   classifier = ContentClassifier()
+   content_type = classifier.classify_content('Your content...')
+   ```
+
+4. ASSET PROCESSING:
+   ```python
+   from scirag.enhanced_processing.asset_processor import AssetProcessor
+   processor = AssetProcessor()
+   result = processor.process_asset('Figure 1: ...', 'figure')
+   ```
+
+5. GLOSSARY EXTRACTION:
+   ```python
+   from scirag.enhanced_processing.glossary_extractor import GlossaryExtractor
+   extractor = GlossaryExtractor()
+   terms = extractor.extract_glossary_terms('Your text...')
+   ```
+""")
+
+def main():
+    """Run the demo."""
+    success = test_enhanced_processing()
+    show_usage_guide()
+    
+    if success:
+        print("\n🎯 Next Steps:")
+        print("1. Use the components directly in your code")
+        print("2. Integrate with your existing RAG pipeline")
+        print("3. Resolve Google Cloud dependencies for full API functionality")
+    else:
+        print("\n🔧 To Resolve Import Issues:")
+        print("1. Install Google Cloud dependencies: pip install google-auth google-auth-oauthlib")
+        print("2. Set up Google Cloud credentials")
+        print("3. Or use components directly without the main scirag module")
+
+if __name__ == "__main__":
+    main()

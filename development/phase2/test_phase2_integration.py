@@ -1,0 +1,382 @@
+#!/usr/bin/env python3
+"""
+Phase 2 Integration Test
+
+This script tests the Phase 2 integration of enhanced processing
+capabilities into the main SciRAG classes.
+"""
+
+import sys
+import os
+import tempfile
+from pathlib import Path
+
+# Add the scirag package to the path
+sys.path.insert(0, str(Path(__file__).parent))
+
+def test_enhanced_scirag_import():
+    """Test that enhanced SciRAG classes can be imported."""
+    print("🧪 Testing enhanced SciRAG imports...")
+    
+    try:
+        from scirag.scirag_enhanced import SciRagEnhanced, EnhancedProcessingStats
+        print("✅ SciRagEnhanced imported successfully")
+        
+        from scirag.scirag_openai_enhanced import SciRagOpenAIEnhanced
+        print("✅ SciRagOpenAIEnhanced imported successfully")
+        
+        return True
+        
+    except ImportError as e:
+        print(f"❌ Import error: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+        return False
+
+def test_enhanced_scirag_initialization():
+    """Test enhanced SciRAG initialization."""
+    print("\n🧪 Testing enhanced SciRAG initialization...")
+    
+    try:
+        from scirag.scirag_enhanced import SciRagEnhanced
+        
+        # Test initialization with enhanced processing enabled
+        scirag = SciRagEnhanced(
+            enable_enhanced_processing=True,
+            enable_mathematical_processing=True,
+            enable_asset_processing=True,
+            enable_glossary_extraction=True,
+            enable_enhanced_chunking=True
+        )
+        
+        # Check that enhanced processing is enabled
+        assert scirag.enable_enhanced_processing is not None
+        assert scirag.enable_mathematical_processing is not None
+        assert scirag.enable_asset_processing is not None
+        assert scirag.enable_glossary_extraction is not None
+        assert scirag.enable_enhanced_chunking is not None
+        
+        print("✅ Enhanced SciRAG initialization working")
+        
+        # Test initialization with enhanced processing disabled
+        scirag_basic = SciRagEnhanced(
+            enable_enhanced_processing=False
+        )
+        
+        assert scirag_basic.enable_enhanced_processing == False
+        print("✅ Enhanced SciRAG fallback initialization working")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Initialization test error: {e}")
+        return False
+
+def test_enhanced_processing_stats():
+    """Test enhanced processing statistics."""
+    print("\n🧪 Testing enhanced processing statistics...")
+    
+    try:
+        from scirag.scirag_enhanced import SciRagEnhanced, EnhancedProcessingStats
+        
+        scirag = SciRagEnhanced(enable_enhanced_processing=True)
+        
+        # Test statistics initialization
+        stats = scirag.get_processing_stats()
+        assert 'enhanced_processing_enabled' in stats
+        assert 'documents_processed' in stats
+        assert 'chunks_created' in stats
+        assert 'mathematical_content_processed' in stats
+        assert 'assets_processed' in stats
+        assert 'glossary_terms_extracted' in stats
+        assert 'processing_time' in stats
+        assert 'errors' in stats
+        
+        print("✅ Enhanced processing statistics working")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Statistics test error: {e}")
+        return False
+
+def test_enhanced_chunk_filtering():
+    """Test enhanced chunk filtering functionality."""
+    print("\n🧪 Testing enhanced chunk filtering...")
+    
+    try:
+        from scirag.scirag_enhanced import SciRagEnhanced
+        from scirag.enhanced_processing import ContentType, EnhancedChunk
+        
+        scirag = SciRagEnhanced(enable_enhanced_processing=True)
+        
+        # Create mock enhanced chunks
+        mock_chunks = [
+            EnhancedChunk(
+                id="test_1",
+                text="This is a test equation: $E = mc^2$",
+                source_id="test_source",
+                chunk_index=0,
+                content_type=ContentType.EQUATION
+            ),
+            EnhancedChunk(
+                id="test_2",
+                text="This is a figure with a caption",
+                source_id="test_source",
+                chunk_index=1,
+                content_type=ContentType.FIGURE
+            ),
+            EnhancedChunk(
+                id="test_3",
+                text="This is regular prose content",
+                source_id="test_source",
+                chunk_index=2,
+                content_type=ContentType.PROSE
+            )
+        ]
+        
+        # Set mock chunks
+        scirag.enhanced_chunks = mock_chunks
+        
+        # Test filtering by content type
+        equation_chunks = scirag.get_chunks_by_type(ContentType.EQUATION)
+        assert len(equation_chunks) == 1
+        assert equation_chunks[0].content_type == ContentType.EQUATION
+        
+        figure_chunks = scirag.get_chunks_by_type(ContentType.FIGURE)
+        assert len(figure_chunks) == 1
+        assert figure_chunks[0].content_type == ContentType.FIGURE
+        
+        prose_chunks = scirag.get_chunks_by_type(ContentType.PROSE)
+        assert len(prose_chunks) == 1
+        assert prose_chunks[0].content_type == ContentType.PROSE
+        
+        print("✅ Enhanced chunk filtering working")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Chunk filtering test error: {e}")
+        return False
+
+def test_enhanced_openai_provider():
+    """Test enhanced OpenAI provider."""
+    print("\n🧪 Testing enhanced OpenAI provider...")
+    
+    try:
+        from scirag.scirag_openai_enhanced import SciRagOpenAIEnhanced
+        
+        # Test initialization
+        scirag = SciRagOpenAIEnhanced(
+            model="gpt-4",
+            enable_enhanced_processing=True,
+            temperature=0.01
+        )
+        
+        # Check that OpenAI-specific attributes are set
+        assert scirag.model == "gpt-4"
+        assert scirag.temperature == 0.01
+        assert scirag.enable_enhanced_processing == True
+        
+        print("✅ Enhanced OpenAI provider initialization working")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Enhanced OpenAI provider test error: {e}")
+        return False
+
+def test_enhanced_document_processing():
+    """Test enhanced document processing pipeline."""
+    print("\n🧪 Testing enhanced document processing pipeline...")
+    
+    try:
+        from scirag.scirag_enhanced import SciRagEnhanced
+        from scirag.enhanced_processing import ContentType
+        
+        scirag = SciRagEnhanced(enable_enhanced_processing=True)
+        
+        # Create a test document with mathematical content
+        test_content = """
+# Test Document
+
+This is a test document with mathematical content.
+
+The famous equation is $E = mc^2$.
+
+Here's a more complex equation:
+$$\\frac{\\partial f}{\\partial x} = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}$$
+
+## Figure
+
+\\begin{figure}
+\\includegraphics{test.png}
+\\caption{Test figure}
+\\label{fig:test}
+\\end{figure}
+
+## Definition
+
+**Definition**: A function is continuous if...
+
+This is regular prose content.
+"""
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+            f.write(test_content)
+            temp_file = f.name
+        
+        try:
+            # Test enhanced document processing
+            chunks = scirag.load_documents_enhanced([temp_file])
+            
+            # Verify we got chunks
+            assert len(chunks) > 0
+            print(f"✅ Enhanced document processing created {len(chunks)} chunks")
+            
+            # Check chunk types
+            chunk_types = [chunk.content_type for chunk in chunks]
+            print(f"✅ Chunk types found: {set(chunk_types)}")
+            
+            # Test chunk filtering
+            math_chunks = scirag.get_mathematical_chunks()
+            print(f"✅ Found {len(math_chunks)} mathematical chunks")
+            
+            # Test validation
+            validation = scirag.validate_enhanced_chunks()
+            assert 'total_chunks' in validation
+            assert 'valid_chunks' in validation
+            print("✅ Enhanced chunk validation working")
+            
+            return True
+            
+        finally:
+            # Clean up temp file
+            os.unlink(temp_file)
+        
+    except Exception as e:
+        print(f"❌ Enhanced document processing test error: {e}")
+        return False
+
+def test_backward_compatibility():
+    """Test backward compatibility with original SciRAG."""
+    print("\n🧪 Testing backward compatibility...")
+    
+    try:
+        from scirag.scirag_enhanced import SciRagEnhanced
+        
+        # Test that enhanced SciRAG can be used like original SciRAG
+        scirag = SciRagEnhanced(
+            enable_enhanced_processing=False,  # Disable enhanced features
+            fallback_on_error=True
+        )
+        
+        # Check that basic functionality is available
+        assert hasattr(scirag, 'get_response')
+        assert hasattr(scirag, 'load_documents_enhanced')
+        assert hasattr(scirag, 'get_processing_stats')
+        
+        # Test that enhanced features are available but disabled
+        assert scirag.enable_enhanced_processing == False
+        
+        print("✅ Backward compatibility working")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Backward compatibility test error: {e}")
+        return False
+
+def test_enhanced_export_functionality():
+    """Test enhanced export functionality."""
+    print("\n🧪 Testing enhanced export functionality...")
+    
+    try:
+        from scirag.scirag_enhanced import SciRagEnhanced
+        from scirag.enhanced_processing import ContentType, EnhancedChunk
+        
+        scirag = SciRagEnhanced(enable_enhanced_processing=True)
+        
+        # Create mock enhanced chunks
+        mock_chunks = [
+            EnhancedChunk(
+                id="test_1",
+                text="This is a test equation: $E = mc^2$",
+                source_id="test_source",
+                chunk_index=0,
+                content_type=ContentType.EQUATION
+            ),
+            EnhancedChunk(
+                id="test_2",
+                text="This is a figure with a caption",
+                source_id="test_source",
+                chunk_index=1,
+                content_type=ContentType.FIGURE
+            )
+        ]
+        
+        # Set mock chunks
+        scirag.enhanced_chunks = mock_chunks
+        
+        # Test JSON export
+        json_export = scirag.export_enhanced_chunks(format='json')
+        assert '"id": "test_1"' in json_export
+        assert '"content_type": "equation"' in json_export
+        print("✅ JSON export working")
+        
+        # Test CSV export
+        csv_export = scirag.export_enhanced_chunks(format='csv')
+        assert 'id,text,content_type,confidence,source_id' in csv_export
+        assert 'test_1' in csv_export
+        print("✅ CSV export working")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Enhanced export test error: {e}")
+        return False
+
+def main():
+    """Run all Phase 2 integration tests."""
+    print("🚀 Starting Phase 2 Integration Tests")
+    print("=" * 50)
+    
+    tests = [
+        ("Enhanced SciRAG Imports", test_enhanced_scirag_import),
+        ("Enhanced SciRAG Initialization", test_enhanced_scirag_initialization),
+        ("Enhanced Processing Stats", test_enhanced_processing_stats),
+        ("Enhanced Chunk Filtering", test_enhanced_chunk_filtering),
+        ("Enhanced OpenAI Provider", test_enhanced_openai_provider),
+        ("Enhanced Document Processing", test_enhanced_document_processing),
+        ("Backward Compatibility", test_backward_compatibility),
+        ("Enhanced Export Functionality", test_enhanced_export_functionality)
+    ]
+    
+    passed = 0
+    total = len(tests)
+    
+    for test_name, test_func in tests:
+        print(f"\n📋 Running {test_name}...")
+        try:
+            if test_func():
+                passed += 1
+                print(f"✅ {test_name} PASSED")
+            else:
+                print(f"❌ {test_name} FAILED")
+        except Exception as e:
+            print(f"❌ {test_name} FAILED with exception: {e}")
+    
+    print("\n" + "=" * 50)
+    print(f"📊 Test Results: {passed}/{total} tests passed")
+    
+    if passed == total:
+        print("🎉 All Phase 2 integration tests passed! Ready for Phase 3.")
+        return True
+    else:
+        print("⚠️  Some tests failed. Please fix issues before proceeding to Phase 3.")
+        return False
+
+if __name__ == "__main__":
+    success = main()
+    sys.exit(0 if success else 1)

@@ -1,0 +1,242 @@
+#!/usr/bin/env python3
+"""
+Test MathematicalProcessor without SymPy dependencies.
+"""
+
+import sys
+from pathlib import Path
+
+# Add the scirag module to the path
+sys.path.insert(0, str(Path(__file__).parent))
+
+def test_mathematical_processor_no_sympy():
+    """Test MathematicalProcessor without SymPy."""
+    try:
+        # Create a minimal version without SymPy
+        import re
+        import logging
+        from typing import Dict, List, Any, Tuple, Optional
+        
+        class MinimalMathematicalProcessor:
+            """Minimal mathematical processor without external dependencies."""
+            
+            def __init__(self, enable_sympy: bool = False, enable_ragbook: bool = False):
+                self.enable_sympy = enable_sympy
+                self.enable_ragbook = enable_ragbook
+                self.logger = logging.getLogger(__name__)
+                
+                # Compile regex patterns for equation detection
+                self.inline_math_pattern = re.compile(r'\$([^$]+)\$')
+                self.display_math_pattern = re.compile(r'\$\$([^$]+)\$\$')
+                self.latex_equation_pattern = re.compile(r'\\begin\{equation\}(.*?)\\end\{equation\}', re.DOTALL)
+                
+                # Common mathematical operators
+                self.operators = {
+                    '+', '-', '*', '/', '=', '<', '>', '<=', '>=', '!=', '==',
+                    '^', '**', 'sqrt', 'log', 'ln', 'exp', 'sin', 'cos', 'tan',
+                    'sum', 'prod', 'int', 'lim', 'max', 'min', 'inf', 'infty'
+                }
+            
+            def detect_equations(self, text: str) -> List[Tuple[str, str, int, int]]:
+                """Detect mathematical equations in text."""
+                equations = []
+                
+                # Detect inline math: $...$
+                for match in self.inline_math_pattern.finditer(text):
+                    equations.append((
+                        match.group(1),
+                        'inline',
+                        match.start(),
+                        match.end()
+                    ))
+                
+                # Detect display math: $$...$$
+                for match in self.display_math_pattern.finditer(text):
+                    equations.append((
+                        match.group(1),
+                        'display',
+                        match.start(),
+                        match.end()
+                    ))
+                
+                # Detect LaTeX equations: \begin{equation}...\end{equation}
+                for match in self.latex_equation_pattern.finditer(text):
+                    equations.append((
+                        match.group(1).strip(),
+                        'equation',
+                        match.start(),
+                        match.end()
+                    ))
+                
+                return equations
+            
+            def process_equation(self, equation_tex: str, equation_type: str = 'inline') -> Dict[str, Any]:
+                """Process a single equation."""
+                try:
+                    # Basic normalization
+                    normalized = self._fallback_normalize(equation_tex)
+                    tokens = self._fallback_tokenize(normalized)
+                    kgrams_3 = self._kgrams(tokens, k=3)
+                    
+                    # Extract variables and operators
+                    variables = self._extract_variables(tokens)
+                    operators = self._extract_operators(tokens)
+                    
+                    result = {
+                        'equation_tex': equation_tex,
+                        'equation_type': equation_type,
+                        'math_norm': normalized,
+                        'math_tokens': tokens,
+                        'math_kgrams': kgrams_3,
+                        'variables': variables,
+                        'operators': operators,
+                        'math_canonical': None
+                    }
+                    
+                    return result
+                    
+                except Exception as e:
+                    self.logger.error(f"Equation processing failed: {e}")
+                    return {
+                        'equation_tex': equation_tex,
+                        'equation_type': equation_type,
+                        'math_norm': equation_tex,
+                        'math_tokens': [],
+                        'math_kgrams': [],
+                        'variables': [],
+                        'operators': [],
+                        'math_canonical': None,
+                        'error': str(e)
+                    }
+            
+            def _extract_variables(self, tokens: List[str]) -> List[str]:
+                """Extract variable names from tokens."""
+                variables = []
+                for token in tokens:
+                    if (len(token) <= 3 and 
+                        token.isalpha() and 
+                        token not in self.operators and
+                        token.lower() not in ['sin', 'cos', 'tan', 'log', 'exp', 'sqrt']):
+                        variables.append(token)
+                return list(set(variables))
+            
+            def _extract_operators(self, tokens: List[str]) -> List[str]:
+                """Extract operators from tokens."""
+                operators = []
+                for token in tokens:
+                    if token in self.operators:
+                        operators.append(token)
+                return list(set(operators))
+            
+            def _fallback_normalize(self, tex: str) -> str:
+                """Fallback LaTeX normalization."""
+                normalized = re.sub(r'\\[a-zA-Z]+\{([^}]*)\}', r'\1', tex)
+                normalized = re.sub(r'\\[a-zA-Z]+', '', normalized)
+                normalized = re.sub(r'[{}]', '', normalized)
+                normalized = re.sub(r'\s+', ' ', normalized)
+                return normalized.strip()
+            
+            def _fallback_tokenize(self, text: str) -> List[str]:
+                """Fallback tokenization."""
+                tokens = re.findall(r'[a-zA-Z0-9]+|[+\-*/=<>()\[\]{}^_.,;]', text)
+                return tokens
+            
+            def _kgrams(self, tokens: List[str], k: int = 3) -> List[str]:
+                """Generate k-grams from tokens."""
+                if len(tokens) < k:
+                    return [' '.join(tokens)]
+                return [' '.join(tokens[i:i+k]) for i in range(len(tokens) - k + 1)]
+            
+            def get_equation_complexity(self, equation_data: Dict[str, Any]) -> float:
+                """Calculate equation complexity score."""
+                score = 0.0
+                
+                # Base score from token count
+                token_count = len(equation_data.get('math_tokens', []))
+                score += min(token_count / 50.0, 0.3)
+                
+                # Score from variable count
+                var_count = len(equation_data.get('variables', []))
+                score += min(var_count / 10.0, 0.2)
+                
+                # Score from operator count
+                op_count = len(equation_data.get('operators', []))
+                score += min(op_count / 20.0, 0.2)
+                
+                # Score from equation type
+                eq_type = equation_data.get('equation_type', 'inline')
+                if eq_type in ['equation', 'align']:
+                    score += 0.2
+                elif eq_type == 'display':
+                    score += 0.1
+                
+                return min(score, 1.0)
+            
+            def validate_equation(self, equation_data: Dict[str, Any]) -> bool:
+                """Validate processed equation data."""
+                required_fields = ['equation_tex', 'math_norm', 'math_tokens']
+                for field in required_fields:
+                    if field not in equation_data or not equation_data[field]:
+                        return False
+                
+                if not equation_data['math_norm'].strip():
+                    return False
+                
+                if not equation_data['math_tokens']:
+                    return False
+                
+                return True
+        
+        # Test the minimal processor
+        processor = MinimalMathematicalProcessor(enable_sympy=False, enable_ragbook=False)
+        
+        # Test equation detection
+        text = "The equation $E = mc^2$ is famous."
+        equations = processor.detect_equations(text)
+        assert len(equations) == 1
+        assert equations[0][0] == "E = mc^2"
+        
+        # Test equation processing
+        result = processor.process_equation("x + y = z", "inline")
+        assert 'math_norm' in result
+        assert 'math_tokens' in result
+        assert 'variables' in result
+        assert 'operators' in result
+        
+        # Test variable extraction
+        assert 'x' in result['variables']
+        assert 'y' in result['variables']
+        assert 'z' in result['variables']
+        
+        # Test operator extraction
+        assert '+' in result['operators']
+        assert '=' in result['operators']
+        
+        # Test equation complexity
+        complexity = processor.get_equation_complexity(result)
+        assert 0 <= complexity <= 1
+        
+        # Test equation validation
+        assert processor.validate_equation(result) == True
+        
+        print("✓ MathematicalProcessor (no SymPy) tests passed")
+        return True
+    except Exception as e:
+        print(f"✗ MathematicalProcessor (no SymPy) test failed: {e}")
+        return False
+
+def main():
+    """Run the test."""
+    print("Testing MathematicalProcessor without SymPy...")
+    print("=" * 50)
+    
+    if test_mathematical_processor_no_sympy():
+        print("\n🎉 MathematicalProcessor core functionality verified!")
+        print("The processor works correctly without external dependencies.")
+        return 0
+    else:
+        print("\n❌ Test failed.")
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())

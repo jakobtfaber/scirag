@@ -1,0 +1,18 @@
+services:
+  scirag-test:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile.ultra-minimal
+    environment:
+      - SCIRAG_CORPUS_NAME=enhanced_scirag_corpus
+      - SCIRAG_MARKDOWN_FILES_PATH=/app/markdown_files
+      - SCIRAG_ENHANCED_PROCESSING=true
+      - SCIRAG_MATH_PROCESSING=true
+      - SCIRAG_ASSET_PROCESSING=true
+      - SCIRAG_GLOSSARY_EXTRACTION=true
+      - SCIRAG_LOG_LEVEL=INFO
+    volumes:
+      - ../../markdown_files:/app/markdown_files
+      - ../../data:/app/data
+      - ../../logs:/app/logs
+    restart: unless-stopped

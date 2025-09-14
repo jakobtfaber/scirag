@@ -1,0 +1,55 @@
+# Full-Scale Enhanced SciRAG Production Dockerfile
+FROM python:3.12-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV SCIRAG_ENHANCED_PROCESSING=true
+ENV SCIRAG_MATH_PROCESSING=true
+ENV SCIRAG_ASSET_PROCESSING=true
+ENV SCIRAG_GLOSSARY_EXTRACTION=true
+ENV SCIRAG_LOG_LEVEL=INFO
+ENV SCIRAG_CORPUS_NAME=enhanced_scirag_corpus
+ENV SCIRAG_MARKDOWN_FILES_PATH=/app/markdown_files
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set work directory
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir numpy>=1.26.0 && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy the entire scirag package
+COPY scirag/ scirag/
+
+# Create necessary directories
+RUN mkdir -p logs data cache temp markdown_files
+
+# Create a non-root user for security
+RUN useradd --create-home --shell /bin/bash scirag && \
+    chown -R scirag:scirag /app
+USER scirag
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Copy startup script
+COPY deployment/docker/start_server.py start_server.py
+
+# Run the production server
+CMD ["python", "start_server.py"]

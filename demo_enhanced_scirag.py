@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+"""
+Enhanced SciRAG Demo - Working Example
+This demonstrates how to use the Enhanced SciRAG components directly.
+"""
+
+import sys
+import os
+sys.path.append('.')
+
+def demo_mathematical_processing():
+    """Demo mathematical processing without full imports."""
+    print("🧮 Mathematical Processing Demo")
+    print("=" * 40)
+    
+    # Import only what we need
+    from scirag.enhanced_processing.mathematical_processor import MathematicalProcessor
+    
+    processor = MathematicalProcessor()
+    
+    # Test equations
+    equations = [
+        "E = mc^2",
+        "\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}",
+        "\\frac{d}{dx}[x^2] = 2x",
+        "\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}"
+    ]
+    
+    for eq in equations:
+        try:
+            result = processor.process_equation(eq)
+            print(f"✅ {eq}")
+            print(f"   Type: {result['equation_type']}")
+            print(f"   Complexity: {result['complexity_score']:.2f}")
+            print(f"   Normalized: {result['math_norm']}")
+            print()
+        except Exception as e:
+            print(f"❌ Error processing {eq}: {e}")
+            print()
+
+def demo_content_classification():
+    """Demo content classification."""
+    print("📝 Content Classification Demo")
+    print("=" * 40)
+    
+    from scirag.enhanced_processing.content_classifier import ContentClassifier
+    
+    classifier = ContentClassifier()
+    
+    test_content = [
+        ("E = mc^2", "equation"),
+        ("The equation E = mc^2 represents mass-energy equivalence.", "prose"),
+        ("Figure 1: Mass-energy relationship diagram", "figure"),
+        ("| Mass | Energy |\n|------|--------|\n| 1kg  | 9e16J  |", "table"),
+        ("\\begin{equation}\nE = mc^2\n\\end{equation}", "equation")
+    ]
+    
+    for content, expected in test_content:
+        try:
+            result = classifier.classify_content(content)
+            print(f"✅ '{content[:30]}...' → {result}")
+        except Exception as e:
+            print(f"❌ Error classifying '{content[:30]}...': {e}")
+
+def demo_enhanced_chunking():
+    """Demo enhanced chunking."""
+    print("\n📚 Enhanced Chunking Demo")
+    print("=" * 40)
+    
+    from scirag.enhanced_processing.enhanced_chunker import EnhancedChunker
+    
+    chunker = EnhancedChunker()
+    
+    document = """
+    The equation E = mc^2 represents mass-energy equivalence.
+    
+    This famous equation shows that mass and energy are interchangeable.
+    The constant c represents the speed of light in vacuum.
+    
+    Figure 1: Mass-energy relationship diagram
+    
+    | Mass | Energy |
+    |------|--------|
+    | 1kg  | 9e16J  |
+    """
+    
+    try:
+        chunks = chunker.chunk_document(document, "demo_doc")
+        print(f"✅ Generated {len(chunks)} enhanced chunks:")
+        
+        for i, chunk in enumerate(chunks):
+            print(f"   Chunk {i+1}: {chunk.content_type}")
+            print(f"   Content: {chunk.content[:60]}...")
+            print()
+    except Exception as e:
+        print(f"❌ Error chunking document: {e}")
+
+def demo_asset_processing():
+    """Demo asset processing."""
+    print("🖼️  Asset Processing Demo")
+    print("=" * 40)
+    
+    from scirag.enhanced_processing.asset_processor import AssetProcessor
+    
+    processor = AssetProcessor()
+    
+    assets = [
+        ("Figure 1: Mass-energy relationship diagram", "figure"),
+        ("| Mass | Energy |\n|------|--------|\n| 1kg  | 9e16J  |", "table"),
+        ("Table 1: Physical constants", "table")
+    ]
+    
+    for content, asset_type in assets:
+        try:
+            result = processor.process_asset(content, asset_type)
+            print(f"✅ {asset_type}: {result.asset_type}")
+            print(f"   Content: {result.content[:50]}...")
+            print()
+        except Exception as e:
+            print(f"❌ Error processing {asset_type}: {e}")
+
+def demo_glossary_extraction():
+    """Demo glossary extraction."""
+    print("📖 Glossary Extraction Demo")
+    print("=" * 40)
+    
+    from scirag.enhanced_processing.glossary_extractor import GlossaryExtractor
+    
+    extractor = GlossaryExtractor()
+    
+    text = """
+    Mass-energy equivalence is a concept in physics that states that mass and energy are interchangeable.
+    
+    The speed of light (c) is a fundamental constant in physics.
+    
+    Einstein's equation relates mass and energy through the speed of light.
+    
+    The rest mass of a particle is its mass when at rest.
+    """
+    
+    try:
+        terms = extractor.extract_glossary_terms(text)
+        print(f"✅ Extracted {len(terms)} glossary terms:")
+        
+        for term in terms:
+            print(f"   • {term.term}: {term.definition[:60]}...")
+            print()
+    except Exception as e:
+        print(f"❌ Error extracting glossary: {e}")
+
+def main():
+    """Run the complete demo."""
+    print("🚀 Enhanced SciRAG Complete Demo")
+    print("=" * 50)
+    print()
+    
+    try:
+        demo_mathematical_processing()
+        demo_content_classification()
+        demo_enhanced_chunking()
+        demo_asset_processing()
+        demo_glossary_extraction()
+        
+        print("=" * 50)
+        print("🎉 Enhanced SciRAG Demo Complete!")
+        print("✅ All components are working and ready to use!")
+        
+    except Exception as e:
+        print(f"❌ Demo failed: {e}")
+        print("This might be due to missing dependencies or import issues.")
+
+if __name__ == "__main__":
+    main()

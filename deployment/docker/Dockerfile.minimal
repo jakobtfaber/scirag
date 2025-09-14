@@ -1,0 +1,32 @@
+# Minimal Enhanced SciRAG Dockerfile
+FROM python:3.12-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV SCIRAG_ENHANCED_PROCESSING=true
+ENV SCIRAG_MATH_PROCESSING=true
+ENV SCIRAG_ASSET_PROCESSING=true
+ENV SCIRAG_GLOSSARY_EXTRACTION=true
+
+# Set work directory
+WORKDIR /app
+
+# Install only essential Python dependencies
+RUN pip install --no-cache-dir fastapi uvicorn pydantic
+
+# Copy only essential files
+COPY scirag/ scirag/
+COPY deployment/docker/requirements-minimal.txt requirements.txt
+
+# Install remaining dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Create necessary directories
+RUN mkdir -p logs data cache temp markdown_files
+
+# Expose port
+EXPOSE 8000
+
+# Run the application
+CMD ["python", "-m", "scirag.api.server"]

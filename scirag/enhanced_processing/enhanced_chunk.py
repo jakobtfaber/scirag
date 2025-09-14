@@ -1,0 +1,208 @@
+"""
+Enhanced chunk data structures for SciRAG with RAGBook integration.
+
+This module provides enhanced chunking capabilities with support for
+mathematical content, assets, and glossary terms.
+"""
+
+from enum import Enum
+from dataclasses import dataclass, field
+from typing import Dict, List, Any, Optional
+
+
+class ContentType(Enum):
+    """Content type classification for document chunks."""
+    PROSE = "prose"
+    EQUATION = "equation"
+    FIGURE = "figure"
+    TABLE = "table"
+    DEFINITION = "definition"
+    ALGORITHM = "algorithm"
+    EXAMPLE = "example"
+    CODE = "code"
+    OTHER = "other"
+
+
+@dataclass
+class MathematicalContent:
+    """Mathematical content data structure."""
+    equation_tex: str = ""
+    math_norm: str = ""
+    math_tokens: List[str] = field(default_factory=list)
+    math_kgrams: List[str] = field(default_factory=list)
+    math_canonical: Optional[str] = None
+    variables: List[str] = field(default_factory=list)
+    equation_type: str = "unknown"
+    complexity_score: float = 0.0
+    error: Optional[str] = None
+
+
+@dataclass
+class AssetContent:
+    """Asset content data structure."""
+    asset_type: str = "unknown"
+    caption: str = ""
+    alt_text: str = ""
+    file_path: str = ""
+    mime_type: str = ""
+    label: str = ""
+    source_id: str = ""
+
+
+@dataclass
+class GlossaryContent:
+    """Glossary content data structure."""
+    term: str = ""
+    definition: str = ""
+    context: str = ""
+    related_terms: List[str] = field(default_factory=list)
+
+
+@dataclass
+class EnhancedChunk:
+    """Enhanced chunk with support for mathematical content, assets, and glossary."""
+
+    # Basic chunk properties
+    id: str
+    text: str
+    source_id: str
+    chunk_index: int
+    content_type: ContentType
+    confidence: float = 0.0
+
+    # Enhanced content
+    mathematical_content: Optional[MathematicalContent] = None
+    asset_content: Optional[AssetContent] = None
+    glossary_content: Optional[GlossaryContent] = None
+
+    # Processing metadata
+    processing_version: str = "1.0"
+    processing_time: float = 0.0
+    error_count: int = 0
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert chunk to dictionary for serialization."""
+        return {
+            'id': self.id,
+            'text': self.text,
+            'source_id': self.source_id,
+            'chunk_index': self.chunk_index,
+            'content_type': self.content_type.value,
+            'confidence': self.confidence,
+            'mathematical_content': (
+                self.mathematical_content.__dict__
+                if self.mathematical_content else None
+            ),
+            'asset_content': (
+                self.asset_content.__dict__
+                if self.asset_content else None
+            ),
+            'glossary_content': (
+                self.glossary_content.__dict__
+                if self.glossary_content else None
+            ),
+            'processing_version': self.processing_version,
+            'processing_time': self.processing_time,
+            'error_count': self.error_count,
+            'metadata': self.metadata
+        }
+
+    def get_summary(self) -> Dict[str, Any]:
+        """Get a summary of the chunk for display purposes."""
+        summary = {
+            'id': self.id,
+            'content_type': self.content_type.value,
+            'text_preview': (
+                self.text[:100] + '...'
+                if len(self.text) > 100 else self.text
+            ),
+            'confidence': self.confidence
+        }
+
+        if self.mathematical_content:
+            summary['equation'] = self.mathematical_content.equation_tex
+            summary['equation_type'] = self.mathematical_content.equation_type
+
+        if self.asset_content:
+            summary['asset_type'] = self.asset_content.asset_type
+            summary['caption'] = self.asset_content.caption
+
+        if self.glossary_content:
+            summary['term'] = self.glossary_content.term
+            summary['definition'] = (
+                self.glossary_content.definition[:100] + '...'
+                if len(self.glossary_content.definition) > 100
+                else self.glossary_content.definition
+            )
+
+        return summary
+
+    def is_mathematical(self) -> bool:
+        """Check if chunk contains mathematical content."""
+        return (self.content_type == ContentType.EQUATION
+                and self.mathematical_content is not None)
+
+    def is_asset(self) -> bool:
+        """Check if chunk contains asset content."""
+        return (self.content_type in [ContentType.FIGURE, ContentType.TABLE]
+                and self.asset_content is not None)
+
+    def is_glossary(self) -> bool:
+        """Check if chunk contains glossary content."""
+        return (self.content_type == ContentType.DEFINITION
+                and self.glossary_content is not None)
+
+    def get_retrieval_text(self) -> str:
+        """Get text optimized for retrieval (includes metadata)."""
+        retrieval_parts = [self.text]
+
+        if self.mathematical_content:
+            retrieval_parts.append(
+                f"Equation: {self.mathematical_content.equation_tex}"
+            )
+            retrieval_parts.append(
+                f"Normalized: {self.mathematical_content.math_norm}"
+            )
+            if self.mathematical_content.math_canonical:
+                retrieval_parts.append(
+                    f"Canonical: {self.mathematical_content.math_canonical}"
+                )
+            retrieval_parts.append(
+                f"Variables: {', '.join(self.mathematical_content.variables)}"
+            )
+            retrieval_parts.append(
+                f"Type: {self.mathematical_content.equation_type}"
+            )
+
+        if self.asset_content:
+            retrieval_parts.append(f"Asset: {self.asset_content.asset_type}")
+            retrieval_parts.append(f"Caption: {self.asset_content.caption}")
+            if self.asset_content.alt_text:
+                retrieval_parts.append(
+                    f"Alt text: {self.asset_content.alt_text}"
+                )
+
+        if self.glossary_content:
+            retrieval_parts.append(f"Term: {self.glossary_content.term}")
+            retrieval_parts.append(
+                f"Definition: {self.glossary_content.definition}"
+            )
+            if self.glossary_content.related_terms:
+                retrieval_parts.append(
+                    f"Related: {', '.join(self.glossary_content.related_terms)}"
+                )
+
+        return " ".join(retrieval_parts)
+
+    def get_metadata_summary(self) -> Dict[str, Any]:
+        """Get summary of processing metadata."""
+        return {
+            'processing_version': self.processing_version,
+            'processing_time': self.processing_time,
+            'error_count': self.error_count,
+            'has_mathematical': self.is_mathematical(),
+            'has_asset': self.is_asset(),
+            'has_glossary': self.is_glossary(),
+            'metadata_keys': list(self.metadata.keys())
+        }

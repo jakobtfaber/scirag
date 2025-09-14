@@ -1,0 +1,362 @@
+"""
+Enhanced SciRAG OpenAI Provider
+
+This module provides an enhanced version of the SciRAG OpenAI provider
+that integrates RAGBook's advanced document processing capabilities.
+"""
+
+import logging
+from typing import List, Dict, Any, Optional, Union
+from pathlib import Path
+
+# Import enhanced processing modules
+try:
+    from .enhanced_processing import ContentType, EnhancedChunk
+    from .scirag_enhanced import SciRagEnhanced
+    ENHANCED_PROCESSING_AVAILABLE = True
+except ImportError:
+    ENHANCED_PROCESSING_AVAILABLE = False
+
+# Import OpenAI client
+from openai import OpenAI
+
+
+class SciRagOpenAIEnhanced(SciRagEnhanced):
+    """
+    Enhanced SciRAG OpenAI provider with RAGBook integration.
+    
+    This class extends SciRagEnhanced with OpenAI-specific functionality
+    while maintaining full backward compatibility with the original
+    SciRagOpenAI class.
+    """
+    
+    def __init__(self,
+                 client: Optional[OpenAI] = None,
+                 api_key: Optional[str] = None,
+                 model: str = "gpt-4",
+                 temperature: float = 0.01,
+                 max_tokens: int = 4096,
+                 # Enhanced processing parameters
+                 enable_enhanced_processing: bool = True,
+                 enable_mathematical_processing: bool = True,
+                 enable_asset_processing: bool = True,
+                 enable_glossary_extraction: bool = True,
+                 enable_enhanced_chunking: bool = True,
+                 # Chunking parameters
+                 chunk_size: int = 1000,
+                 chunk_overlap: int = 200,
+                 # Fallback parameters
+                 fallback_on_error: bool = True,
+                 **kwargs):
+        """
+        Initialize enhanced SciRAG OpenAI provider.
+        
+        Args:
+            client: OpenAI client instance
+            api_key: OpenAI API key
+            model: OpenAI model to use
+            temperature: Temperature for generation
+            max_tokens: Maximum tokens for generation
+            enable_enhanced_processing: Enable enhanced processing features
+            enable_mathematical_processing: Enable mathematical content processing
+            enable_asset_processing: Enable figure/table processing
+            enable_glossary_extraction: Enable glossary term extraction
+            enable_enhanced_chunking: Enable content-aware chunking
+            chunk_size: Target chunk size for enhanced chunking
+            chunk_overlap: Overlap between chunks
+            fallback_on_error: Fallback to original processing on errors
+            **kwargs: Additional arguments passed to parent class
+        """
+        # Initialize OpenAI client
+        if client is None:
+            if api_key is None:
+                import os
+                api_key = os.getenv("OPENAI_API_KEY")
+                if not api_key:
+                    raise ValueError("OpenAI API key must be provided")
+            client = OpenAI(api_key=api_key)
+        
+        # Initialize parent class
+        super().__init__(
+            client=client,
+            gen_model=model,
+            enable_enhanced_processing=enable_enhanced_processing,
+            enable_mathematical_processing=enable_mathematical_processing,
+            enable_asset_processing=enable_asset_processing,
+            enable_glossary_extraction=enable_glossary_extraction,
+            enable_enhanced_chunking=enable_enhanced_chunking,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            fallback_on_error=fallback_on_error,
+            **kwargs
+        )
+        
+        # OpenAI-specific configuration
+        self.model = model
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        
+        # Logging
+        self.logger = logging.getLogger(__name__)
+        self.logger.info(f"Enhanced SciRAG OpenAI provider initialized with model={model}")
+    
+    def _generate_response_with_prompt(self, prompt: str) -> str:
+        """
+        Generate response using OpenAI API with custom prompt.
+        
+        Args:
+            prompt: Custom prompt for generation
+            
+        Returns:
+            Generated response string
+        """
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a helpful scientific research assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=self.temperature,
+                max_tokens=self.max_tokens
+            )
+            
+            return response.choices[0].message.content.strip()
+            
+        except Exception as e:
+            self.logger.error(f"OpenAI API error: {e}")
+            raise
+    
+    def get_enhanced_response(self, 
+                             query: str, 
+                             content_types: Optional[List[ContentType]] = None,
+                             max_chunks: int = 10,
+                             include_metadata: bool = True) -> str:
+        """
+        Get enhanced response with content type filtering and metadata.
+        
+        Args:
+            query: Query string
+            content_types: Optional list of content types to filter by
+            max_chunks: Maximum number of chunks to use
+            include_metadata: Whether to include enhanced metadata in context
+            
+        Returns:
+            Enhanced response string
+        """
+        if not self.enable_enhanced_processing or not self.enhanced_chunks:
+            self.logger.warning("Enhanced processing not available, using basic response")
+            return self.get_response(query)
+        
+        try:
+            # Filter chunks by content type if specified
+            filtered_chunks = self._filter_chunks_by_type(content_types)
+            
+            # Limit number of chunks
+            if len(filtered_chunks) > max_chunks:
+                filtered_chunks = filtered_chunks[:max_chunks]
+            
+            # Build enhanced context
+            if include_metadata:
+                context = self._build_enhanced_context(filtered_chunks)
+            else:
+                context = self._build_context_from_chunks(filtered_chunks)
+            
+            # Create enhanced prompt
+            prompt = self._create_enhanced_prompt(query, context, content_types)
+            
+            # Generate response
+            response = self._generate_response_with_prompt(prompt)
+            
+            return response
+            
+        except Exception as e:
+            self.logger.error(f"Enhanced response generation failed: {e}")
+            if self.fallback_on_error:
+                self.logger.info("Falling back to basic response")
+                return self.get_response(query)
+            else:
+                raise
+    
+    def _build_enhanced_context(self, chunks: List[EnhancedChunk]) -> str:
+        """Build enhanced context with rich metadata."""
+        context_parts = []
+        
+        for i, chunk in enumerate(chunks, 1):
+            context_part = f"--- Source {i} ({chunk.content_type.value}) ---\n"
+            context_part += f"Text: {chunk.text}\n"
+            
+            # Add mathematical content metadata
+            if chunk.is_mathematical() and chunk.mathematical_content:
+                math_content = chunk.mathematical_content
+                context_part += f"Equation: {math_content.equation_tex}\n"
+                context_part += f"Normalized: {math_content.math_norm}\n"
+                if math_content.math_canonical:
+                    context_part += f"Canonical: {math_content.math_canonical}\n"
+                context_part += f"Variables: {', '.join(math_content.variables)}\n"
+                context_part += f"Type: {math_content.equation_type}\n"
+            
+            # Add asset content metadata
+            if chunk.is_asset() and chunk.asset_content:
+                asset_content = chunk.asset_content
+                context_part += f"Asset Type: {asset_content.asset_type}\n"
+                context_part += f"Caption: {asset_content.caption}\n"
+                if asset_content.ocr_text:
+                    context_part += f"OCR Text: {asset_content.ocr_text}\n"
+            
+            # Add glossary content metadata
+            if chunk.is_glossary() and chunk.glossary_content:
+                gloss_content = chunk.glossary_content
+                context_part += f"Term: {gloss_content.term}\n"
+                context_part += f"Definition: {gloss_content.definition}\n"
+                if gloss_content.related_terms:
+                    context_part += f"Related Terms: {', '.join(gloss_content.related_terms)}\n"
+            
+            context_parts.append(context_part)
+        
+        return "\n\n".join(context_parts)
+    
+    def _create_enhanced_prompt(self, 
+                               query: str, 
+                               context: str, 
+                               content_types: Optional[List[ContentType]]) -> str:
+        """Create enhanced prompt with content type awareness."""
+        prompt_parts = [
+            "You are a scientific research assistant with access to enhanced document processing capabilities.",
+            "You can analyze mathematical equations, figures, tables, and glossary terms with high precision.",
+            "",
+            "Context (with enhanced metadata):",
+            context,
+            "",
+            f"Query: {query}",
+            ""
+        ]
+        
+        if content_types:
+            content_type_names = [ct.value for ct in content_types]
+            prompt_parts.append(f"Focus on content types: {', '.join(content_type_names)}")
+            prompt_parts.append("")
+        
+        prompt_parts.extend([
+            "Instructions:",
+            "- Provide a comprehensive and accurate response based on the context",
+            "- If mathematical content is present, explain equations clearly",
+            "- If figures or tables are referenced, describe their content",
+            "- If glossary terms are present, use them precisely",
+            "- Cite specific sources when possible",
+            "- Be concise but thorough",
+            "",
+            "Response:"
+        ])
+        
+        return "\n".join(prompt_parts)
+    
+    def get_mathematical_response(self, query: str, max_chunks: int = 5) -> str:
+        """Get response focused on mathematical content."""
+        return self.get_enhanced_response(
+            query=query,
+            content_types=[ContentType.EQUATION],
+            max_chunks=max_chunks
+        )
+    
+    def get_asset_response(self, query: str, max_chunks: int = 5) -> str:
+        """Get response focused on figures and tables."""
+        return self.get_enhanced_response(
+            query=query,
+            content_types=[ContentType.FIGURE, ContentType.TABLE],
+            max_chunks=max_chunks
+        )
+    
+    def get_glossary_response(self, query: str, max_chunks: int = 5) -> str:
+        """Get response focused on glossary terms and definitions."""
+        return self.get_enhanced_response(
+            query=query,
+            content_types=[ContentType.DEFINITION],
+            max_chunks=max_chunks
+        )
+    
+    def analyze_mathematical_content(self, query: str) -> Dict[str, Any]:
+        """Analyze mathematical content in the corpus."""
+        math_chunks = self.get_mathematical_chunks()
+        
+        if not math_chunks:
+            return {"message": "No mathematical content found"}
+        
+        # Analyze equations
+        equations = []
+        for chunk in math_chunks:
+            if chunk.mathematical_content:
+                equations.append({
+                    'equation': chunk.mathematical_content.equation_tex,
+                    'normalized': chunk.mathematical_content.math_norm,
+                    'variables': chunk.mathematical_content.variables,
+                    'type': chunk.mathematical_content.equation_type,
+                    'complexity': chunk.mathematical_content.complexity_score
+                })
+        
+        # Generate analysis
+        analysis_prompt = f"""
+        Analyze the following mathematical content and provide insights:
+        
+        Query: {query}
+        
+        Equations found:
+        {chr(10).join([f"- {eq['equation']} (Type: {eq['type']}, Variables: {eq['variables']})" for eq in equations])}
+        
+        Please provide:
+        1. A summary of the mathematical concepts
+        2. Key equations and their significance
+        3. Relationships between different equations
+        4. Any patterns or themes
+        """
+        
+        analysis = self._generate_response_with_prompt(analysis_prompt)
+        
+        return {
+            'query': query,
+            'equations_count': len(equations),
+            'equations': equations,
+            'analysis': analysis
+        }
+    
+    def search_by_content_type(self, 
+                               query: str, 
+                               content_type: ContentType,
+                               max_results: int = 10) -> List[Dict[str, Any]]:
+        """Search for content of a specific type."""
+        chunks = self.get_chunks_by_type(content_type)
+        
+        if not chunks:
+            return []
+        
+        # Simple text matching for now
+        # In a full implementation, this would use semantic search
+        results = []
+        query_lower = query.lower()
+        
+        for chunk in chunks:
+            if query_lower in chunk.text.lower():
+                result = {
+                    'id': chunk.id,
+                    'text': chunk.text,
+                    'source_id': chunk.source_id,
+                    'content_type': chunk.content_type.value,
+                    'confidence': chunk.confidence
+                }
+                
+                # Add type-specific metadata
+                if chunk.is_mathematical() and chunk.mathematical_content:
+                    result['equation'] = chunk.mathematical_content.equation_tex
+                    result['variables'] = chunk.mathematical_content.variables
+                
+                if chunk.is_asset() and chunk.asset_content:
+                    result['caption'] = chunk.asset_content.caption
+                    result['asset_type'] = chunk.asset_content.asset_type
+                
+                if chunk.is_glossary() and chunk.glossary_content:
+                    result['term'] = chunk.glossary_content.term
+                    result['definition'] = chunk.glossary_content.definition
+                
+                results.append(result)
+        
+        return results[:max_results]

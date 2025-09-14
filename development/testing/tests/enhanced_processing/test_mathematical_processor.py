@@ -1,0 +1,160 @@
+"""
+Tests for MathematicalProcessor class.
+"""
+
+import pytest
+import sys
+from pathlib import Path
+
+# Add the scirag module to the path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from scirag.enhanced_processing.mathematical_processor import MathematicalProcessor
+
+
+class TestMathematicalProcessor:
+    """Test cases for MathematicalProcessor."""
+    
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.processor = MathematicalProcessor(enable_sympy=True, enable_ragbook=False)
+    
+    def test_equation_detection(self):
+        """Test equation detection in text."""
+        text = "The equation $E = mc^2$ is famous. Also, $$\\frac{a}{b} = c$$ is another equation."
+        
+        equations = self.processor.detect_equations(text)
+        
+        assert len(equations) == 2
+        assert equations[0][0] == "E = mc^2"
+        assert equations[0][1] == "inline"
+        assert equations[1][0] == "\\frac{a}{b} = c"
+        assert equations[1][1] == "display"
+    
+    def test_process_equation_inline(self):
+        """Test processing of inline equation."""
+        equation_tex = "E = mc^2"
+        result = self.processor.process_equation(equation_tex, "inline")
+        
+        assert result['equation_tex'] == equation_tex
+        assert result['equation_type'] == "inline"
+        assert 'math_norm' in result
+        assert 'math_tokens' in result
+        assert 'math_kgrams' in result
+        assert 'variables' in result
+        assert 'operators' in result
+    
+    def test_process_equation_display(self):
+        """Test processing of display equation."""
+        equation_tex = "\\frac{a}{b} = c"
+        result = self.processor.process_equation(equation_tex, "display")
+        
+        assert result['equation_tex'] == equation_tex
+        assert result['equation_type'] == "display"
+        assert 'math_norm' in result
+        assert 'math_tokens' in result
+        assert 'math_kgrams' in result
+    
+    def test_variable_extraction(self):
+        """Test variable extraction from equation."""
+        equation_tex = "x + y = z"
+        result = self.processor.process_equation(equation_tex, "inline")
+        
+        variables = result['variables']
+        assert 'x' in variables
+        assert 'y' in variables
+        assert 'z' in variables
+    
+    def test_operator_extraction(self):
+        """Test operator extraction from equation."""
+        equation_tex = "x + y = z"
+        result = self.processor.process_equation(equation_tex, "inline")
+        
+        operators = result['operators']
+        assert '+' in operators
+        assert '=' in operators
+    
+    def test_equation_complexity(self):
+        """Test equation complexity calculation."""
+        simple_eq = "x = 1"
+        complex_eq = "\\frac{\\partial f}{\\partial x} = \\sum_{i=1}^{n} \\frac{x_i}{\\sqrt{x_i^2 + y_i^2}}"
+        
+        simple_result = self.processor.process_equation(simple_eq, "inline")
+        complex_result = self.processor.process_equation(complex_eq, "display")
+        
+        simple_complexity = self.processor.get_equation_complexity(simple_result)
+        complex_complexity = self.processor.get_equation_complexity(complex_result)
+        
+        assert simple_complexity < complex_complexity
+        assert 0 <= simple_complexity <= 1
+        assert 0 <= complex_complexity <= 1
+    
+    def test_equation_validation(self):
+        """Test equation validation."""
+        valid_eq = "x + y = z"
+        invalid_eq = ""
+        
+        valid_result = self.processor.process_equation(valid_eq, "inline")
+        invalid_result = self.processor.process_equation(invalid_eq, "inline")
+        
+        assert self.processor.validate_equation(valid_result) == True
+        assert self.processor.validate_equation(invalid_result) == False
+    
+    def test_process_mathematical_content(self):
+        """Test processing of mathematical content in text."""
+        text = "We have $E = mc^2$ and also $$\\int_0^\\infty e^{-x} dx = 1$$"
+        
+        processed_equations = self.processor.process_mathematical_content(text)
+        
+        assert len(processed_equations) == 2
+        assert processed_equations[0]['equation_tex'] == "E = mc^2"
+        assert processed_equations[1]['equation_tex'] == "\\int_0^\\infty e^{-x} dx = 1"
+    
+    def test_fallback_normalization(self):
+        """Test fallback normalization when RAGBook is not available."""
+        equation_tex = "\\frac{a}{b} = c"
+        normalized = self.processor._fallback_normalize(equation_tex)
+        
+        assert normalized is not None
+        assert len(normalized) > 0
+    
+    def test_fallback_tokenization(self):
+        """Test fallback tokenization when RAGBook is not available."""
+        text = "x + y = z"
+        tokens = self.processor._fallback_tokenize(text)
+        
+        assert len(tokens) > 0
+        assert 'x' in tokens
+        assert '+' in tokens
+        assert 'y' in tokens
+        assert '=' in tokens
+        assert 'z' in tokens
+    
+    def test_error_handling(self):
+        """Test error handling in equation processing."""
+        # Test with malformed equation
+        malformed_eq = "\\invalid{command}{with}{too}{many}{braces"
+        result = self.processor.process_equation(malformed_eq, "inline")
+        
+        # Should not raise exception, but may have error in result
+        assert 'equation_tex' in result
+        assert result['equation_tex'] == malformed_eq
+    
+    def test_processor_initialization(self):
+        """Test processor initialization with different options."""
+        # Test with SymPy disabled
+        processor_no_sympy = MathematicalProcessor(enable_sympy=False)
+        assert processor_no_sympy.enable_sympy == False
+        
+        # Test with RAGBook disabled
+        processor_no_ragbook = MathematicalProcessor(enable_ragbook=False)
+        assert processor_no_ragbook.enable_ragbook == False
+        
+        # Test with both disabled
+        processor_minimal = MathematicalProcessor(enable_sympy=False, enable_ragbook=False)
+        assert processor_minimal.enable_sympy == False
+        assert processor_minimal.enable_ragbook == False
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

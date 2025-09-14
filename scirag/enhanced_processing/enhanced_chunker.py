@@ -1,0 +1,326 @@
+"""
+Enhanced chunking module for Enhanced SciRAG.
+
+This module provides intelligent chunking capabilities that preserve
+mathematical content, figures, and other structured elements.
+"""
+
+import re
+from typing import List, Dict, Any, Optional
+from .enhanced_chunk import EnhancedChunk, ContentType
+from .content_classifier import ContentClassifier
+from .mathematical_processor import MathematicalProcessor
+from .asset_processor import AssetProcessor
+from .glossary_extractor import GlossaryExtractor
+
+
+class EnhancedChunker:
+    """Enhanced chunker for scientific documents."""
+    
+    def __init__(self, 
+                 chunk_size: int = 320,
+                 overlap_ratio: float = 0.12,
+                 preserve_math: bool = True,
+                 preserve_figures: bool = True,
+                 preserve_tables: bool = True):
+        """
+        Initialize enhanced chunker.
+        
+        Args:
+            chunk_size: Target chunk size in characters
+            overlap_ratio: Overlap ratio between chunks
+            preserve_math: Whether to preserve mathematical content
+            preserve_figures: Whether to preserve figures
+            preserve_tables: Whether to preserve tables
+        """
+        self.chunk_size = chunk_size
+        self.overlap_ratio = overlap_ratio
+        self.preserve_math = preserve_math
+        self.preserve_figures = preserve_figures
+        self.preserve_tables = preserve_tables
+        
+        # Initialize processors
+        self.classifier = ContentClassifier()
+        self.math_processor = MathematicalProcessor()
+        self.asset_processor = AssetProcessor()
+        self.glossary_extractor = GlossaryExtractor()
+        
+        # Calculate overlap size
+        self.overlap_size = int(chunk_size * overlap_ratio)
+    
+    def chunk_text(self, text: str, source_id: str, start_index: int = 0) -> List[EnhancedChunk]:
+        """
+        Chunk text into enhanced chunks.
+        
+        Args:
+            text: Text to chunk
+            source_id: Source document ID
+            start_index: Starting chunk index
+            
+        Returns:
+            List of enhanced chunks
+        """
+        if not text:
+            return []
+        
+        # Split text into sentences and paragraphs
+        segments = self._split_into_segments(text)
+        
+        chunks = []
+        current_chunk = ""
+        current_index = start_index
+        
+        for segment in segments:
+            # Check if adding this segment would exceed chunk size
+            if len(current_chunk) + len(segment) > self.chunk_size and current_chunk:
+                # Create chunk from current content
+                chunk = self._create_chunk(current_chunk, source_id, current_index)
+                if chunk:
+                    chunks.append(chunk)
+                    current_index += 1
+                
+                # Start new chunk with overlap
+                current_chunk = self._get_overlap_text(current_chunk) + segment
+            else:
+                current_chunk += segment
+        
+        # Create final chunk if there's remaining content
+        if current_chunk.strip():
+            chunk = self._create_chunk(current_chunk, source_id, current_index)
+            if chunk:
+                chunks.append(chunk)
+        
+        return chunks
+    
+    def _split_into_segments(self, text: str) -> List[str]:
+        """Split text into segments for chunking."""
+        segments = []
+        
+        # Split by paragraphs first
+        paragraphs = text.split('\n\n')
+        
+        for paragraph in paragraphs:
+            if not paragraph.strip():
+                continue
+            
+            # Check if paragraph contains mathematical content
+            if self._contains_math(paragraph):
+                # Keep mathematical content as single segment
+                segments.append(paragraph + '\n\n')
+            elif self._contains_figure(paragraph):
+                # Keep figure content as single segment
+                segments.append(paragraph + '\n\n')
+            elif self._contains_table(paragraph):
+                # Keep table content as single segment
+                segments.append(paragraph + '\n\n')
+            else:
+                # Split regular paragraphs by sentences
+                sentences = self._split_into_sentences(paragraph)
+                for sentence in sentences:
+                    if sentence.strip():
+                        segments.append(sentence + ' ')
+        
+        return segments
+    
+    def _split_into_sentences(self, text: str) -> List[str]:
+        """Split text into sentences."""
+        # Simple sentence splitting
+        sentences = re.split(r'[.!?]+', text)
+        return [s.strip() for s in sentences if s.strip()]
+    
+    def _contains_math(self, text: str) -> bool:
+        """Check if text contains mathematical content."""
+        math_patterns = [
+            r'\\begin\{equation\}',
+            r'\\begin\{align\}',
+            r'\\begin\{eqnarray\}',
+            r'\$[^$]+\$',
+            r'\\\[[^\]]+\\\]',
+            r'\\\([^)]+\\\)'
+        ]
+        
+        for pattern in math_patterns:
+            if re.search(pattern, text):
+                return True
+        return False
+    
+    def _contains_figure(self, text: str) -> bool:
+        """Check if text contains figure content."""
+        figure_patterns = [
+            r'\\begin\{figure\}',
+            r'\\includegraphics',
+            r'\\begin\{picture\}',
+            r'\\begin\{tikzpicture\}'
+        ]
+        
+        for pattern in figure_patterns:
+            if re.search(pattern, text):
+                return True
+        return False
+    
+    def _contains_table(self, text: str) -> bool:
+        """Check if text contains table content."""
+        table_patterns = [
+            r'\\begin\{table\}',
+            r'\\begin\{tabular\}',
+            r'\\begin\{array\}',
+            r'\\begin\{longtable\}'
+        ]
+        
+        for pattern in table_patterns:
+            if re.search(pattern, text):
+                return True
+        return False
+    
+    def _create_chunk(self, text: str, source_id: str, chunk_index: int) -> Optional[EnhancedChunk]:
+        """Create enhanced chunk from text."""
+        if not text.strip():
+            return None
+        
+        # Classify content type
+        content_type, confidence = self.classifier.classify_with_confidence(text, {})
+        
+        # Create chunk ID
+        chunk_id = f"{source_id}_chunk_{chunk_index}"
+        
+        # Create base chunk
+        chunk = EnhancedChunk(
+            id=chunk_id,
+            text=text.strip(),
+            source_id=source_id,
+            chunk_index=chunk_index,
+            content_type=content_type,
+            confidence=confidence
+        )
+        
+        # Add enhanced content based on type
+        if content_type == ContentType.EQUATION and self.preserve_math:
+            self._add_mathematical_content(chunk)
+        elif content_type in [ContentType.FIGURE, ContentType.TABLE] and self.preserve_figures:
+            self._add_asset_content(chunk)
+        elif content_type == ContentType.DEFINITION:
+            self._add_glossary_content(chunk)
+        
+        return chunk
+    
+    def _add_mathematical_content(self, chunk: EnhancedChunk):
+        """Add mathematical content to chunk."""
+        try:
+            # Extract equation from text
+            equation = self._extract_equation(chunk.text)
+            if equation:
+                math_content = self.math_processor.create_mathematical_content(equation)
+                chunk.mathematical_content = math_content
+        except Exception:
+            pass  # Continue without mathematical content
+    
+    def _add_asset_content(self, chunk: EnhancedChunk):
+        """Add asset content to chunk."""
+        try:
+            asset_content = self.asset_processor.process_asset(chunk.text, chunk.source_id)
+            if asset_content:
+                chunk.asset_content = asset_content
+        except Exception:
+            pass  # Continue without asset content
+    
+    def _add_glossary_content(self, chunk: EnhancedChunk):
+        """Add glossary content to chunk."""
+        try:
+            glossary_terms = self.glossary_extractor.extract_glossary_terms(chunk.text, chunk.source_id)
+            if glossary_terms:
+                # Use the first glossary term
+                chunk.glossary_content = glossary_terms[0]
+        except Exception:
+            pass  # Continue without glossary content
+    
+    def _extract_equation(self, text: str) -> Optional[str]:
+        """Extract equation from text."""
+        # Look for LaTeX equation environments
+        equation_patterns = [
+            r'\\begin\{equation\}(.*?)\\end\{equation\}',
+            r'\\begin\{align\}(.*?)\\end\{align\}',
+            r'\\begin\{eqnarray\}(.*?)\\end\{eqnarray\}',
+            r'\$([^$]+)\$',
+            r'\\\[([^\]]+)\\\]',
+            r'\\\(([^)]+)\\\)'
+        ]
+        
+        for pattern in equation_patterns:
+            match = re.search(pattern, text, re.DOTALL)
+            if match:
+                return match.group(1).strip()
+        
+        return None
+    
+    def _get_overlap_text(self, text: str) -> str:
+        """Get overlap text from previous chunk."""
+        if len(text) <= self.overlap_size:
+            return text
+        
+        # Get last part of text for overlap
+        overlap_text = text[-self.overlap_size:]
+        
+        # Try to end at sentence boundary
+        last_sentence_end = overlap_text.rfind('.')
+        if last_sentence_end > self.overlap_size // 2:
+            overlap_text = overlap_text[:last_sentence_end + 1]
+        
+        return overlap_text + ' '
+    
+    def chunk_document(self, document_text: str, source_id: str) -> List[EnhancedChunk]:
+        """
+        Chunk entire document into enhanced chunks.
+        
+        Args:
+            document_text: Full document text
+            source_id: Source document ID
+            
+        Returns:
+            List of enhanced chunks
+        """
+        return self.chunk_text(document_text, source_id, 0)
+    
+    def get_chunk_statistics(self, chunks: List[EnhancedChunk]) -> Dict[str, Any]:
+        """
+        Get statistics about chunks.
+        
+        Args:
+            chunks: List of enhanced chunks
+            
+        Returns:
+            Dictionary containing chunk statistics
+        """
+        if not chunks:
+            return {}
+        
+        # Count content types
+        content_type_counts = {}
+        for chunk in chunks:
+            content_type = chunk.content_type.value
+            content_type_counts[content_type] = content_type_counts.get(content_type, 0) + 1
+        
+        # Calculate size statistics
+        chunk_sizes = [len(chunk.text) for chunk in chunks]
+        avg_size = sum(chunk_sizes) / len(chunk_sizes)
+        min_size = min(chunk_sizes)
+        max_size = max(chunk_sizes)
+        
+        # Count enhanced content
+        math_chunks = sum(1 for chunk in chunks if chunk.is_mathematical())
+        asset_chunks = sum(1 for chunk in chunks if chunk.is_asset())
+        glossary_chunks = sum(1 for chunk in chunks if chunk.is_glossary())
+        
+        return {
+            'total_chunks': len(chunks),
+            'content_type_distribution': content_type_counts,
+            'size_statistics': {
+                'average_size': avg_size,
+                'min_size': min_size,
+                'max_size': max_size
+            },
+            'enhanced_content_counts': {
+                'mathematical': math_chunks,
+                'asset': asset_chunks,
+                'glossary': glossary_chunks
+            }
+        }

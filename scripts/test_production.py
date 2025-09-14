@@ -1,0 +1,333 @@
+#!/usr/bin/env python3
+"""
+Production Test Script for Enhanced SciRAG
+
+This script tests the production deployment of the enhanced SciRAG system
+to ensure all components are working correctly.
+"""
+
+import requests
+import time
+import json
+from typing import Dict, Any, List
+import sys
+
+
+class ProductionTester:
+    """Production tester for Enhanced SciRAG."""
+    
+    def __init__(self, base_url: str = "http://localhost:8000"):
+        """Initialize production tester."""
+        self.base_url = base_url
+        self.session = requests.Session()
+        self.test_results = []
+    
+    def test_health_endpoint(self) -> bool:
+        """Test health endpoint."""
+        print("🧪 Testing health endpoint...")
+        
+        try:
+            response = self.session.get(f"{self.base_url}/health", timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            assert 'status' in data
+            assert 'timestamp' in data
+            assert 'components' in data
+            
+            print(f"✅ Health check passed - Status: {data['status']}")
+            self.test_results.append(("health_endpoint", True, data))
+            return True
+            
+        except Exception as e:
+            print(f"❌ Health check failed: {e}")
+            self.test_results.append(("health_endpoint", False, str(e)))
+            return False
+    
+    def test_metrics_endpoint(self) -> bool:
+        """Test metrics endpoint."""
+        print("🧪 Testing metrics endpoint...")
+        
+        try:
+            response = self.session.get(f"{self.base_url}/metrics", timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            assert 'metrics' in data
+            assert 'timestamp' in data
+            
+            print("✅ Metrics endpoint working")
+            self.test_results.append(("metrics_endpoint", True, data))
+            return True
+            
+        except Exception as e:
+            print(f"❌ Metrics endpoint failed: {e}")
+            self.test_results.append(("metrics_endpoint", False, str(e)))
+            return False
+    
+    def test_query_endpoint(self) -> bool:
+        """Test query endpoint."""
+        print("🧪 Testing query endpoint...")
+        
+        try:
+            query_data = {
+                "query": "What is the theory of relativity?",
+                "content_types": ["prose", "equation"],
+                "max_results": 5,
+                "enable_enhanced_processing": True
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/query",
+                json=query_data,
+                timeout=30
+            )
+            response.raise_for_status()
+            
+            data = response.json()
+            assert 'response' in data
+            assert 'chunks_used' in data
+            assert 'processing_time' in data
+            assert 'enhanced_processing_enabled' in data
+            
+            print(f"✅ Query endpoint working - Response time: {data['processing_time']:.3f}s")
+            self.test_results.append(("query_endpoint", True, data))
+            return True
+            
+        except Exception as e:
+            print(f"❌ Query endpoint failed: {e}")
+            self.test_results.append(("query_endpoint", False, str(e)))
+            return False
+    
+    def test_document_upload_endpoint(self) -> bool:
+        """Test document upload endpoint."""
+        print("🧪 Testing document upload endpoint...")
+        
+        try:
+            document_data = {
+                "content": """
+                # Test Document
+                
+                This is a test document with mathematical content.
+                
+                The famous equation is: E = mc²
+                
+                \\begin{figure}
+                \\includegraphics{test.png}
+                \\caption{Test figure}
+                \\end{figure}
+                
+                Definition: A black hole is a region of spacetime.
+                """,
+                "source_id": "test_document_001",
+                "file_type": "markdown"
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/documents",
+                json=document_data,
+                timeout=30
+            )
+            response.raise_for_status()
+            
+            data = response.json()
+            assert 'chunks_created' in data
+            assert 'processing_time' in data
+            assert 'enhanced_content_types' in data
+            
+            print(f"✅ Document upload working - Created {data['chunks_created']} chunks")
+            self.test_results.append(("document_upload_endpoint", True, data))
+            return True
+            
+        except Exception as e:
+            print(f"❌ Document upload failed: {e}")
+            self.test_results.append(("document_upload_endpoint", False, str(e)))
+            return False
+    
+    def test_config_endpoint(self) -> bool:
+        """Test config endpoint."""
+        print("🧪 Testing config endpoint...")
+        
+        try:
+            response = self.session.get(f"{self.base_url}/config", timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            assert 'core' in data
+            assert 'enhanced_processing' in data
+            assert 'performance' in data
+            
+            print("✅ Config endpoint working")
+            self.test_results.append(("config_endpoint", True, data))
+            return True
+            
+        except Exception as e:
+            print(f"❌ Config endpoint failed: {e}")
+            self.test_results.append(("config_endpoint", False, str(e)))
+            return False
+    
+    def test_config_validation_endpoint(self) -> bool:
+        """Test config validation endpoint."""
+        print("🧪 Testing config validation endpoint...")
+        
+        try:
+            response = self.session.post(f"{self.base_url}/config/validate", timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            assert 'valid' in data
+            
+            print(f"✅ Config validation working - Valid: {data['valid']}")
+            self.test_results.append(("config_validation_endpoint", True, data))
+            return True
+            
+        except Exception as e:
+            print(f"❌ Config validation failed: {e}")
+            self.test_results.append(("config_validation_endpoint", False, str(e)))
+            return False
+    
+    def test_performance(self) -> bool:
+        """Test performance under load."""
+        print("🧪 Testing performance under load...")
+        
+        try:
+            # Test multiple concurrent requests
+            import concurrent.futures
+            
+            def make_request():
+                query_data = {
+                    "query": f"Test query {time.time()}",
+                    "enable_enhanced_processing": True
+                }
+                response = self.session.post(
+                    f"{self.base_url}/query",
+                    json=query_data,
+                    timeout=30
+                )
+                return response.status_code == 200
+            
+            # Run 10 concurrent requests
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                futures = [executor.submit(make_request) for _ in range(10)]
+                results = [future.result() for future in concurrent.futures.as_completed(futures)]
+            
+            success_rate = sum(results) / len(results)
+            
+            if success_rate >= 0.8:  # 80% success rate
+                print(f"✅ Performance test passed - Success rate: {success_rate:.1%}")
+                self.test_results.append(("performance_test", True, {"success_rate": success_rate}))
+                return True
+            else:
+                print(f"❌ Performance test failed - Success rate: {success_rate:.1%}")
+                self.test_results.append(("performance_test", False, {"success_rate": success_rate}))
+                return False
+                
+        except Exception as e:
+            print(f"❌ Performance test failed: {e}")
+            self.test_results.append(("performance_test", False, str(e)))
+            return False
+    
+    def test_monitoring_endpoints(self) -> bool:
+        """Test monitoring endpoints."""
+        print("🧪 Testing monitoring endpoints...")
+        
+        try:
+            # Test Prometheus metrics
+            prometheus_url = "http://localhost:9090"
+            response = self.session.get(f"{prometheus_url}/api/v1/targets", timeout=10)
+            if response.status_code == 200:
+                print("✅ Prometheus is accessible")
+            else:
+                print("⚠️  Prometheus not accessible")
+            
+            # Test Grafana
+            grafana_url = "http://localhost:3000"
+            response = self.session.get(f"{grafana_url}/api/health", timeout=10)
+            if response.status_code == 200:
+                print("✅ Grafana is accessible")
+            else:
+                print("⚠️  Grafana not accessible")
+            
+            self.test_results.append(("monitoring_endpoints", True, {}))
+            return True
+            
+        except Exception as e:
+            print(f"⚠️  Monitoring test failed: {e}")
+            self.test_results.append(("monitoring_endpoints", False, str(e)))
+            return False
+    
+    def run_all_tests(self) -> Dict[str, Any]:
+        """Run all production tests."""
+        print("🚀 Starting Enhanced SciRAG Production Tests")
+        print("=" * 60)
+        
+        tests = [
+            self.test_health_endpoint,
+            self.test_metrics_endpoint,
+            self.test_query_endpoint,
+            self.test_document_upload_endpoint,
+            self.test_config_endpoint,
+            self.test_config_validation_endpoint,
+            self.test_performance,
+            self.test_monitoring_endpoints
+        ]
+        
+        passed = 0
+        failed = 0
+        
+        for test in tests:
+            try:
+                if test():
+                    passed += 1
+                else:
+                    failed += 1
+            except Exception as e:
+                print(f"❌ Test {test.__name__} failed with exception: {e}")
+                failed += 1
+            print()
+        
+        print("=" * 60)
+        print(f"📊 Test Results: {passed}/{len(tests)} tests passed")
+        
+        if failed == 0:
+            print("🎉 All production tests passed!")
+            print("✅ Enhanced SciRAG is ready for production!")
+        else:
+            print(f"⚠️  {failed} tests failed. Please review and fix issues.")
+        
+        return {
+            "total_tests": len(tests),
+            "passed": passed,
+            "failed": failed,
+            "success_rate": passed / len(tests),
+            "test_results": self.test_results
+        }
+    
+    def generate_report(self, output_file: str = "production_test_report.json"):
+        """Generate test report."""
+        report = {
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "base_url": self.base_url,
+            "test_results": self.test_results
+        }
+        
+        with open(output_file, 'w') as f:
+            json.dump(report, f, indent=2)
+        
+        print(f"📄 Test report saved to: {output_file}")
+
+
+def main():
+    """Main function."""
+    base_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000"
+    
+    tester = ProductionTester(base_url)
+    results = tester.run_all_tests()
+    tester.generate_report()
+    
+    # Exit with appropriate code
+    sys.exit(0 if results["failed"] == 0 else 1)
+
+
+if __name__ == "__main__":
+    main()

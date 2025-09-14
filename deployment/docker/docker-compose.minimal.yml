@@ -1,0 +1,28 @@
+services:
+  scirag-api:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile.minimal
+    ports:
+      - "8000:8000"
+    environment:
+      - SCIRAG_CORPUS_NAME=enhanced_scirag_corpus
+      - SCIRAG_MARKDOWN_FILES_PATH=/app/markdown_files
+      - SCIRAG_ENHANCED_PROCESSING=true
+      - SCIRAG_MATH_PROCESSING=true
+      - SCIRAG_ASSET_PROCESSING=true
+      - SCIRAG_GLOSSARY_EXTRACTION=true
+      - SCIRAG_LOG_LEVEL=INFO
+      - SCIRAG_API_HOST=0.0.0.0
+      - SCIRAG_API_PORT=8000
+    volumes:
+      - ./markdown_files:/app/markdown_files
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

@@ -1,0 +1,283 @@
+#!/usr/bin/env python3
+"""
+Memory Usage Debugging Script
+
+This script investigates what's causing high memory usage in the enhanced processing system.
+"""
+
+import sys
+import os
+import psutil
+import tracemalloc
+import gc
+from pathlib import Path
+
+# Add the scirag package to the path
+sys.path.insert(0, str(Path(__file__).parent))
+
+def get_memory_usage():
+    """Get current memory usage in MB"""
+    process = psutil.Process()
+    return process.memory_info().rss / 1024 / 1024
+
+def analyze_memory_objects():
+    """Analyze memory usage by object type"""
+    import gc
+    from collections import defaultdict
+    
+    # Force garbage collection
+    gc.collect()
+    
+    # Get object counts by type
+    obj_counts = defaultdict(int)
+    obj_sizes = defaultdict(int)
+    
+    for obj in gc.get_objects():
+        obj_type = type(obj).__name__
+        obj_counts[obj_type] += 1
+        try:
+            obj_sizes[obj_type] += sys.getsizeof(obj)
+        except (TypeError, ValueError):
+            pass
+    
+    # Sort by size
+    sorted_sizes = sorted(obj_sizes.items(), key=lambda x: x[1], reverse=True)
+    
+    print("Top 10 object types by memory usage:")
+    for obj_type, size in sorted_sizes[:10]:
+        count = obj_counts[obj_type]
+        size_mb = size / 1024 / 1024
+        print(f"  {obj_type}: {count:,} objects, {size_mb:.2f} MB")
+    
+    return sorted_sizes
+
+def test_enhanced_processing_memory():
+    """Test memory usage during enhanced processing"""
+    print("🔍 Testing Enhanced Processing Memory Usage")
+    print("=" * 50)
+    
+    # Start memory tracking
+    tracemalloc.start()
+    initial_memory = get_memory_usage()
+    print(f"Initial memory usage: {initial_memory:.2f} MB")
+    
+    try:
+        # Import enhanced processing modules
+        sys.path.insert(0, str(Path(__file__).parent / "scirag" / "enhanced_processing"))
+        
+        print("\n📦 Importing enhanced processing modules...")
+        from enhanced_chunk import EnhancedChunk, ContentType, MathematicalContent
+        from mathematical_processor import MathematicalProcessor
+        from content_classifier import ContentClassifier
+        from enhanced_chunker import EnhancedChunker
+        from document_processor import EnhancedDocumentProcessor
+        from asset_processor import AssetProcessor
+        from glossary_extractor import GlossaryExtractor
+        from monitoring import EnhancedProcessingMonitor
+        
+        after_import_memory = get_memory_usage()
+        print(f"After importing modules: {after_import_memory:.2f} MB (+{after_import_memory - initial_memory:.2f} MB)")
+        
+        # Test mathematical processor
+        print("\n🧮 Testing MathematicalProcessor...")
+        math_processor = MathematicalProcessor()
+        after_math_memory = get_memory_usage()
+        print(f"After creating MathematicalProcessor: {after_math_memory:.2f} MB (+{after_math_memory - after_import_memory:.2f} MB)")
+        
+        # Test content classifier
+        print("\n🏷️ Testing ContentClassifier...")
+        classifier = ContentClassifier()
+        after_classifier_memory = get_memory_usage()
+        print(f"After creating ContentClassifier: {after_classifier_memory:.2f} MB (+{after_classifier_memory - after_math_memory:.2f} MB)")
+        
+        # Test enhanced chunker
+        print("\n✂️ Testing EnhancedChunker...")
+        chunker = EnhancedChunker()
+        after_chunker_memory = get_memory_usage()
+        print(f"After creating EnhancedChunker: {after_chunker_memory:.2f} MB (+{after_chunker_memory - after_classifier_memory:.2f} MB)")
+        
+        # Test document processor
+        print("\n📄 Testing EnhancedDocumentProcessor...")
+        doc_processor = EnhancedDocumentProcessor()
+        after_doc_processor_memory = get_memory_usage()
+        print(f"After creating EnhancedDocumentProcessor: {after_doc_processor_memory:.2f} MB (+{after_doc_processor_memory - after_chunker_memory:.2f} MB)")
+        
+        # Test asset processor
+        print("\n🖼️ Testing AssetProcessor...")
+        asset_processor = AssetProcessor()
+        after_asset_memory = get_memory_usage()
+        print(f"After creating AssetProcessor: {after_asset_memory:.2f} MB (+{after_asset_memory - after_doc_processor_memory:.2f} MB)")
+        
+        # Test glossary extractor
+        print("\n📚 Testing GlossaryExtractor...")
+        glossary_extractor = GlossaryExtractor()
+        after_glossary_memory = get_memory_usage()
+        print(f"After creating GlossaryExtractor: {after_glossary_memory:.2f} MB (+{after_glossary_memory - after_asset_memory:.2f} MB)")
+        
+        # Test monitoring system
+        print("\n📊 Testing EnhancedProcessingMonitor...")
+        monitor = EnhancedProcessingMonitor()
+        after_monitor_memory = get_memory_usage()
+        print(f"After creating EnhancedProcessingMonitor: {after_monitor_memory:.2f} MB (+{after_monitor_memory - after_glossary_memory:.2f} MB)")
+        
+        # Test processing a document
+        print("\n📝 Testing document processing...")
+        import tempfile
+        
+        test_content = """
+        # Test Document
+        
+        This is a test equation: $E = mc^2$
+        
+        Here's a more complex equation:
+        $$\\frac{\\partial f}{\\partial x} = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}$$
+        
+        ## Figure
+        
+        \\begin{figure}
+        \\includegraphics{test.png}
+        \\caption{Test figure}
+        \\end{figure}
+        """
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+            f.write(test_content)
+            temp_file = f.name
+        
+        try:
+            chunks = doc_processor.process_document(temp_file, "test_doc")
+            after_processing_memory = get_memory_usage()
+            print(f"After processing document: {after_processing_memory:.2f} MB (+{after_processing_memory - after_monitor_memory:.2f} MB)")
+            print(f"Created {len(chunks)} chunks")
+            
+            # Analyze memory by object type
+            print("\n🔍 Analyzing memory usage by object type...")
+            analyze_memory_objects()
+            
+        finally:
+            os.unlink(temp_file)
+        
+        # Get memory snapshot
+        snapshot = tracemalloc.take_snapshot()
+        top_stats = snapshot.statistics('lineno')
+        
+        print("\n📊 Top 10 memory allocations:")
+        for stat in top_stats[:10]:
+            print(f"  {stat}")
+        
+        return after_processing_memory
+        
+    except Exception as e:
+        print(f"❌ Error during memory testing: {e}")
+        import traceback
+        traceback.print_exc()
+        return get_memory_usage()
+    
+    finally:
+        tracemalloc.stop()
+
+def test_ragbook_imports():
+    """Test memory usage of RAGBook imports specifically"""
+    print("\n🔍 Testing RAGBook Import Memory Usage")
+    print("=" * 50)
+    
+    initial_memory = get_memory_usage()
+    print(f"Initial memory: {initial_memory:.2f} MB")
+    
+    try:
+        # Test RAGBook imports
+        print("\n📦 Importing RAGBook modules...")
+        import ragbook
+        after_ragbook_memory = get_memory_usage()
+        print(f"After importing ragbook: {after_ragbook_memory:.2f} MB (+{after_ragbook_memory - initial_memory:.2f} MB)")
+        
+        # Test specific RAGBook modules
+        print("\n🧮 Testing RAGBook math processing...")
+        import ragbook.math_norm
+        after_math_norm_memory = get_memory_usage()
+        print(f"After importing math_norm: {after_math_norm_memory:.2f} MB (+{after_math_norm_memory - after_ragbook_memory:.2f} MB)")
+        
+        print("\n📄 Testing RAGBook tex parsing...")
+        import ragbook.tex_parse
+        after_tex_parse_memory = get_memory_usage()
+        print(f"After importing tex_parse: {after_tex_parse_memory:.2f} MB (+{after_tex_parse_memory - after_math_norm_memory:.2f} MB)")
+        
+        print("\n🔍 Testing RAGBook md parsing...")
+        import ragbook.md_parse
+        after_md_parse_memory = get_memory_usage()
+        print(f"After importing md_parse: {after_md_parse_memory:.2f} MB (+{after_md_parse_memory - after_tex_parse_memory:.2f} MB)")
+        
+        return after_md_parse_memory
+        
+    except ImportError as e:
+        print(f"⚠️ RAGBook not available: {e}")
+        return get_memory_usage()
+    except Exception as e:
+        print(f"❌ Error during RAGBook testing: {e}")
+        return get_memory_usage()
+
+def test_sympy_memory():
+    """Test memory usage of SymPy specifically"""
+    print("\n🔍 Testing SymPy Memory Usage")
+    print("=" * 50)
+    
+    initial_memory = get_memory_usage()
+    print(f"Initial memory: {initial_memory:.2f} MB")
+    
+    try:
+        print("\n🧮 Importing SymPy...")
+        import sympy as sp
+        after_sympy_memory = get_memory_usage()
+        print(f"After importing SymPy: {after_sympy_memory:.2f} MB (+{after_sympy_memory - initial_memory:.2f} MB)")
+        
+        print("\n🧮 Testing SymPy operations...")
+        x = sp.Symbol('x')
+        expr = sp.sin(x) + sp.cos(x)
+        simplified = sp.simplify(expr)
+        after_sympy_ops_memory = get_memory_usage()
+        print(f"After SymPy operations: {after_sympy_ops_memory:.2f} MB (+{after_sympy_ops_memory - after_sympy_memory:.2f} MB)")
+        
+        return after_sympy_ops_memory
+        
+    except ImportError as e:
+        print(f"⚠️ SymPy not available: {e}")
+        return get_memory_usage()
+    except Exception as e:
+        print(f"❌ Error during SymPy testing: {e}")
+        return get_memory_usage()
+
+def main():
+    """Main memory debugging function"""
+    print("🚀 Starting Memory Usage Investigation")
+    print("=" * 60)
+    
+    # Test RAGBook imports
+    ragbook_memory = test_ragbook_imports()
+    
+    # Test SymPy imports
+    sympy_memory = test_sympy_memory()
+    
+    # Test enhanced processing
+    enhanced_memory = test_enhanced_processing_memory()
+    
+    print("\n" + "=" * 60)
+    print("📊 MEMORY USAGE SUMMARY")
+    print("=" * 60)
+    print(f"RAGBook imports: {ragbook_memory:.2f} MB")
+    print(f"SymPy imports: {sympy_memory:.2f} MB")
+    print(f"Enhanced processing: {enhanced_memory:.2f} MB")
+    print(f"Total memory usage: {enhanced_memory:.2f} MB")
+    
+    # Check if memory usage is reasonable
+    if enhanced_memory > 1000:  # More than 1GB
+        print("\n⚠️ WARNING: High memory usage detected!")
+        print("This could be caused by:")
+        print("1. Large RAGBook dependencies")
+        print("2. SymPy mathematical processing")
+        print("3. Memory leaks in enhanced processing")
+        print("4. Large data structures not being garbage collected")
+    else:
+        print("\n✅ Memory usage appears reasonable")
+
+if __name__ == "__main__":
+    main()
